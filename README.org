@@ -1,0 +1,13 @@
+#+title: Geometric Algebra Library in Rust
+
+* Geometric Algebra
+
+This is a geometric algebra library written in Rust.
+
+It is made for 3 dimensions.
+
+It will later be used in a Rotor Extended Kalman Filter.
+
+* TODO
+- I need to make a test for everything
+- Do scalars need their own type?
