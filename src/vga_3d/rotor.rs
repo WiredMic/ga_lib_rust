@@ -65,22 +65,6 @@ impl VGA3DRotor {
     }
 }
 
-// Addition
-impl Add for VGA3DRotor {
-    type Output = VGA3DMultivector;
-
-    fn add(self: VGA3DRotor, b: VGA3DRotor) -> VGA3DMultivector {
-        let scalar = self.scalar + b.scalar;
-        let bivector = self.bivector + b.bivector;
-        VGA3DMultivector::new(
-            scalar,
-            VGA3DVector::zero(),
-            bivector,
-            VGA3DTrivector::zero(),
-        )
-    }
-}
-
 // Subtration
 impl Sub for VGA3DRotor {
     type Output = VGA3DMultivector;
@@ -96,6 +80,7 @@ impl Sub for VGA3DRotor {
         )
     }
 }
+forward_ref_binop!(impl Sub, sub for VGA3DRotor, VGA3DRotor);
 
 // Geometric Product
 // \[ R_1 R_2 \]
@@ -154,6 +139,7 @@ impl BitXor for VGA3DRotor {
         VGA3DMultivector::new(scalar, vector, bivector, trivector)
     }
 }
+forward_ref_binop!(impl BitXor, bitxor for VGA3DRotor, VGA3DRotor);
 
 // Inner Product
 // \[ R_1 \cdot R_2\]
@@ -167,8 +153,10 @@ impl BitOr for VGA3DRotor {
         VGA3DMultivector::new(scalar, vector, bivector, trivector)
     }
 }
+forward_ref_binop!(impl BitOr, bitor for VGA3DRotor, VGA3DRotor);
 
 impl VGA3DOps for VGA3DRotor {
+    // \[ |R|^2=\left< R^\dag A \right>_0 \]
     fn norm(self) -> f32 {
         sqrtf(
             (self.scalar() * self.scalar())

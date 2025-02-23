@@ -38,16 +38,6 @@ mod new {
     }
 }
 
-// Addition
-impl Add for VGA3DTrivector {
-    type Output = VGA3DTrivector;
-
-    fn add(self: VGA3DTrivector, b: VGA3DTrivector) -> VGA3DTrivector {
-        let e123 = self.e123 + b.e123;
-        VGA3DTrivector::new(e123)
-    }
-}
-
 // Subtraction
 impl Sub for VGA3DTrivector {
     type Output = VGA3DTrivector;

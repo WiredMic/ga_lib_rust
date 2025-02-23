@@ -111,19 +111,6 @@ impl VGA3DMultivector {
     }
 }
 
-// Addition
-impl Add for VGA3DMultivector {
-    type Output = VGA3DMultivector;
-
-    fn add(self: VGA3DMultivector, b: VGA3DMultivector) -> VGA3DMultivector {
-        let scalar = self.scalar + b.scalar;
-        let vector = self.vector + b.vector;
-        let bivector = self.bivector + b.bivector;
-        let trivector = self.trivector + b.trivector;
-        VGA3DMultivector::new(scalar, vector, bivector, trivector)
-    }
-}
-
 // Subtraction
 impl Sub for VGA3DMultivector {
     type Output = VGA3DMultivector;

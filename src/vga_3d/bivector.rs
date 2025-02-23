@@ -57,18 +57,6 @@ mod new {
     }
 }
 
-// Addition
-impl Add for VGA3DBivector {
-    type Output = VGA3DBivector;
-
-    fn add(self: VGA3DBivector, b: VGA3DBivector) -> VGA3DBivector {
-        let e12 = self.e12 + b.e12;
-        let e31 = self.e31 + b.e31;
-        let e23 = self.e23 + b.e23;
-        VGA3DBivector::new(e12, e31, e23)
-    }
-}
-
 // Subtraction
 impl Sub for VGA3DBivector {
     type Output = VGA3DBivector;
