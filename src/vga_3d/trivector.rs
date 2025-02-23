@@ -38,16 +38,6 @@ mod new {
     }
 }
 
-// Subtraction
-impl Sub for VGA3DTrivector {
-    type Output = VGA3DTrivector;
-
-    fn sub(self: VGA3DTrivector, b: VGA3DTrivector) -> VGA3DTrivector {
-        let e123 = self.e123 - b.e123;
-        VGA3DTrivector::new(e123)
-    }
-}
-
 impl Neg for VGA3DTrivector {
     type Output = VGA3DTrivector;
     fn neg(self) -> VGA3DTrivector {

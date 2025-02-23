@@ -57,19 +57,6 @@ mod vector_new {
     }
 }
 
-// Subtraction
-impl Sub for VGA3DVector {
-    type Output = VGA3DVector;
-
-    fn sub(self: VGA3DVector, b: VGA3DVector) -> VGA3DVector {
-        let mut res = VGA3DVector::zero();
-        res.e1 = self.e1 - b.e1;
-        res.e2 = self.e2 - b.e2;
-        res.e3 = self.e3 - b.e3;
-        res
-    }
-}
-
 // Negation
 impl Neg for VGA3DVector {
     type Output = VGA3DVector;

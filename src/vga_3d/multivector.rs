@@ -111,19 +111,6 @@ impl VGA3DMultivector {
     }
 }
 
-// Subtraction
-impl Sub for VGA3DMultivector {
-    type Output = VGA3DMultivector;
-
-    fn sub(self: VGA3DMultivector, b: VGA3DMultivector) -> VGA3DMultivector {
-        let scalar = self.scalar - b.scalar;
-        let vector = self.vector - b.vector;
-        let bivector = self.bivector - b.bivector;
-        let trivector = self.trivector - b.trivector;
-        VGA3DMultivector::new(scalar, vector, bivector, trivector)
-    }
-}
-
 impl Neg for VGA3DMultivector {
     type Output = VGA3DMultivector;
     fn neg(self) -> VGA3DMultivector {

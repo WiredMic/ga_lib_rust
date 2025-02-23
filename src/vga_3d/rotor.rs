@@ -65,23 +65,6 @@ impl VGA3DRotor {
     }
 }
 
-// Subtration
-impl Sub for VGA3DRotor {
-    type Output = VGA3DMultivector;
-
-    fn sub(self: VGA3DRotor, b: VGA3DRotor) -> VGA3DMultivector {
-        let scalar = self.scalar - b.scalar;
-        let bivector = self.bivector - b.bivector;
-        VGA3DMultivector::new(
-            scalar,
-            VGA3DVector::zero(),
-            bivector,
-            VGA3DTrivector::zero(),
-        )
-    }
-}
-forward_ref_binop!(impl Sub, sub for VGA3DRotor, VGA3DRotor);
-
 // Geometric Product
 // \[ R_1 R_2 \]
 impl Mul for VGA3DRotor {
