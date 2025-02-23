@@ -9,6 +9,7 @@ use super::{
     multivector::VGA3DMultivector,
     trivector::{self, VGA3DTrivector},
     vector::VGA3DVector,
+    VGA3DOps, VGA3DOpsRef,
 };
 
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
@@ -29,6 +30,10 @@ impl VGA3DBivector {
 
     pub fn new(e12: f32, e31: f32, e23: f32) -> Self {
         Self { e12, e31, e23 }
+    }
+
+    pub fn bivector(self) -> Self {
+        self
     }
 
     pub fn e12(&self) -> f32 {
@@ -62,67 +67,6 @@ impl Neg for VGA3DBivector {
     type Output = VGA3DBivector;
     fn neg(self) -> VGA3DBivector {
         VGA3DBivector::new(-self.e12, -self.e31, -self.e23)
-    }
-}
-
-// Inner Product / Dot Product
-// \[ \overset\Rightarrow{a} \cdot \overset\Rightarrow{b} = \left <\overset\Rightarrow{a} \overset\Rightarrow{b} \right>_0 \]
-impl VGA3DBivector {
-    pub fn inner(self, b: VGA3DBivector) -> f32 {
-        -self.e12 * b.e12 - self.e31 * b.e31 - self.e23 * b.e23
-    }
-}
-impl BitOr for VGA3DBivector {
-    type Output = f32;
-
-    fn bitor(self: VGA3DBivector, b: VGA3DBivector) -> f32 {
-        self.inner(b)
-    }
-}
-
-#[cfg(test)]
-mod bivector_dot {
-    use super::*;
-    use approx::assert_relative_eq;
-    #[test]
-    fn bivector_bivector_dot() {
-        // 3e12+5e31+4e23
-        let bivector1 = VGA3DBivector::new(3.0, 5.0, 4.0);
-        // 2e12+e31+6e23
-        let bivector2 = VGA3DBivector::new(2.0, 1.0, 6.0);
-        let scalar = bivector1 | bivector2;
-        assert_relative_eq!(scalar, -35.0, max_relative = 0.000001);
-    }
-}
-
-// Exterior Product / Wedge Product
-// \[ \overset\Rightarrow{a} \wedge \overset\Rightarrow{b} = \left <\overset\Rightarrow{a} \overset\Rightarrow{b} \right>_4 \]
-// There is no object of grade 4 in 3D VGA
-impl VGA3DBivector {
-    pub fn exterior(self, _b: VGA3DBivector) -> f32 {
-        0.0
-    }
-}
-impl BitXor for VGA3DBivector {
-    type Output = f32;
-
-    fn bitxor(self: VGA3DBivector, b: VGA3DBivector) -> f32 {
-        self.exterior(b)
-    }
-}
-
-#[cfg(test)]
-mod bivector_wedge {
-    use super::*;
-    use approx::assert_relative_eq;
-    #[test]
-    fn bivector_bivector_wedge() {
-        // 3e1+5e2+4e3
-        let bivector1 = VGA3DBivector::new(3.0, 5.0, 4.0);
-        // 2e12+e31+6e23
-        let bivector2 = VGA3DBivector::new(2.0, 1.0, 6.0);
-        // 31e123​
-        assert_relative_eq!(bivector1 ^ bivector2, 0.0, max_relative = 0.000001);
     }
 }
 
@@ -168,30 +112,6 @@ mod bivector_cross {
     }
 }
 
-// Others
-impl VGA3DBivector {
-    // Reverse
-    // It follows the patten (Each is a grade)
-    // \[+ + - - + + - - \dots (-1)^{k(k-1)/2}\]
-    pub fn reverse(self) -> VGA3DBivector {
-        -self
-    }
-    // Clifford Conjugation
-    // It follows the patten (Each is a grade)
-    // \[+--+--+\dots(-1)^{k(k+1)/2}\]
-
-    pub fn conjugate(self) -> VGA3DBivector {
-        -self
-    }
-    // Grade Involution
-    // The follows this patten (Each is a grade)
-    // \[+ - + - + -\dots (-1)^{k}\]
-
-    pub fn involution(self) -> VGA3DBivector {
-        self
-    }
-}
-
 // Dual
 // In VGA 3D, the dual is the pseudoscalar
 // \[ \overset\Rightarrow{b} \overset\Rrightarrow{i} = -\vec{v} \]
@@ -231,5 +151,73 @@ impl VGA3DBivector {
 impl VGA3DBivector {
     pub fn norm(self) -> f32 {
         sqrtf((self.reverse() * self).scalar())
+    }
+}
+
+impl VGA3DOps for VGA3DBivector {
+    fn norm(self) -> f32 {
+        sqrtf((self.e12() * self.e12()) + (self.e31() * self.e31()) + (self.e23() * self.e23()))
+        // sqrtf((self.reverse() * self).scalar())
+    }
+
+    // Inverse
+    // \[A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>}\]
+    fn inverse(self) -> Self {
+        self.reverse() * (1.0 / (self * self.reverse()).scalar())
+    }
+
+    // Reverse
+    // It follows the patten (Each is a grade)
+    // \[+ + - - + + - - \dots (-1)^{k(k-1)/2}\]
+    fn reverse(self) -> Self {
+        -self
+    }
+    // Clifford Conjugation
+    // It follows the patten (Each is a grade)
+    // \[+ - - + - - +\dots(-1)^{k(k+1)/2}\]
+
+    fn conjugate(self) -> Self {
+        -self
+    }
+    // Grade Involution
+    // The follows this patten (Each is a grade)
+    // \[+ - + - + -\dots (-1)^{k}\]
+
+    fn involute(self) -> Self {
+        self
+    }
+}
+
+impl VGA3DOpsRef for VGA3DBivector {
+    fn norm(&self) -> f32 {
+        // sqrtf((self.reverse() * self).scalar())
+        sqrtf((self.e12() * self.e12()) + (self.e31() * self.e31()) + (self.e23() * self.e23()))
+    }
+
+    // Inverse
+    // \[A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>}\]
+    fn inverse(&self) -> Self {
+        self.reverse() * (1.0 / (self * self.reverse()).scalar())
+    }
+
+    // Reverse
+    // It follows the patten (Each is a grade)
+    // \[+ + - - + + - - \dots (-1)^{k(k-1)/2}\]
+    fn reverse(&self) -> Self {
+        -(*self)
+    }
+    // Clifford Conjugation
+    // It follows the patten (Each is a grade)
+    // \[+ - - + - - +\dots(-1)^{k(k+1)/2}\]
+
+    fn conjugate(&self) -> Self {
+        -(*self)
+    }
+    // Grade Involution
+    // The follows this patten (Each is a grade)
+    // \[+ - + - + -\dots (-1)^{k}\]
+
+    fn involute(&self) -> Self {
+        *self
     }
 }

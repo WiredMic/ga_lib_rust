@@ -19,10 +19,12 @@ mod rotor;
 // Interactions
 mod addition;
 mod exterior;
-mod functions;
 mod geometric;
 mod inner;
+mod regressive;
 mod subtraction;
+// Functions
+mod functions;
 
 pub trait VGA3DOps {
     fn reverse(self) -> Self;

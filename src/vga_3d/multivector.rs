@@ -5,9 +5,12 @@ use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Index, IndexMut, Mul, Neg, Not,
 
 use libm::sqrtf;
 
-use super::bivector::{self, VGA3DBivector};
-use super::trivector::{self, VGA3DTrivector};
-use super::vector::{self, VGA3DVector};
+use super::{
+    bivector::VGA3DBivector,
+    trivector::{self, VGA3DTrivector},
+    vector::VGA3DVector,
+    VGA3DOps, VGA3DOpsRef,
+};
 
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct VGA3DMultivector {
@@ -60,6 +63,10 @@ impl VGA3DMultivector {
             bivector,
             trivector,
         }
+    }
+
+    pub fn multivector(self) -> Self {
+        self
     }
 
     // Scalar component
@@ -118,90 +125,6 @@ impl Neg for VGA3DMultivector {
     }
 }
 
-// Geometric Product
-impl Mul for VGA3DMultivector {
-    type Output = VGA3DMultivector;
-    fn mul(self: VGA3DMultivector, b: VGA3DMultivector) -> VGA3DMultivector {
-        let scalar_multi = self.scalar * b;
-        let vec_multi = self.vector * b;
-        let bivec_multi = self.bivector * b;
-        let trivec_multi = self.trivector * b;
-
-        scalar_multi + vec_multi + bivec_multi + trivec_multi
-    }
-}
-
-#[cfg(test)]
-mod mvec_mvec_mul {
-    // https://bivector.net/tools.html?p=3&q=0&r=0
-    use super::*;
-    use approx::assert_relative_eq;
-    #[test]
-    fn mvec_mvec_mul() {
-        let mvec1 = VGA3DMultivector::new_components(6.0, 9.0, 7.0, 4.0, 7.0, 4.0, 8.0, 7.0);
-        let mvec2 = VGA3DMultivector::new_components(5.0, 8.0, 7.0, 3.0, 2.0, 8.0, 2.0, 1.0);
-        let mvec_res = mvec1 * mvec2;
-        // 94+126e1​−5e2​−65e3​+23e12​−131e13​+158e23​+236e123
-        assert_relative_eq!(mvec_res.scalar(), 94.0, max_relative = 0.000001);
-        assert_relative_eq!(mvec_res.e1(), 126.0, max_relative = 0.000001);
-        assert_relative_eq!(mvec_res.e2(), -5.0, max_relative = 0.000001);
-        assert_relative_eq!(mvec_res.e3(), -65.0, max_relative = 0.000001);
-        assert_relative_eq!(mvec_res.e12(), 23.0, max_relative = 0.000001);
-        assert_relative_eq!(mvec_res.e31(), 131.0, max_relative = 0.000001);
-        assert_relative_eq!(mvec_res.e23(), 158.0, max_relative = 0.000001);
-        assert_relative_eq!(mvec_res.e123(), 236.0, max_relative = 0.000001);
-    }
-    #[test]
-    fn negetive_mvec_mvec_mul() {
-        // let mvec1 = GaMultivector::new_mvec(-6.0, -8.0, -4.0, -1.0, -6.0, -4.0, -8.0, -5.0);
-        let mvec1 =
-            VGA3DMultivector::new_components(-4.0, -1.0, -3.0, -2.0, -9.0, -6.0, -3.0, -10.0);
-        let mvec2 =
-            VGA3DMultivector::new_components(-4.0, -2.0, -4.0, -9.0, -2.0, -1.0, -7.0, -1.0);
-        let mvec_res = mvec1 * mvec2;
-        // −7−83e1​+9e2​+35e3​+173e12​−9e13​+77e23​+169e123
-        assert_relative_eq!(mvec_res.scalar(), -7.0, max_relative = 0.000001);
-        assert_relative_eq!(mvec_res.e1(), -83.0, max_relative = 0.000001);
-        assert_relative_eq!(mvec_res.e2(), 9.0, max_relative = 0.000001);
-        assert_relative_eq!(mvec_res.e3(), 35.0, max_relative = 0.000001);
-        assert_relative_eq!(mvec_res.e12(), 173.0, max_relative = 0.000001);
-        assert_relative_eq!(mvec_res.e31(), 9.0, max_relative = 0.000001);
-        assert_relative_eq!(mvec_res.e23(), 77.0, max_relative = 0.000001);
-        assert_relative_eq!(mvec_res.e123(), 169.0, max_relative = 0.000001);
-    }
-}
-
-// // Inner Product / Dot Product
-// // In 3D there the geometric product of two trivectors is there inner product
-// // \[ A \cdot B = \left <A B \right>_{|a-b|} \]
-// impl VGA3DMultivector {
-//     pub fn inner(self, b: VGA3DMultivector) -> VGA3DMultivector {
-//         self
-//     }
-// }
-// impl BitOr for VGA3DMultivector {
-//     type Output = VGA3DMultivector;
-
-//     fn bitor(self: VGA3DMultivector, b: VGA3DMultivector) -> VGA3DMultivector {
-//         self.inner(b)
-//     }
-// }
-
-// // Exterior Product / Wedge Product
-// // \[ A \wedge B = \left <A B \right>_{a+b} \]
-// impl VGA3DMultivector {
-//     pub fn exterior(self, _b: VGA3DMultivector) -> VGA3DMultivector {
-//         self
-//     }
-// }
-// impl BitXor for VGA3DMultivector {
-//     type Output = VGA3DMultivector;
-
-//     fn bitxor(self: VGA3DMultivector, b: VGA3DMultivector) -> VGA3DMultivector {
-//         self.exterior(b)
-//     }
-// }
-
 // // Cross Product
 // // It does not make sence to take the cross product of two multvectors
 // // impl VGA3DTrivector {
@@ -210,12 +133,11 @@ mod mvec_mvec_mul {
 // //     }
 // // }
 
-// Others
-impl VGA3DMultivector {
+impl VGA3DOps for VGA3DMultivector {
     // Reverse
     // It follows the patten (Each is a grade)
     // \[+ + - - + + - - \dots (-1)^{k(k-1)/2}\]
-    pub fn reverse(self) -> VGA3DMultivector {
+    fn reverse(self) -> VGA3DMultivector {
         let scalar = self.scalar;
         let vector = self.vector;
         let bivector = -self.bivector;
@@ -226,7 +148,7 @@ impl VGA3DMultivector {
     // It follows the patten (Each is a grade)
     // \[+--+--+\dots(-1)^{k(k+1)/2}\]
 
-    pub fn conjugate(self) -> VGA3DMultivector {
+    fn conjugate(self) -> VGA3DMultivector {
         let scalar = self.scalar;
         let vector = -self.vector;
         let bivector = -self.bivector;
@@ -237,30 +159,82 @@ impl VGA3DMultivector {
     // The follows this patten (Each is a grade)
     // \[+ - + - + -\dots (-1)^{k}\]
 
-    pub fn involution(self) -> VGA3DMultivector {
+    fn involute(self) -> VGA3DMultivector {
         let scalar = self.scalar;
         let vector = -self.vector;
         let bivector = self.bivector;
         let trivector = -self.trivector;
         VGA3DMultivector::new(scalar, vector, bivector, trivector)
     }
+
+    // Inverse
+    // \[A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>}\]
+    fn inverse(self) -> VGA3DMultivector {
+        self.reverse() * (1.0 / (self * self.reverse()).scalar)
+    }
+
+    fn norm(self) -> f32 {
+        sqrtf((self.reverse() * self).scalar())
+    }
 }
 
-// // Dual
-// // In VGA 3D, the dual is the pseudoscalar
-// // \[ \overset\Rightarrow{b} \overset\Rrightarrow{i} = -\vec{v} \]
-// // vector and bivectors in 3D VGA follows this pattern. Going up, going down
-// // \[ \mathrm{e}_1,\,\mathrm{e}_2,\,\mathrm{e}_3,\,\mathrm{e}_3\star,\,\mathrm{e}_2\star,\,\mathrm{e}_1\star,\, \]
-// impl VGA3DTrivector {
-//     pub fn dual(self) -> f32 {
-//         -self.e123
-//     }
-// }
-// Inverse
-// \[A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>}\]
-impl VGA3DMultivector {
-    pub fn inverse(self) -> VGA3DMultivector {
+impl VGA3DOpsRef for VGA3DMultivector {
+    // Reverse
+    // It follows the patten (Each is a grade)
+    // \[+ + - - + + - - \dots (-1)^{k(k-1)/2}\]
+    fn reverse(&self) -> VGA3DMultivector {
+        let scalar = self.scalar;
+        let vector = self.vector;
+        let bivector = -self.bivector;
+        let trivector = -self.trivector;
+        VGA3DMultivector::new(scalar, vector, bivector, trivector)
+    }
+    // Clifford Conjugation
+    // It follows the patten (Each is a grade)
+    // \[+--+--+\dots(-1)^{k(k+1)/2}\]
+
+    fn conjugate(&self) -> VGA3DMultivector {
+        let scalar = self.scalar;
+        let vector = -self.vector;
+        let bivector = -self.bivector;
+        let trivector = self.trivector;
+        VGA3DMultivector::new(scalar, vector, bivector, trivector)
+    }
+    // Grade Involution
+    // The follows this patten (Each is a grade)
+    // \[+ - + - + -\dots (-1)^{k}\]
+
+    fn involute(&self) -> VGA3DMultivector {
+        let scalar = self.scalar;
+        let vector = -self.vector;
+        let bivector = self.bivector;
+        let trivector = -self.trivector;
+        VGA3DMultivector::new(scalar, vector, bivector, trivector)
+    }
+
+    // Inverse
+    // \[A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>}\]
+    fn inverse(&self) -> VGA3DMultivector {
         self.reverse() * (1.0 / (self * self.reverse()).scalar)
+    }
+
+    // the norm of a multivector |A|
+    // \[|A|^2=\left< A\^dag A \right>_0\]
+    fn norm(&self) -> f32 {
+        sqrtf((self.reverse() * self).scalar())
+    }
+}
+
+// Dual
+// In VGA 3D, the dual is the pseudoscalar
+// \[ \text{scalar},\mathrm{e}_1,\,\mathrm{e}_2,\,\mathrm{e}_3,\,\mathrm{e}_3\star,\,\mathrm{e}_2\star,\,\mathrm{e}_1\star,\, \text{scalar} \star \]
+impl VGA3DMultivector {
+    pub fn dual(self) -> VGA3DMultivector {
+        let scalar = self.trivector().dual();
+        let vector = self.bivector().dual();
+        let bivector = self.vector().dual();
+        let trivector = VGA3DTrivector::new(self.scalar());
+        VGA3DMultivector::new(scalar, vector, bivector, trivector)
     }
 }
 
@@ -272,11 +246,3 @@ impl VGA3DMultivector {
 //         self
 //     }
 // }
-
-// the norm of a multivector |A|
-// \[|A|^2=\left< A\^dag A \right>_0\]
-impl VGA3DMultivector {
-    pub fn norm(self) -> f32 {
-        sqrtf((self.reverse() * self).scalar())
-    }
-}

@@ -29,7 +29,7 @@ impl VGA3DRotor {
         let scalar = cosf(angle / 2.0);
         let sin = sinf(angle / 2.0);
         let norm = rotation_plane.norm();
-        let bi_pre = sin * norm;
+        let bi_pre = sin / norm;
 
         let bivector = bi_pre * rotation_plane;
         Self { scalar, bivector }
@@ -62,6 +62,25 @@ impl VGA3DRotor {
     pub fn rotatino_plane(&self) -> VGA3DBivector {
         let sin = sinf(self.angle());
         self.bivector * (1.0 / sin)
+    }
+}
+
+#[cfg(test)]
+mod rotor {
+    use super::*;
+    use approx::assert_relative_eq;
+    use core::f32::consts::TAU;
+
+    #[test]
+    fn new() {
+        let angle = TAU / 4.0;
+        let rotation_plane = VGA3DBivector::new(4.0, 2.0, -3.0);
+        let rotor = VGA3DRotor::new(angle, rotation_plane);
+        // 0.70710677+0.52522576e12+0.26261288e31-0.3939193e23
+        assert_relative_eq!(rotor.scalar(), 0.70710677, max_relative = 0.000001);
+        assert_relative_eq!(rotor.e12(), 0.52522576, max_relative = 0.000001);
+        assert_relative_eq!(rotor.e31(), 0.26261288, max_relative = 0.000001);
+        assert_relative_eq!(rotor.e23(), -0.3939193, max_relative = 0.000001);
     }
 }
 
@@ -109,34 +128,6 @@ mod rotor_geo {
         assert_relative_eq!(res_rotor.e23(), 0.5, max_relative = 0.000001);
     }
 }
-
-// Exterior Product
-// \[ R_1 \wedge R_2\]
-impl BitXor for VGA3DRotor {
-    type Output = VGA3DMultivector;
-    fn bitxor(self: VGA3DRotor, b: VGA3DRotor) -> VGA3DMultivector {
-        let scalar = (self.scalar() * b.scalar()) + (self.bivector() ^ b.bivector());
-        let vector = VGA3DVector::zero();
-        let bivector = (self.scalar() ^ b.bivector()) + (self.bivector() ^ b.scalar());
-        let trivector = VGA3DTrivector::zero();
-        VGA3DMultivector::new(scalar, vector, bivector, trivector)
-    }
-}
-forward_ref_binop!(impl BitXor, bitxor for VGA3DRotor, VGA3DRotor);
-
-// Inner Product
-// \[ R_1 \cdot R_2\]
-impl BitOr for VGA3DRotor {
-    type Output = VGA3DMultivector;
-    fn bitor(self: VGA3DRotor, b: VGA3DRotor) -> VGA3DMultivector {
-        let scalar = (self.scalar() * b.scalar()) + (self.bivector() | b.bivector());
-        let vector = VGA3DVector::zero();
-        let bivector = (self.scalar() | b.bivector()) + (self.bivector() | b.scalar());
-        let trivector = VGA3DTrivector::zero();
-        VGA3DMultivector::new(scalar, vector, bivector, trivector)
-    }
-}
-forward_ref_binop!(impl BitOr, bitor for VGA3DRotor, VGA3DRotor);
 
 impl VGA3DOps for VGA3DRotor {
     // \[ |R|^2=\left< R^\dag A \right>_0 \]

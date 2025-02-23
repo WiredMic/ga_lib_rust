@@ -149,6 +149,7 @@ impl Mul for VGA3DVector {
         VGA3DMultivector::new(scalar, vector, bivector, trivector)
     }
 }
+forward_ref_binop!(impl Mul, mul for VGA3DVector, VGA3DVector);
 
 // Vector-Bivector
 // \[ \vec{a}\overset\Rightarrow{b}\]
@@ -281,15 +282,15 @@ forward_ref_binop!(impl Mul, mul for VGA3DVector, VGA3DRotor);
 // \[ \overset\Rightarrow{a} \overset\Rightarrow{b} = \overset\Rightarrow{a} \cdot \overset\Rightarrow{b} +  \overset\Rightarrow{a} \times \overset\Rightarrow{b} + \overset\Rightarrow{a} \wedge \overset\Rightarrow{b} \]
 impl Mul for VGA3DBivector {
     type Output = VGA3DMultivector;
-
     fn mul(self: VGA3DBivector, b: VGA3DBivector) -> VGA3DMultivector {
-        let scalar = self | b;
+        let scalar = (self | b) + (self ^ b);
         let vector = VGA3DVector::zero();
         let bivector = self.cross(b);
         let trivector = VGA3DTrivector::zero();
         VGA3DMultivector::new(scalar, vector, bivector, trivector)
     }
 }
+forward_ref_binop!(impl Mul, mul for VGA3DBivector, VGA3DBivector);
 
 // Bivector-Trivector
 // \[ \overset\Rightarrow{a}\overset\Rrightarrow{b}\]
@@ -360,11 +361,7 @@ forward_ref_binop!(impl Mul, mul for VGA3DMultivector, VGA3DBivector);
 impl Mul<VGA3DRotor> for VGA3DBivector {
     type Output = VGA3DMultivector;
     fn mul(self: VGA3DBivector, b: VGA3DRotor) -> VGA3DMultivector {
-        let scalar = 0.0;
-        let vector = VGA3DVector::zero();
-        let bivector = self * b.scalar();
-        let trivector = VGA3DTrivector::zero();
-        VGA3DMultivector::new(scalar, vector, bivector, trivector) + self * b.bivector()
+        self * b.scalar() + self * b.bivector()
     }
 }
 forward_ref_binop!(impl Mul, mul for VGA3DBivector, VGA3DRotor);
@@ -374,14 +371,20 @@ forward_ref_binop!(impl Mul, mul for VGA3DBivector, VGA3DRotor);
 impl Mul<VGA3DBivector> for VGA3DRotor {
     type Output = VGA3DMultivector;
     fn mul(self: VGA3DRotor, b: VGA3DBivector) -> VGA3DMultivector {
-        let scalar = 0.0;
-        let vector = VGA3DVector::zero();
-        let bivector = b * self.scalar();
-        let trivector = VGA3DTrivector::zero();
-        VGA3DMultivector::new(scalar, vector, bivector, trivector) + self.bivector() * b
+        self.scalar() * b + self.bivector() * b
     }
 }
 forward_ref_binop!(impl Mul, mul for VGA3DRotor, VGA3DBivector);
+
+// Trivector-Trivector
+// \[ \overset\Rrightarrow{a}\overset\Rrightarrow{b}= \overset\Rrightarrow{a} \cdot \overset\Rrightarrow{b}\]
+impl Mul for VGA3DTrivector {
+    type Output = f32;
+    fn mul(self: VGA3DTrivector, b: VGA3DTrivector) -> f32 {
+        -self.e123() * b.e123()
+    }
+}
+forward_ref_binop!(impl Mul, mul for VGA3DTrivector, VGA3DTrivector);
 
 // Trivector-Multivector
 impl Mul<VGA3DMultivector> for VGA3DTrivector {
@@ -449,6 +452,15 @@ impl Mul<VGA3DTrivector> for VGA3DRotor {
 }
 forward_ref_binop!(impl Mul, mul for VGA3DRotor, VGA3DTrivector);
 
+// Multivector-Multivector
+impl Mul for VGA3DMultivector {
+    type Output = VGA3DMultivector;
+    fn mul(self: VGA3DMultivector, b: VGA3DMultivector) -> VGA3DMultivector {
+        (self.scalar() * b) + (self.vector() * b) + (self.bivector() * b) + (self.trivector() * b)
+    }
+}
+forward_ref_binop!(impl Mul, mul for VGA3DMultivector, VGA3DMultivector);
+
 // Multivector-Rotor
 // \[ \vec{a}R\]
 impl Mul<VGA3DRotor> for VGA3DMultivector {
@@ -472,8 +484,38 @@ forward_ref_binop!(impl Mul, mul for VGA3DRotor, VGA3DMultivector);
 // Test
 #[cfg(test)]
 mod geometric_product {
+    use core::f32::consts::TAU;
+
     use super::*;
     use approx::assert_relative_eq;
+    #[test]
+    fn vector_bivector_geo() {
+        // 3e1+5e2+4e3
+        let vector = VGA3DVector::new(3.0, 5.0, 4.0);
+        // 2e12+e31+6e23
+        let bivector = VGA3DBivector::new(2.0, 1.0, 6.0);
+        let mvec = vector * bivector;
+        // −6e1​−18e2​+27e3​+31e123​
+        assert_relative_eq!(mvec.e1(), -6.0, max_relative = 0.000001);
+        assert_relative_eq!(mvec.e2(), -18.0, max_relative = 0.000001);
+        assert_relative_eq!(mvec.e3(), 27.0, max_relative = 0.000001);
+        assert_relative_eq!(mvec.e123(), 31.0, max_relative = 0.000001);
+    }
+
+    #[test]
+    fn bivector_vector_geo() {
+        // 2e12+e31+6e23
+        let bivector = VGA3DBivector::new(2.0, 1.0, 6.0);
+        // 3e1+5e2+4e3
+        let vector = VGA3DVector::new(3.0, 5.0, 4.0);
+        let mvec = bivector * vector;
+        // 6e1​+18e2​−27e3​+31e123​
+        assert_relative_eq!(mvec.e1(), 6.0, max_relative = 0.000001);
+        assert_relative_eq!(mvec.e2(), 18.0, max_relative = 0.000001);
+        assert_relative_eq!(mvec.e3(), -27.0, max_relative = 0.000001);
+        assert_relative_eq!(mvec.e123(), 31.0, max_relative = 0.000001);
+    }
+
     #[test]
     fn bivector_bivector_mul() {
         // 3e12+5e31+4e23
@@ -486,5 +528,79 @@ mod geometric_product {
         assert_relative_eq!(mvec.e12(), 26.0, max_relative = 0.000001);
         assert_relative_eq!(mvec.e31(), -10.0, max_relative = 0.000001);
         assert_relative_eq!(mvec.e23(), -7.0, max_relative = 0.000001);
+    }
+
+    #[test]
+    fn rotor_bivector_geo() {
+        let angle = TAU / 4.0;
+        let rotation_plane = VGA3DBivector::new(4.0, 2.0, -3.0);
+        let rotor = VGA3DRotor::new(angle, rotation_plane);
+        // 2e12+e31+6e23
+        let bivector = VGA3DBivector::new(2.0, 1.0, 6.0);
+        // 0.7071+0.5252e12+0.2626e31-0.3939e23
+        let res = rotor * bivector;
+        // 1.0504512787+3.3838100433e12​-3.2320864201e31​+4.2426404953e23
+        assert_relative_eq!(res.scalar(), 1.0504512787, max_relative = 0.000001);
+        assert_relative_eq!(res.e12(), 3.3838100433, max_relative = 0.000001);
+        assert_relative_eq!(res.e31(), -3.2320864201, max_relative = 0.000001);
+        assert_relative_eq!(res.e23(), 4.2426404953, max_relative = 0.000001);
+    }
+
+    #[test]
+    fn bivector_rotor_geo() {
+        // 2e12+e31+6e23
+        let bivector = VGA3DBivector::new(2.0, 1.0, 6.0);
+        // 0.7071+0.5252e12+0.2626e31-0.3939e23
+        let angle = TAU / 4.0;
+        let rotation_plane = VGA3DBivector::new(4.0, 2.0, -3.0);
+        let rotor = VGA3DRotor::new(angle, rotation_plane);
+        let mvec = bivector * rotor;
+        // 1.0504512787−0.5553830266e12​+4.646299839e31​+4.2426404953e23
+        assert_relative_eq!(mvec.scalar(), 1.0504, max_relative = 0.001);
+        assert_relative_eq!(mvec.e12(), -0.5553, max_relative = 0.001);
+        assert_relative_eq!(mvec.e31(), 4.6461, max_relative = 0.001);
+        assert_relative_eq!(mvec.e23(), 4.2425, max_relative = 0.001);
+    }
+
+    #[test]
+    fn trivec_trivec_geo() {
+        let trivector1 = VGA3DTrivector::new(3.0);
+        let trivector2 = VGA3DTrivector::new(6.0);
+        let res = trivector1 * trivector2;
+        assert_relative_eq!(res, -18.0, max_relative = 0.000001);
+    }
+
+    #[test]
+    fn mvec_mvec_mul() {
+        let mvec1 = VGA3DMultivector::new_components(6.0, 9.0, 7.0, 4.0, 7.0, 4.0, 8.0, 7.0);
+        let mvec2 = VGA3DMultivector::new_components(5.0, 8.0, 7.0, 3.0, 2.0, 8.0, 2.0, 1.0);
+        let mvec_res = mvec1 * mvec2;
+        // 94+126e1​−5e2​−65e3​+23e12​−131e13​+158e23​+236e123
+        assert_relative_eq!(mvec_res.scalar(), 94.0, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e1(), 126.0, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e2(), -5.0, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e3(), -65.0, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e12(), 23.0, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e31(), 131.0, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e23(), 158.0, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e123(), 236.0, max_relative = 0.000001);
+    }
+    #[test]
+    fn negetive_mvec_mvec_mul() {
+        // let mvec1 = GaMultivector::new_mvec(-6.0, -8.0, -4.0, -1.0, -6.0, -4.0, -8.0, -5.0);
+        let mvec1 =
+            VGA3DMultivector::new_components(-4.0, -1.0, -3.0, -2.0, -9.0, -6.0, -3.0, -10.0);
+        let mvec2 =
+            VGA3DMultivector::new_components(-4.0, -2.0, -4.0, -9.0, -2.0, -1.0, -7.0, -1.0);
+        let mvec_res = mvec1 * mvec2;
+        // −7−83e1​+9e2​+35e3​+173e12​−9e13​+77e23​+169e123
+        assert_relative_eq!(mvec_res.scalar(), -7.0, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e1(), -83.0, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e2(), 9.0, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e3(), 35.0, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e12(), 173.0, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e31(), 9.0, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e23(), 77.0, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e123(), 169.0, max_relative = 0.000001);
     }
 }

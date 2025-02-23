@@ -8,6 +8,7 @@ use libm::sqrtf;
 //
 use super::{
     bivector::VGA3DBivector, multivector::VGA3DMultivector, trivector::VGA3DTrivector, VGA3DOps,
+    VGA3DOpsRef,
 };
 
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
@@ -28,6 +29,10 @@ impl VGA3DVector {
 
     pub fn new(e1: f32, e2: f32, e3: f32) -> Self {
         Self { e1, e2, e3 }
+    }
+
+    pub fn vector(self) -> Self {
+        self
     }
 
     // Vector components
@@ -62,72 +67,6 @@ impl Neg for VGA3DVector {
     type Output = VGA3DVector;
     fn neg(self) -> VGA3DVector {
         VGA3DVector::new(-self.e1, -self.e2, -self.e3)
-    }
-}
-
-// Geometric Product
-
-// Inner Product / Dot Product
-// \[ \vec{u} \cdot \vec{v} = u_1 \cdot v_1 + u_2 \cdot v_2 + u_3 \cdot v_3 \]
-impl VGA3DVector {
-    // TODO This only works with vector. fix?
-    pub fn inner(self, b: VGA3DVector) -> f32 {
-        self.e1 * b.e1 + self.e2 * b.e2 + self.e3 * b.e3
-    }
-}
-impl BitOr for VGA3DVector {
-    type Output = f32;
-
-    fn bitor(self: VGA3DVector, b: VGA3DVector) -> f32 {
-        self.inner(b)
-    }
-}
-#[cfg(test)]
-mod vector_dot {
-    use super::*;
-    use approx::assert_relative_eq;
-    #[test]
-    fn vector_vector_dot() {
-        // 3e1+5e2+4e3
-        let vector1 = VGA3DVector::new(3.0, 5.0, 4.0);
-        // 2e1+1e2+6e3
-        let vector2 = VGA3DVector::new(2.0, 1.0, 6.0);
-        let scalar = vector1 | vector2;
-        assert_relative_eq!(scalar, 35.0, max_relative = 0.000001);
-    }
-}
-
-// Exterior Product / Wedge Product
-impl VGA3DVector {
-    pub fn exterior(self, b: VGA3DVector) -> VGA3DBivector {
-        let e12 = self.e1 * b.e2 - self.e2 * b.e1;
-        let e31 = self.e3 * b.e1 - self.e1 * b.e3;
-        let e23 = self.e2 * b.e3 - self.e3 * b.e2;
-        VGA3DBivector::new(e12, e31, e23)
-    }
-}
-impl BitXor for VGA3DVector {
-    type Output = VGA3DBivector;
-
-    fn bitxor(self: VGA3DVector, b: VGA3DVector) -> VGA3DBivector {
-        self.exterior(b)
-    }
-}
-#[cfg(test)]
-mod vector_exterior {
-    use super::*;
-    use approx::assert_relative_eq;
-    #[test]
-    fn vector_vector_wedge() {
-        // 3e1+5e2+4e3
-        let vector1 = VGA3DVector::new(3.0, 5.0, 4.0);
-        // 2e1+1e2+6e3
-        let vector2 = VGA3DVector::new(2.0, 1.0, 6.0);
-        let bivector = vector1 ^ vector2;
-        // −7e12​-10e31​+26e23
-        assert_relative_eq!(bivector.e12(), -7.0, max_relative = 0.000001);
-        assert_relative_eq!(bivector.e31(), -10.0, max_relative = 0.000001);
-        assert_relative_eq!(bivector.e23(), 26.0, max_relative = 0.000001);
     }
 }
 
@@ -197,7 +136,7 @@ impl VGA3DVector {
 
 impl VGA3DOps for VGA3DVector {
     fn norm(self) -> f32 {
-        sqrtf((self.reverse() * self).scalar())
+        sqrtf((self.e1() * self.e1()) + (self.e2() * self.e2()) + (self.e3() * self.e3()))
     }
 
     // Inverse
@@ -225,5 +164,39 @@ impl VGA3DOps for VGA3DVector {
 
     fn involute(self) -> Self {
         -self
+    }
+}
+
+impl VGA3DOpsRef for VGA3DVector {
+    fn norm(&self) -> f32 {
+        // sqrtf((self.reverse() * self).scalar())
+        sqrtf((self.e1() * self.e1()) + (self.e2() * self.e2()) + (self.e3() * self.e3()))
+    }
+
+    // Inverse
+    // \[A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>}\]
+    fn inverse(&self) -> VGA3DVector {
+        self.reverse() * (1.0 / (self * self.reverse()).scalar())
+    }
+
+    // Reverse
+    // It follows the patten (Each is a grade)
+    // \[+ + - - + + - - \dots (-1)^{k(k-1)/2}\]
+    fn reverse(&self) -> VGA3DVector {
+        *self
+    }
+    // Clifford Conjugation
+    // It follows the patten (Each is a grade)
+    // \[+--+--+\dots(-1)^{k(k+1)/2}\]
+
+    fn conjugate(&self) -> VGA3DVector {
+        -(*self)
+    }
+    // Grade Involution
+    // The follows this patten (Each is a grade)
+    // \[+ - + - + -\dots (-1)^{k}\]
+
+    fn involute(&self) -> Self {
+        -(*self)
     }
 }
