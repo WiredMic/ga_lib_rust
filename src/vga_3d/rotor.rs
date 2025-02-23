@@ -43,6 +43,18 @@ impl VGA3DRotor {
         self.bivector
     }
 
+    pub fn e12(&self) -> f32 {
+        self.bivector.e12()
+    }
+
+    pub fn e31(&self) -> f32 {
+        self.bivector.e31()
+    }
+
+    pub fn e23(&self) -> f32 {
+        self.bivector.e23()
+    }
+
     pub fn angle(&self) -> f32 {
         acosf(self.scalar())
     }
@@ -94,23 +106,41 @@ impl Mul for VGA3DRotor {
         let a = self.bivector * b.bivector;
         let scalar = self.scalar * b.scalar + a.scalar();
         let bivector = self.scalar * b.bivector + self.bivector * b.scalar + a.bivector();
-        VGA3DRotor::new(scalar, bivector)
+
+        // Normelize
+        let norm = sqrtf(scalar * scalar + (bivector * bivector.reverse()).scalar());
+        VGA3DRotor {
+            scalar: scalar * norm,
+            bivector: bivector * norm,
+        }
     }
 }
 forward_ref_binop!(impl Mul, mul for VGA3DRotor, VGA3DRotor);
 
-// #[cfg(test)]
-// mod rotor_geo {
-//     use super::*;
-//     use approx::assert_relative_eq;
-//     #[test]
-//     fn rotor_rotor_geo() {
-//         let rotor1 = VGA3DRotor::new(3.0, 5.0, 4.0);
-//         let rotor2 = VGA3DRotor::new(2.0, 1.0, 6.0);
-//         let scalar = vector1 | vector2;
-//         assert_relative_eq!(scalar, 35.0, max_relative = 0.000001);
-//     }
-// }
+#[cfg(test)]
+mod rotor_geo {
+    use core::f32::consts::TAU;
+
+    use crate::vga_3d::bivector;
+
+    use super::*;
+    use approx::assert_relative_eq;
+    #[test]
+    fn rotor_rotor_geo() {
+        let angle1 = TAU / 4.0;
+        let rotation_plane1 = VGA3DBivector::new(1.0, 0.0, 0.0);
+        let rotor1 = VGA3DRotor::new(angle1, rotation_plane1);
+        let angle2 = TAU / 4.0;
+        let rotation_plane2 = VGA3DBivector::new(0.0, 1.0, 0.0);
+        let rotor2 = VGA3DRotor::new(angle2, rotation_plane2);
+
+        let res_rotor = rotor1 * rotor2;
+        assert_relative_eq!(res_rotor.scalar(), 0.5, max_relative = 0.000001);
+        assert_relative_eq!(res_rotor.e12(), 0.5, max_relative = 0.000001);
+        assert_relative_eq!(res_rotor.e31(), 0.5, max_relative = 0.000001);
+        assert_relative_eq!(res_rotor.e23(), 0.5, max_relative = 0.000001);
+    }
+}
 
 // Exterior Product
 // \[ R_1 \wedge R_2\]
@@ -140,7 +170,10 @@ impl BitOr for VGA3DRotor {
 
 impl VGA3DOps for VGA3DRotor {
     fn norm(self) -> f32 {
-        sqrtf((self.reverse() * self).scalar())
+        sqrtf(
+            (self.scalar() * self.scalar())
+                + (self.bivector() * self.bivector().reverse()).scalar(),
+        )
     }
 
     // Inverse
@@ -183,7 +216,10 @@ impl VGA3DOps for VGA3DRotor {
 
 impl VGA3DOpsRef for VGA3DRotor {
     fn norm(&self) -> f32 {
-        sqrtf((self.reverse() * self).scalar())
+        sqrtf(
+            (self.scalar() * self.scalar())
+                + (self.bivector() * self.bivector().reverse()).scalar(),
+        )
     }
 
     // Inverse
@@ -224,5 +260,48 @@ impl VGA3DOpsRef for VGA3DRotor {
             scalar: self.scalar,
             bivector: self.bivector,
         }
+    }
+}
+
+#[cfg(test)]
+mod rotor_reverse {
+    use super::*;
+    use approx::assert_relative_eq;
+    use core::f32::consts::TAU;
+    // The reverse of the geometric product of to rotors is the geometric product of the reverse rotors flipped
+    // \[ (R_1R_2)^\dag = R_2^\dag R_1^\dag\]
+    #[test]
+    fn rotor_rotor_reverse() {
+        let angle1 = TAU / 4.0;
+        let rotation_plane1 = VGA3DBivector::new(3.0, 2.0, 10.0);
+        let rotor1 = VGA3DRotor::new(angle1, rotation_plane1);
+
+        let angle2 = TAU / 2.0;
+        let rotation_plane2 = VGA3DBivector::new(2.0, -3.0, -1.0);
+        let rotor2 = VGA3DRotor::new(angle2, rotation_plane2);
+
+        let rotor_reverse = (rotor1 * rotor2).reverse();
+        let reverse_rotor = rotor2.reverse() * rotor1.reverse();
+
+        assert_relative_eq!(
+            rotor_reverse.scalar(),
+            reverse_rotor.scalar(),
+            max_relative = 0.000001
+        );
+        assert_relative_eq!(
+            rotor_reverse.e12(),
+            reverse_rotor.e12(),
+            max_relative = 0.000001
+        );
+        assert_relative_eq!(
+            rotor_reverse.e31(),
+            reverse_rotor.e31(),
+            max_relative = 0.000001
+        );
+        assert_relative_eq!(
+            rotor_reverse.e23(),
+            reverse_rotor.e23(),
+            max_relative = 0.000001
+        );
     }
 }
