@@ -9,8 +9,8 @@ use super::{
     vector::VGA3DVector,
 };
 
+use crate::forward_ref_binop;
 use core::ops::{BitAnd, BitOr, Div, Mul};
-use forward_ref::forward_ref_binop;
 
 // Geometric Product
 // Scalar-Vector

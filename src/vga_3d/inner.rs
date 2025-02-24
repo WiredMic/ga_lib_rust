@@ -9,8 +9,9 @@ use super::{
     vector::VGA3DVector,
 };
 
+use crate::forward_ref_binop;
+
 use core::ops::BitOr;
-use forward_ref::forward_ref_binop;
 
 // // Scalar-Scalar
 // // \[ a \cdot b\]

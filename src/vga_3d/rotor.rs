@@ -1,8 +1,8 @@
 #![allow(unused_imports)]
 #![allow(dead_code)]
 
+use crate::forward_ref_binop;
 use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Index, IndexMut, Mul, Neg, Not, Sub};
-use forward_ref::forward_ref_binop;
 
 use libm::{acosf, cosf, sinf, sqrtf};
 

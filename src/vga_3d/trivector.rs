@@ -3,7 +3,7 @@
 
 use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Index, IndexMut, Mul, Neg, Not, Sub};
 
-use libm::sqrtf;
+use libm::{fabsf, sqrtf};
 
 use super::{bivector::VGA3DBivector, vector::VGA3DVector, VGA3DOps, VGA3DOpsRef};
 
@@ -96,7 +96,7 @@ impl VGA3DOps for VGA3DTrivector {
     // There is only one element.
     // The norm is the absolute value of e1e2e3
     fn norm(self) -> f32 {
-        self.e123().abs()
+        fabsf(self.e123())
         // sqrtf((self.reverse() * self).scalar())
     }
 
@@ -131,7 +131,7 @@ impl VGA3DOps for VGA3DTrivector {
 impl VGA3DOpsRef for VGA3DTrivector {
     fn norm(&self) -> f32 {
         // sqrtf((self.reverse() * self).scalar())
-        self.e123().abs()
+        fabsf(self.e123())
     }
 
     // Inverse

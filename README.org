@@ -1,12 +1,21 @@
 #+title: Geometric Algebra Library in Rust
 
-* Geometric Algebra
-
 This is a geometric algebra library written in Rust.
 
 It is made for 3 dimensions.
 
 It will later be used in a Rotor Extended Kalman Filter.
+
+* 3D VGA
+It has implemented a full 3D Vector Geometric Algebra.
+** Features
+- addition, subtraction, inner product, exterior product, geometric product: interaction between all grades
+- Rotations for all grades through Rotors
+- Projection between all grades
+- Rejections between all grades
+- Reflection between all grades
+
+
 
 * TODO
 - I need to make a test for everything

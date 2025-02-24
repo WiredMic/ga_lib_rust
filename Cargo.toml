@@ -9,4 +9,4 @@ license = "GPL-3.0-or-later"
 [dependencies]
 libm = {version = "0.2.11"} # math lib for embedded
 approx = {version = "0.5.1"} # approx test for floats
-forward_ref = {version = "1.0.0"}
+# forward_ref = {version = "1.0.0"}
