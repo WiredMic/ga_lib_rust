@@ -115,38 +115,207 @@ mod rotation {
 
 // Projection
 // \[A_\parallel = (A\cdot B)B^{-1}\]
+pub trait HasVector {
+    fn vector(&self) -> VGA3DVector;
+}
 
-// pub trait Projectable {
-//     type Output;
-//     fn project<T, P>(self, target: T) -> Self::Output
-//     where
-//         T: VGA3DOps + Copy,
-//         Self: core::ops::BitOr<T, Output = P>,
-//         P: core::ops::Mul<T::Output>;
-// }
+impl HasVector for VGA3DVector {
+    fn vector(&self) -> VGA3DVector {
+        *self
+    }
+}
 
-// // Macro for implementing Projectable
-// macro_rules! impl_projectable {
-//     ($type:ty, $extract:ident) => {
-//         impl Projectable for $type {
-//             type Output = $type;
+impl HasVector for VGA3DMultivector {
+    fn vector(&self) -> VGA3DVector {
+        self.vector() // Or however you currently implement vector()
+    }
+}
 
-//             fn project<T, P>(self, target: T) -> Self::Output
-//             where
-//                 T: VGA3DOps + Copy,
-//                 Self: core::ops::BitOr<T, Output = P>,
-//                 P: core::ops::Mul<T::Output>,
-//             {
-//                 ((self | target) * target.inverse()).$extract()
-//             }
-//         }
-//     };
-// }
+pub trait HasBivector {
+    fn bivector(&self) -> VGA3DBivector;
+}
 
-// // Implement for each type that can be projected
-// impl_projectable!(VGA3DVector, vector);
-// impl_projectable!(VGA3DBivector, bivector);
+impl HasBivector for VGA3DBivector {
+    fn bivector(&self) -> VGA3DBivector {
+        *self
+    }
+}
 
+impl HasBivector for VGA3DMultivector {
+    fn bivector(&self) -> VGA3DBivector {
+        self.bivector() // Or however you currently implement vector()
+    }
+}
+
+pub trait HasTrivector {
+    fn trivector(&self) -> VGA3DTrivector;
+}
+
+impl HasTrivector for VGA3DTrivector {
+    fn trivector(&self) -> VGA3DTrivector {
+        *self
+    }
+}
+
+impl HasTrivector for VGA3DMultivector {
+    fn trivector(&self) -> VGA3DTrivector {
+        self.trivector() // Or however you currently implement vector()
+    }
+}
+
+pub trait HasMultivector {
+    fn multivector(&self) -> VGA3DMultivector;
+}
+
+impl HasMultivector for VGA3DMultivector {
+    fn multivector(&self) -> VGA3DMultivector {
+        *self
+    }
+}
+
+pub trait Projectable<T> {
+    type Output;
+
+    fn project(self, target: T) -> Self::Output
+    where
+        T: VGA3DOps + Copy;
+}
+
+// For vectors
+impl<T> Projectable<T> for VGA3DVector
+where
+    T: VGA3DOps + Copy,
+    VGA3DVector: core::ops::BitOr<T>,
+    <VGA3DVector as core::ops::BitOr<T>>::Output: core::ops::Mul<T>,
+    <<VGA3DVector as core::ops::BitOr<T>>::Output as core::ops::Mul<T>>::Output: HasVector,
+{
+    type Output = VGA3DVector;
+    fn project(self, b: T) -> Self::Output {
+        ((self | b) * (b.inverse())).vector()
+    }
+}
+
+impl<T> Projectable<T> for VGA3DBivector
+where
+    T: VGA3DOps + Copy,
+    VGA3DBivector: core::ops::BitOr<T>,
+    <VGA3DBivector as core::ops::BitOr<T>>::Output: core::ops::Mul<T>,
+    <<VGA3DBivector as core::ops::BitOr<T>>::Output as core::ops::Mul<T>>::Output: HasBivector,
+{
+    type Output = VGA3DBivector;
+
+    fn project(self, b: T) -> Self::Output {
+        ((self | b) * (b.inverse())).bivector()
+    }
+}
+
+impl<T> Projectable<T> for VGA3DTrivector
+where
+    T: VGA3DOps + Copy,
+    VGA3DTrivector: core::ops::BitOr<T>,
+    <VGA3DTrivector as core::ops::BitOr<T>>::Output: core::ops::Mul<T>,
+    <<VGA3DTrivector as core::ops::BitOr<T>>::Output as core::ops::Mul<T>>::Output: HasTrivector,
+{
+    type Output = VGA3DTrivector;
+
+    fn project(self, b: T) -> Self::Output {
+        ((self | b) * (b.inverse())).trivector()
+    }
+}
+
+impl<T> Projectable<T> for VGA3DMultivector
+where
+    T: VGA3DOps + Copy,
+    VGA3DMultivector: core::ops::BitOr<T>,
+    <VGA3DMultivector as core::ops::BitOr<T>>::Output: core::ops::Mul<T>,
+    <<VGA3DMultivector as core::ops::BitOr<T>>::Output as core::ops::Mul<T>>::Output:
+        HasMultivector,
+{
+    type Output = VGA3DMultivector;
+
+    fn project(self, b: T) -> Self::Output {
+        ((self | b) * (b.inverse())).multivector()
+    }
+}
+
+#[cfg(test)]
+mod projection {
+    use super::*;
+    use approx::assert_relative_eq;
+    use core::f32::consts::TAU;
+
+    #[test]
+    fn vector_vector() {
+        let vector1 = VGA3DVector::new(2.0, 0.0, 3.0);
+        let vector2 = VGA3DVector::new(-2.0, 0.0, 4.0);
+        let res = vector1.project(vector2);
+        assert_relative_eq!(res.e1(), -0.8, max_relative = 0.000001);
+        assert_relative_eq!(res.e2(), 0.0, max_relative = 0.000001);
+        assert_relative_eq!(res.e3(), 1.6, max_relative = 0.000001);
+    }
+
+    #[test]
+    fn vector_bivector() {
+        // 2e1+3e3
+        let vector = VGA3DVector::new(2.0, 0.0, 3.0);
+        // -2e12+4e23
+        let bivector = VGA3DBivector::new(-2.0, 0.0, 4.0);
+        // ( (2e1+3e3) | (-2e12+4e23) ) * (( ~(-2e12+4e23) )/  ((-2e12+4e23) * ~(-2e12+4e23))  )
+        // 1.5999999046e1​+3.1999998093e3
+        let res = vector.project(bivector);
+        assert_relative_eq!(res.e1(), 1.6, max_relative = 0.000001);
+        assert_relative_eq!(res.e2(), 0.0, max_relative = 0.000001);
+        assert_relative_eq!(res.e3(), 3.2, max_relative = 0.000001);
+    }
+
+    #[test]
+    fn vector_trivector() {
+        // 2e1+3e3
+        let vector = VGA3DVector::new(2.0, 0.0, 3.0);
+        // -2e12+4e23
+        let trivector = VGA3DTrivector::new(-2.0);
+        // ( (2e1+3e3) | (-2e12+4e23) ) * (( ~(-2e12+4e23) )/  ((-2e12+4e23) * ~(-2e12+4e23))  )
+        // 1.5999999046e1​+3.1999998093e3
+        let res = vector.project(trivector);
+        assert_relative_eq!(res.e1(), 2.0, max_relative = 0.000001);
+        assert_relative_eq!(res.e2(), 0.0, max_relative = 0.000001);
+        assert_relative_eq!(res.e3(), 3.0, max_relative = 0.000001);
+    }
+    #[test]
+    fn bivector_vector() {
+        // The projected bivector is orthogonal to the dual of the vector it is projected onto
+        let bivector = VGA3DBivector::new(-2.0, 5.0, -4.0);
+        let vector = VGA3DVector::new(3.0, 4.0, 0.0);
+        let res = bivector.project(vector);
+        let dual = vector.dual();
+        let inner = dual | res;
+        assert_relative_eq!(inner, 0.0, max_relative = 0.0001);
+    }
+
+    // #[test]
+    // fn bivector_bivector() {
+    //     let bivector1 = VGA3DVector::new(2.0, 0.0, 3.0);
+    //     let bivector2 = VGA3DBivector::new(-2.0, 0.0, 4.0);
+    //     let res = bivector1.project(bivector2);
+    //     assert_relative_eq!(res.e1(), 1.6, max_relative = 0.000001);
+    //     assert_relative_eq!(res.e2(), 0.0, max_relative = 0.000001);
+    //     assert_relative_eq!(res.e3(), 3.2, max_relative = 0.000001);
+    // }
+
+    // #[test]
+    // fn bivector_trivector() {
+    //     // 2e1+3e3
+    //     let vector = VGA3DVector::new(2.0, 0.0, 3.0);
+    //     // -2e12+4e23
+    //     let trivector = VGA3DTrivector::new(-2.0);
+    //     // ( (2e1+3e3) | (-2e12+4e23) ) * (( ~(-2e12+4e23) )/  ((-2e12+4e23) * ~(-2e12+4e23))  )
+    //     // 1.5999999046e1​+3.1999998093e3
+    //     let res = vector.project(trivector);
+    //     assert_relative_eq!(res.e1(), 2.0, max_relative = 0.000001);
+    //     assert_relative_eq!(res.e2(), 0.0, max_relative = 0.000001);
+    //     assert_relative_eq!(res.e3(), 3.0, max_relative = 0.000001);
+    // }
+}
 // pub trait Projectable {
 //     type Output;
 //     fn project_line(self, vector: VGA3DVector) -> Self::Output;
