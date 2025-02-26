@@ -1,5 +1,22 @@
+// ga_lib is a rust library that implements different geometric algbras.
+// Copyright (C) 2025 Rasmus Enevoldsen
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 #![allow(unused_imports)]
 #![allow(dead_code)]
+#![warn(missing_docs)]
 
 use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Index, IndexMut, Mul, Neg, Not, Sub};
 
@@ -11,6 +28,9 @@ use super::{
     VGA3DOpsRef,
 };
 
+/// # 3D Vector Geometric Algebra Vector
+/// This is the same vector as in $\mathbb{R}^3$
+/// $$\vec{v}=v_1 \mathrm{e}_1 + v_2 \mathrm{e}_2 + v_3 \mathrm{e}_3$$
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct VGA3DVector {
     e1: f32,
@@ -19,6 +39,7 @@ pub struct VGA3DVector {
 }
 
 impl VGA3DVector {
+    /// The zero vector
     pub fn zero() -> Self {
         Self {
             e1: 0.0,
@@ -27,23 +48,28 @@ impl VGA3DVector {
         }
     }
 
+    /// Create new vector from linear combination of unit vectors
     pub fn new(e1: f32, e2: f32, e3: f32) -> Self {
         Self { e1, e2, e3 }
     }
 
+    /// Get vector
     pub fn vector(self) -> Self {
         self
     }
 
     // Vector components
+    /// Get unit scaling factor for $\mathrm{e}_1$
     pub fn e1(&self) -> f32 {
         self.e1
     }
 
+    /// Get unit scaling factor for $\mathrm{e}_2$
     pub fn e2(&self) -> f32 {
         self.e2
     }
 
+    /// Get unit scaling factor for $\mathrm{e}_3$
     pub fn e3(&self) -> f32 {
         self.e3
     }
@@ -70,10 +96,10 @@ impl Neg for VGA3DVector {
     }
 }
 
-// Cross Product
-// The cross product is the dual of the exterior product
-// \[\vec{v}\times\vec{u} = (\vec{v}\wedge\vec{u})\star \]
 impl VGA3DVector {
+    /// # Cross Product
+    /// The cross product is the dual of the exterior product
+    /// $$ \vec{v}\times\vec{u} = (\vec{v}\wedge\vec{u})\star $$
     pub fn cross(self, b: VGA3DVector) -> VGA3DVector {
         // -(self ^ b).dual()
         let e1 = self.e2() * b.e3() - self.e3() * b.e2();
@@ -100,13 +126,12 @@ mod vector_cross {
     }
 }
 
-// Dual
-// In VGA 3D, the dual is the pseudoscalar
-// In VGA 3D, the dual is the pseudoscalar
-// \[ \vec{v} \overset\Rrightarrow{i} = \overset\Rightarrow{b} \]
-// vector and bivectors in 3D VGA follows this pattern. Going up, going down
-// \[ \mathrm{e}_1,\,\mathrm{e}_2,\,\mathrm{e}_3,\,\mathrm{e}_3\star,\,\mathrm{e}_2\star,\,\mathrm{e}_1\star,\, \]
 impl VGA3DVector {
+    /// # Dual
+    /// In VGA 3D, the dual is the pseudoscalar
+    /// $$ \vec{v} \overset\Rrightarrow{i} = \overset\Rightarrow{b} $$
+    /// vector and bivectors in 3D VGA follows this pattern. Going up, going down
+    /// $$\text{scalar}, \mathrm{e}_1,\mathrm{e}_2,\mathrm{e}_3,\mathrm{e}_3\star,\mathrm{e}_2\star,\mathrm{e}_1\star, \text{scalar}\star $$
     pub fn dual(self) -> VGA3DBivector {
         VGA3DBivector::new(self.e3, self.e2, self.e1)
     }
@@ -122,15 +147,6 @@ mod vector_dual {
         assert_eq!(vector.e1(), bivector.e23());
         assert_eq!(vector.e2(), bivector.e31());
         assert_eq!(vector.e3(), bivector.e12());
-    }
-}
-
-// Regressive Product
-// \[ (A \vee B)\star = ( A\star  \wedge B\star ) \]
-impl VGA3DVector {
-    pub fn regressive(self) -> VGA3DVector {
-        // TODO
-        self
     }
 }
 

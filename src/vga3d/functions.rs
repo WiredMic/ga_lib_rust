@@ -1,3 +1,19 @@
+// ga_lib is a rust library that implements different geometric algbras.
+// Copyright (C) 2025 Rasmus Enevoldsen
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 #![allow(unused_imports)]
 #![allow(dead_code)]
 
@@ -57,7 +73,7 @@ impl_rotatable!(VGA3DMultivector, VGA3DMultivector, multivector);
 
 #[cfg(test)]
 mod rotation {
-    use crate::vga_3d::rotor;
+    use crate::vga3d::rotor;
 
     use super::*;
     use approx::assert_relative_eq;
@@ -68,7 +84,7 @@ mod rotation {
         let vector = VGA3DVector::new(3.0, 0.0, 0.0);
         let angle = TAU / 4.0;
         let bivector = VGA3DBivector::new(1.0, 0.0, 0.0);
-        let rotor = VGA3DRotor::new(angle, bivector);
+        let rotor = VGA3DRotor::new(angle / 2.0, bivector);
         let vector_rot_ref1 = (&vector).rotate(&rotor);
         let vector_rot_ref2 = (&vector).rotate(rotor);
         let vector_rot_ref3 = vector.rotate(&rotor);
@@ -95,7 +111,7 @@ mod rotation {
     fn bivector() {
         let angle = TAU / 4.0;
         let rotation_plane = VGA3DBivector::new(0.5, 5.2, -3.0);
-        let rotor = VGA3DRotor::new(angle, rotation_plane);
+        let rotor = VGA3DRotor::new(angle / 2.0, rotation_plane);
         let bivector = VGA3DBivector::new(6.4, -4.5, 3.3);
         let bivector_rot = bivector.rotate(rotor);
 

@@ -1,5 +1,22 @@
+// ga_lib is a rust library that implements different geometric algbras.
+// Copyright (C) 2025 Rasmus Enevoldsen
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 #![allow(unused_imports)]
 #![allow(dead_code)]
+// #![warn(missing_docs)]
 
 use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Index, IndexMut, Mul, Neg, Not, Sub};
 
@@ -12,6 +29,11 @@ use super::{
     VGA3DOps, VGA3DOpsRef,
 };
 
+/// # 3D Vector Geometric Algebra Multivector
+/// Geometric algebra is the studie of multivectors
+///
+/// A multivector is a sum of all grades in the algebra
+/// $$ M = \text{scalar} + \vec{v} + \overset\Rightarrow{b} + \overset\Rrightarrow{t} $$
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct VGA3DMultivector {
     scalar: f32,

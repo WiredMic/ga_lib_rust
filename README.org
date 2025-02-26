@@ -20,3 +20,4 @@ It has implemented a full 3D Vector Geometric Algebra.
 * TODO
 - I need to make a test for everything
 - Do scalars need their own type?
+

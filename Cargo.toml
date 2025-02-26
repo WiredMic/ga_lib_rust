@@ -1,5 +1,5 @@
 [package]
-name = "geometric_algebra"
+name = "ga_lib"
 version = "0.1.0"
 edition = "2021"
 authors = [ "Rasmus Enevoldsen" ]
@@ -9,4 +9,8 @@ license = "GPL-3.0-or-later"
 [dependencies]
 libm = {version = "0.2.11"} # math lib for embedded
 approx = {version = "0.5.1"} # approx test for floats
-# forward_ref = {version = "1.0.0"}
+
+[package.metadata.docs.rs]
+rustdoc-args = [
+"--html-in-header", "./katex-header.html"
+]

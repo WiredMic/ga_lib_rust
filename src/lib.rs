@@ -1,18 +1,67 @@
+// ga_lib is a rust library that implements different geometric algbras.
+// Copyright (C) 2025 Rasmus Enevoldsen
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 #![no_std]
 
-pub mod vga_3d;
+//! > Geometry without algebra is dumb! Algebra without geometry is blind!
+//!
+//! >\- David Hestenes
+//!
+//! This is a create the expolore the world of geometric algebra.
+//! It was build to be the backend of my rotation donut project.
+//! I also wanted to see if I could use GA in the attitude control of a satellite.
+//!
+//! # Products
+//! This library implements different geometric algebra products using Rust operations
+//!
+//! ## Addition
+//! Addition is implemented with the use of the `+` (Add) operator.
+//!
+//! ## Subtraction
+//! Subtraction is implemented with the use of the `-` (Sub) operator.
+//!
+//! ## Inner Product
+//! The inner product $\cdot$ is implemented with the use of the `|` (BitOr) Operator.
+//!
+//! ## Exterior Product
+//! The exterior product $\wedge$ is implemented with the use of the `^` (BitXor) Operator.
+//!
+//! ## Geometric Product
+//! The geometric product is implemented with the use of the `*` (Mul) Operator.
+//!
+//! ## Regressive Product
+//! The regressive product is implemented with the use of the `&` (BitAnd) Operator.
+//!
+//! TODO Not implemented
+//!
+//! # Operations
+//! There is implemented different geometric operations.
+//! They apply to all grades. Rotation only take rotors. The others take all grades except rotors.
+//!
+//! ## Rotation
+//!
+//!
+//! ## Projection
+//!
+//! ## Rejection
+//!
+//! ## Reflection
 
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+/// Vector Geometric Algebra $\text{Cl}(3,0,0)$
+pub mod vga3d;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+#[macro_use]
+pub(self) mod macros;

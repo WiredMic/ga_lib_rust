@@ -1,3 +1,19 @@
+// ga_lib is a rust library that implements different geometric algbras.
+// Copyright (C) 2025 Rasmus Enevoldsen
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 #![allow(unused_imports)]
 #![allow(dead_code)]
 
@@ -13,7 +29,7 @@ use crate::forward_ref_binop;
 use core::ops::{BitAnd, BitOr, Div, Mul};
 
 // Geometric Product
-// Scalar-Vector
+/// Scalar-Vector
 impl Mul<VGA3DVector> for f32 {
     type Output = VGA3DVector;
     fn mul(self, b: VGA3DVector) -> VGA3DVector {
@@ -25,7 +41,7 @@ impl Mul<VGA3DVector> for f32 {
 }
 forward_ref_binop!(impl Mul, mul for f32, VGA3DVector);
 
-// Vector-Scalar
+/// Vector-Scalar
 impl Mul<f32> for VGA3DVector {
     type Output = VGA3DVector;
     fn mul(self, b: f32) -> VGA3DVector {
@@ -37,7 +53,7 @@ impl Mul<f32> for VGA3DVector {
 }
 forward_ref_binop!(impl Mul, mul for VGA3DVector,f32);
 
-//Scalar-Bivector
+/// Scalar-Bivector
 impl Mul<VGA3DBivector> for f32 {
     type Output = VGA3DBivector;
     fn mul(self, b: VGA3DBivector) -> VGA3DBivector {
@@ -136,8 +152,8 @@ impl Mul<f32> for VGA3DRotor {
 }
 forward_ref_binop!(impl Mul, mul for f32, VGA3DRotor);
 
-// Vector-Vector
-// \[ \vec{a} \vec{b} = \vec{a} \cdot \vec{b} +   \vec{a} \wedge \vec{b}\]
+/// Vector-Vector
+/// $$ \vec{a} \vec{b} = \vec{a} \cdot \vec{b} +   \vec{a} \wedge \vec{b} $$
 impl Mul for VGA3DVector {
     type Output = VGA3DMultivector;
 
@@ -151,8 +167,8 @@ impl Mul for VGA3DVector {
 }
 forward_ref_binop!(impl Mul, mul for VGA3DVector, VGA3DVector);
 
-// Vector-Bivector
-// \[ \vec{a}\overset\Rightarrow{b}\]
+/// Vector-Bivector
+/// $$ \vec{a}\overset\Rightarrow{b} $$
 impl Mul<VGA3DBivector> for VGA3DVector {
     type Output = VGA3DMultivector;
     fn mul(self: VGA3DVector, b: VGA3DBivector) -> VGA3DMultivector {
@@ -534,7 +550,7 @@ mod geometric_product {
     fn rotor_bivector_geo() {
         let angle = TAU / 4.0;
         let rotation_plane = VGA3DBivector::new(4.0, 2.0, -3.0);
-        let rotor = VGA3DRotor::new(angle, rotation_plane);
+        let rotor = VGA3DRotor::new(angle / 2.0, rotation_plane);
         // 2e12+e31+6e23
         let bivector = VGA3DBivector::new(2.0, 1.0, 6.0);
         // 0.7071+0.5252e12+0.2626e31-0.3939e23
@@ -553,7 +569,7 @@ mod geometric_product {
         // 0.7071+0.5252e12+0.2626e31-0.3939e23
         let angle = TAU / 4.0;
         let rotation_plane = VGA3DBivector::new(4.0, 2.0, -3.0);
-        let rotor = VGA3DRotor::new(angle, rotation_plane);
+        let rotor = VGA3DRotor::new(angle / 2.0, rotation_plane);
         let mvec = bivector * rotor;
         // 1.0504512787−0.5553830266e12​+4.646299839e31​+4.2426404953e23
         assert_relative_eq!(mvec.scalar(), 1.0504, max_relative = 0.001);
