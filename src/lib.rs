@@ -64,4 +64,4 @@
 pub mod vga3d;
 
 #[macro_use]
-pub(self) mod macros;
+pub(crate) mod macros;

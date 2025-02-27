@@ -18,11 +18,11 @@
 #![allow(dead_code)]
 
 use super::{
-    bivector::{self, VGA3DBivector},
-    multivector::VGA3DMultivector,
+    bivector::{self, Bivector},
+    multivector::Multivector,
     rotor::VGA3DRotor,
-    trivector::{self, VGA3DTrivector},
-    vector::VGA3DVector,
+    trivector::{self, Trivector},
+    vector::Vector,
 };
 
 use crate::forward_ref_binop;
@@ -30,8 +30,8 @@ use crate::forward_ref_binop;
 /// # Regressive Product
 /// $$ (A \vee B)\star = ( A\star  \wedge B\star ) $$
 /// NOT IMPLEMENTED
-impl VGA3DVector {
-    pub fn regressive(self) -> VGA3DVector {
+impl Vector {
+    pub fn regressive(self) -> Vector {
         // TODO
         self
     }

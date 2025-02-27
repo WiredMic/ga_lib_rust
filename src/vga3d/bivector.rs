@@ -23,9 +23,9 @@ use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Index, IndexMut, Mul, Neg, Not,
 use libm::sqrtf;
 
 use super::{
-    multivector::VGA3DMultivector,
-    trivector::{self, VGA3DTrivector},
-    vector::VGA3DVector,
+    multivector::Multivector,
+    trivector::{self, Trivector},
+    vector::Vector,
     VGA3DOps, VGA3DOpsRef,
 };
 
@@ -36,13 +36,13 @@ use super::{
 /// This is the correct way to represent an axial vector.
 /// The two are confused because the bivector is the dual of the vector.
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
-pub struct VGA3DBivector {
+pub struct Bivector {
     e12: f32,
     e31: f32,
     e23: f32,
 }
 
-impl VGA3DBivector {
+impl Bivector {
     /// The zero bivector
     pub fn zero() -> Self {
         Self {
@@ -84,7 +84,7 @@ mod new {
 
     #[test]
     fn new() {
-        let bivec = VGA3DBivector::new(2.0, 1.0, 1.0);
+        let bivec = Bivector::new(2.0, 1.0, 1.0);
         assert_eq!(bivec.e12, 2.0);
         assert_eq!(bivec.e31, 1.0);
         assert_eq!(bivec.e23, 1.0);
@@ -92,22 +92,22 @@ mod new {
 }
 
 // Negation
-impl Neg for VGA3DBivector {
-    type Output = VGA3DBivector;
-    fn neg(self) -> VGA3DBivector {
-        VGA3DBivector::new(-self.e12, -self.e31, -self.e23)
+impl Neg for Bivector {
+    type Output = Bivector;
+    fn neg(self) -> Bivector {
+        Bivector::new(-self.e12, -self.e31, -self.e23)
     }
 }
 
-impl VGA3DBivector {
+impl Bivector {
     /// # Cross Product
     /// The cross product for two bivectors gives the bivector orthogonal to both
     /// $$ \overset\Rightarrow{a} \times \overset\Rightarrow{b} = \left <\overset\Rightarrow{a} \overset\Rightarrow{b} \right>_2 $$
-    pub fn cross(self, b: VGA3DBivector) -> VGA3DBivector {
+    pub fn cross(self, b: Bivector) -> Bivector {
         let e12 = self.e31 * b.e23 - self.e23 * b.e31;
         let e31 = self.e23 * b.e12 - self.e12 * b.e23;
         let e23 = self.e12 * b.e31 - self.e31 * b.e12;
-        VGA3DBivector::new(e12, e31, e23)
+        Bivector::new(e12, e31, e23)
     }
 }
 
@@ -118,11 +118,11 @@ mod bivector_cross {
     #[test]
     fn bivector_bivector_cross() {
         // 3e1+5e2+4e3
-        let bivector1 = VGA3DBivector::new(3.0, 5.0, 4.0);
+        let bivector1 = Bivector::new(3.0, 5.0, 4.0);
         // 2e12+e31+6e23
-        let bivector2 = VGA3DBivector::new(2.0, 1.0, 6.0);
+        let bivector2 = Bivector::new(2.0, 1.0, 6.0);
         //
-        let res_bivector = VGA3DBivector::new(26.0, -10.0, -7.0);
+        let res_bivector = Bivector::new(26.0, -10.0, -7.0);
         assert_relative_eq!(
             bivector1.cross(bivector2).e12(),
             res_bivector.e12(),
@@ -141,7 +141,7 @@ mod bivector_cross {
     }
 }
 
-impl VGA3DBivector {
+impl Bivector {
     /// # Dual
     /// In VGA 3D, the dual is the unit pseudoscalar $\overset\Rrightarrow{i}$
     ///
@@ -150,8 +150,8 @@ impl VGA3DBivector {
     /// Vector and bivectors in 3D VGA follows this pattern. Going up, going down
     ///
     /// $$ \text{scalar}, \mathrm{e}_1,\mathrm{e}_2,\mathrm{e}_3,\mathrm{e}_3\star, \mathrm{e}_2\star, \mathrm{e}_1\star, \text{scalar}\star $$
-    pub fn dual(self) -> VGA3DVector {
-        VGA3DVector::new(-self.e23, -self.e31, -self.e12)
+    pub fn dual(self) -> Vector {
+        Vector::new(-self.e23, -self.e31, -self.e12)
     }
 }
 
@@ -163,25 +163,25 @@ impl VGA3DBivector {
 //     fn vector_vector_cross() {
 //     }}
 
-impl VGA3DBivector {
+impl Bivector {
     /// # Inverse
     /// $$ A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>} $$
-    pub fn inverse(self) -> VGA3DBivector {
+    pub fn inverse(self) -> Bivector {
         self.reverse() * (1.0 / (self * self.reverse()).scalar())
     }
 }
 
-impl VGA3DBivector {
+impl Bivector {
     /// Regressive Product
     /// $$ (A \vee B)\star = ( A\star  \wedge B\star ) $$
     /// NOT IMPEMENTED
-    pub fn regressive(self) -> VGA3DBivector {
+    pub fn regressive(self) -> Bivector {
         // TODO
         self
     }
 }
 
-impl VGA3DOps for VGA3DBivector {
+impl VGA3DOps for Bivector {
     fn norm(self) -> f32 {
         sqrtf((self.e12() * self.e12()) + (self.e31() * self.e31()) + (self.e23() * self.e23()))
         // sqrtf((self.reverse() * self).scalar())
@@ -215,7 +215,7 @@ impl VGA3DOps for VGA3DBivector {
     }
 }
 
-impl VGA3DOpsRef for VGA3DBivector {
+impl VGA3DOpsRef for Bivector {
     fn norm(&self) -> f32 {
         // sqrtf((self.reverse() * self).scalar())
         sqrtf((self.e12() * self.e12()) + (self.e31() * self.e31()) + (self.e23() * self.e23()))

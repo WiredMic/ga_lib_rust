@@ -24,7 +24,7 @@ use libm::sqrtf;
 
 //
 use super::{
-    bivector::VGA3DBivector, multivector::VGA3DMultivector, trivector::VGA3DTrivector, VGA3DOps,
+    bivector::Bivector, multivector::Multivector, trivector::Trivector, VGA3DOps,
     VGA3DOpsRef,
 };
 
@@ -32,13 +32,13 @@ use super::{
 /// This is the same vector as in $\mathbb{R}^3$
 /// $$\vec{v}=v_1 \mathrm{e}_1 + v_2 \mathrm{e}_2 + v_3 \mathrm{e}_3$$
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
-pub struct VGA3DVector {
+pub struct Vector {
     e1: f32,
     e2: f32,
     e3: f32,
 }
 
-impl VGA3DVector {
+impl Vector {
     /// The zero vector
     pub fn zero() -> Self {
         Self {
@@ -81,7 +81,7 @@ mod vector_new {
 
     #[test]
     fn vector_new() {
-        let vec = VGA3DVector::new(2.0, 1.0, 1.0);
+        let vec = Vector::new(2.0, 1.0, 1.0);
         assert_eq!(vec.e1, 2.0);
         assert_eq!(vec.e2, 1.0);
         assert_eq!(vec.e3, 1.0);
@@ -89,23 +89,23 @@ mod vector_new {
 }
 
 // Negation
-impl Neg for VGA3DVector {
-    type Output = VGA3DVector;
-    fn neg(self) -> VGA3DVector {
-        VGA3DVector::new(-self.e1, -self.e2, -self.e3)
+impl Neg for Vector {
+    type Output = Vector;
+    fn neg(self) -> Vector {
+        Vector::new(-self.e1, -self.e2, -self.e3)
     }
 }
 
-impl VGA3DVector {
+impl Vector {
     /// # Cross Product
     /// The cross product is the dual of the exterior product
     /// $$ \vec{v}\times\vec{u} = (\vec{v}\wedge\vec{u})\star $$
-    pub fn cross(self, b: VGA3DVector) -> VGA3DVector {
+    pub fn cross(self, b: Vector) -> Vector {
         // -(self ^ b).dual()
         let e1 = self.e2() * b.e3() - self.e3() * b.e2();
         let e2 = self.e3() * b.e1() - self.e1() * b.e3();
         let e3 = self.e1() * b.e2() - self.e2() * b.e1();
-        VGA3DVector::new(e1, e2, e3)
+        Vector::new(e1, e2, e3)
     }
 }
 #[cfg(test)]
@@ -115,9 +115,9 @@ mod vector_cross {
     #[test]
     fn vector_vector_cross() {
         // 3e1+5e2+4e3
-        let vector1 = VGA3DVector::new(3.0, 5.0, 4.0);
+        let vector1 = Vector::new(3.0, 5.0, 4.0);
         // 2e1+1e2+6e3
-        let vector2 = VGA3DVector::new(2.0, 1.0, 6.0);
+        let vector2 = Vector::new(2.0, 1.0, 6.0);
         let cross = vector1.cross(vector2);
         // −7e12​-10e31​+26e23
         assert_relative_eq!(cross.e1(), 26.0, max_relative = 0.000001);
@@ -126,14 +126,14 @@ mod vector_cross {
     }
 }
 
-impl VGA3DVector {
+impl Vector {
     /// # Dual
     /// In VGA 3D, the dual is the pseudoscalar
     /// $$ \vec{v} \overset\Rrightarrow{i} = \overset\Rightarrow{b} $$
     /// vector and bivectors in 3D VGA follows this pattern. Going up, going down
     /// $$\text{scalar}, \mathrm{e}_1,\mathrm{e}_2,\mathrm{e}_3,\mathrm{e}_3\star,\mathrm{e}_2\star,\mathrm{e}_1\star, \text{scalar}\star $$
-    pub fn dual(self) -> VGA3DBivector {
-        VGA3DBivector::new(self.e3, self.e2, self.e1)
+    pub fn dual(self) -> Bivector {
+        Bivector::new(self.e3, self.e2, self.e1)
     }
 }
 
@@ -142,36 +142,36 @@ mod vector_dual {
     use super::*;
     #[test]
     fn vector_to_bivector() {
-        let vector: VGA3DVector = VGA3DVector::new(1.0, 2.0, 3.0);
-        let bivector: VGA3DBivector = vector.dual();
+        let vector: Vector = Vector::new(1.0, 2.0, 3.0);
+        let bivector: Bivector = vector.dual();
         assert_eq!(vector.e1(), bivector.e23());
         assert_eq!(vector.e2(), bivector.e31());
         assert_eq!(vector.e3(), bivector.e12());
     }
 }
 
-impl VGA3DOps for VGA3DVector {
+impl VGA3DOps for Vector {
     fn norm(self) -> f32 {
         sqrtf((self.e1() * self.e1()) + (self.e2() * self.e2()) + (self.e3() * self.e3()))
     }
 
     // Inverse
     // \[A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>}\]
-    fn inverse(self) -> VGA3DVector {
+    fn inverse(self) -> Vector {
         self.reverse() * (1.0 / (self * self.reverse()).scalar())
     }
 
     // Reverse
     // It follows the patten (Each is a grade)
     // \[+ + - - + + - - \dots (-1)^{k(k-1)/2}\]
-    fn reverse(self) -> VGA3DVector {
+    fn reverse(self) -> Vector {
         self
     }
     // Clifford Conjugation
     // It follows the patten (Each is a grade)
     // \[+--+--+\dots(-1)^{k(k+1)/2}\]
 
-    fn conjugate(self) -> VGA3DVector {
+    fn conjugate(self) -> Vector {
         -self
     }
     // Grade Involution
@@ -183,7 +183,7 @@ impl VGA3DOps for VGA3DVector {
     }
 }
 
-impl VGA3DOpsRef for VGA3DVector {
+impl VGA3DOpsRef for Vector {
     fn norm(&self) -> f32 {
         // sqrtf((self.reverse() * self).scalar())
         sqrtf((self.e1() * self.e1()) + (self.e2() * self.e2()) + (self.e3() * self.e3()))
@@ -191,21 +191,21 @@ impl VGA3DOpsRef for VGA3DVector {
 
     // Inverse
     // \[A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>}\]
-    fn inverse(&self) -> VGA3DVector {
+    fn inverse(&self) -> Vector {
         self.reverse() * (1.0 / (self * self.reverse()).scalar())
     }
 
     // Reverse
     // It follows the patten (Each is a grade)
     // \[+ + - - + + - - \dots (-1)^{k(k-1)/2}\]
-    fn reverse(&self) -> VGA3DVector {
+    fn reverse(&self) -> Vector {
         *self
     }
     // Clifford Conjugation
     // It follows the patten (Each is a grade)
     // \[+--+--+\dots(-1)^{k(k+1)/2}\]
 
-    fn conjugate(&self) -> VGA3DVector {
+    fn conjugate(&self) -> Vector {
         -(*self)
     }
     // Grade Involution

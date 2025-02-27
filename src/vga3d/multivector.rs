@@ -23,9 +23,9 @@ use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Index, IndexMut, Mul, Neg, Not,
 use libm::sqrtf;
 
 use super::{
-    bivector::VGA3DBivector,
-    trivector::{self, VGA3DTrivector},
-    vector::VGA3DVector,
+    bivector::Bivector,
+    trivector::{self, Trivector},
+    vector::Vector,
     VGA3DOps, VGA3DOpsRef,
 };
 
@@ -35,28 +35,28 @@ use super::{
 /// A multivector is a sum of all grades in the algebra
 /// $$ M = \text{scalar} + \vec{v} + \overset\Rightarrow{b} + \overset\Rrightarrow{t} $$
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
-pub struct VGA3DMultivector {
+pub struct Multivector {
     scalar: f32,
-    vector: VGA3DVector,
-    bivector: VGA3DBivector,
-    trivector: VGA3DTrivector,
+    vector: Vector,
+    bivector: Bivector,
+    trivector: Trivector,
 }
 
-impl VGA3DMultivector {
+impl Multivector {
     pub fn zero() -> Self {
         Self {
             scalar: 0.0,
-            vector: VGA3DVector::zero(),
-            bivector: VGA3DBivector::zero(),
-            trivector: VGA3DTrivector::zero(),
+            vector: Vector::zero(),
+            bivector: Bivector::zero(),
+            trivector: Trivector::zero(),
         }
     }
 
     pub fn new(
         scalar: f32,
-        vector: VGA3DVector,
-        bivector: VGA3DBivector,
-        trivector: VGA3DTrivector,
+        vector: Vector,
+        bivector: Bivector,
+        trivector: Trivector,
     ) -> Self {
         Self {
             scalar,
@@ -76,9 +76,9 @@ impl VGA3DMultivector {
         e23: f32,
         e123: f32,
     ) -> Self {
-        let vector = VGA3DVector::new(e1, e2, e3);
-        let bivector = VGA3DBivector::new(e12, e31, e23);
-        let trivector = VGA3DTrivector::new(e123);
+        let vector = Vector::new(e1, e2, e3);
+        let bivector = Bivector::new(e12, e31, e23);
+        let trivector = Trivector::new(e123);
         Self {
             scalar,
             vector,
@@ -97,7 +97,7 @@ impl VGA3DMultivector {
     }
 
     // Vector components
-    pub fn vector(&self) -> VGA3DVector {
+    pub fn vector(&self) -> Vector {
         self.vector
     }
 
@@ -114,7 +114,7 @@ impl VGA3DMultivector {
     }
 
     // Bivector components
-    pub fn bivector(&self) -> VGA3DBivector {
+    pub fn bivector(&self) -> Bivector {
         self.bivector
     }
 
@@ -131,7 +131,7 @@ impl VGA3DMultivector {
     }
 
     // Trivector component
-    pub fn trivector(&self) -> VGA3DTrivector {
+    pub fn trivector(&self) -> Trivector {
         self.trivector
     }
 
@@ -140,58 +140,58 @@ impl VGA3DMultivector {
     }
 }
 
-impl Neg for VGA3DMultivector {
-    type Output = VGA3DMultivector;
-    fn neg(self) -> VGA3DMultivector {
-        VGA3DMultivector::new(-self.scalar, -self.vector, -self.bivector, -self.trivector)
+impl Neg for Multivector {
+    type Output = Multivector;
+    fn neg(self) -> Multivector {
+        Multivector::new(-self.scalar, -self.vector, -self.bivector, -self.trivector)
     }
 }
 
 // // Cross Product
 // // It does not make sence to take the cross product of two multvectors
-// // impl VGA3DTrivector {
-// //     pub fn cross(self, _b: VGA3DTrivector) -> f32 {
+// // impl Trivector {
+// //     pub fn cross(self, _b: Trivector) -> f32 {
 // //         0.0
 // //     }
 // // }
 
-impl VGA3DOps for VGA3DMultivector {
+impl VGA3DOps for Multivector {
     // Reverse
     // It follows the patten (Each is a grade)
     // \[+ + - - + + - - \dots (-1)^{k(k-1)/2}\]
-    fn reverse(self) -> VGA3DMultivector {
+    fn reverse(self) -> Multivector {
         let scalar = self.scalar;
         let vector = self.vector;
         let bivector = -self.bivector;
         let trivector = -self.trivector;
-        VGA3DMultivector::new(scalar, vector, bivector, trivector)
+        Multivector::new(scalar, vector, bivector, trivector)
     }
     // Clifford Conjugation
     // It follows the patten (Each is a grade)
     // \[+--+--+\dots(-1)^{k(k+1)/2}\]
 
-    fn conjugate(self) -> VGA3DMultivector {
+    fn conjugate(self) -> Multivector {
         let scalar = self.scalar;
         let vector = -self.vector;
         let bivector = -self.bivector;
         let trivector = self.trivector;
-        VGA3DMultivector::new(scalar, vector, bivector, trivector)
+        Multivector::new(scalar, vector, bivector, trivector)
     }
     // Grade Involution
     // The follows this patten (Each is a grade)
     // \[+ - + - + -\dots (-1)^{k}\]
 
-    fn involute(self) -> VGA3DMultivector {
+    fn involute(self) -> Multivector {
         let scalar = self.scalar;
         let vector = -self.vector;
         let bivector = self.bivector;
         let trivector = -self.trivector;
-        VGA3DMultivector::new(scalar, vector, bivector, trivector)
+        Multivector::new(scalar, vector, bivector, trivector)
     }
 
     // Inverse
     // \[A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>}\]
-    fn inverse(self) -> VGA3DMultivector {
+    fn inverse(self) -> Multivector {
         self.reverse() * (1.0 / (self * self.reverse()).scalar)
     }
 
@@ -200,43 +200,43 @@ impl VGA3DOps for VGA3DMultivector {
     }
 }
 
-impl VGA3DOpsRef for VGA3DMultivector {
+impl VGA3DOpsRef for Multivector {
     // Reverse
     // It follows the patten (Each is a grade)
     // \[+ + - - + + - - \dots (-1)^{k(k-1)/2}\]
-    fn reverse(&self) -> VGA3DMultivector {
+    fn reverse(&self) -> Multivector {
         let scalar = self.scalar;
         let vector = self.vector;
         let bivector = -self.bivector;
         let trivector = -self.trivector;
-        VGA3DMultivector::new(scalar, vector, bivector, trivector)
+        Multivector::new(scalar, vector, bivector, trivector)
     }
     // Clifford Conjugation
     // It follows the patten (Each is a grade)
     // \[+--+--+\dots(-1)^{k(k+1)/2}\]
 
-    fn conjugate(&self) -> VGA3DMultivector {
+    fn conjugate(&self) -> Multivector {
         let scalar = self.scalar;
         let vector = -self.vector;
         let bivector = -self.bivector;
         let trivector = self.trivector;
-        VGA3DMultivector::new(scalar, vector, bivector, trivector)
+        Multivector::new(scalar, vector, bivector, trivector)
     }
     // Grade Involution
     // The follows this patten (Each is a grade)
     // \[+ - + - + -\dots (-1)^{k}\]
 
-    fn involute(&self) -> VGA3DMultivector {
+    fn involute(&self) -> Multivector {
         let scalar = self.scalar;
         let vector = -self.vector;
         let bivector = self.bivector;
         let trivector = -self.trivector;
-        VGA3DMultivector::new(scalar, vector, bivector, trivector)
+        Multivector::new(scalar, vector, bivector, trivector)
     }
 
     // Inverse
     // \[A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>}\]
-    fn inverse(&self) -> VGA3DMultivector {
+    fn inverse(&self) -> Multivector {
         self.reverse() * (1.0 / (self * self.reverse()).scalar)
     }
 
@@ -250,20 +250,20 @@ impl VGA3DOpsRef for VGA3DMultivector {
 // Dual
 // In VGA 3D, the dual is the pseudoscalar
 // \[ \text{scalar},\mathrm{e}_1,\,\mathrm{e}_2,\,\mathrm{e}_3,\,\mathrm{e}_3\star,\,\mathrm{e}_2\star,\,\mathrm{e}_1\star,\, \text{scalar} \star \]
-impl VGA3DMultivector {
-    pub fn dual(self) -> VGA3DMultivector {
+impl Multivector {
+    pub fn dual(self) -> Multivector {
         let scalar = self.trivector().dual();
         let vector = self.bivector().dual();
         let bivector = self.vector().dual();
-        let trivector = VGA3DTrivector::new(self.scalar());
-        VGA3DMultivector::new(scalar, vector, bivector, trivector)
+        let trivector = Trivector::new(self.scalar());
+        Multivector::new(scalar, vector, bivector, trivector)
     }
 }
 
 // // Regressive Product
 // // \[ (A \vee B)\star = ( A\star  \wedge B\star ) \]
-// impl VGA3DTrivector {
-//     pub fn regressive(self) -> VGA3DTrivector {
+// impl Trivector {
+//     pub fn regressive(self) -> Trivector {
 //         // TODO
 //         self
 //     }

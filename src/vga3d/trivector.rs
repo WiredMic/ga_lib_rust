@@ -21,14 +21,14 @@ use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Index, IndexMut, Mul, Neg, Not,
 
 use libm::{fabsf, sqrtf};
 
-use super::{bivector::VGA3DBivector, vector::VGA3DVector, VGA3DOps, VGA3DOpsRef};
+use super::{bivector::Bivector, vector::Vector, VGA3DOps, VGA3DOpsRef};
 
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
-pub struct VGA3DTrivector {
+pub struct Trivector {
     e123: f32,
 }
 
-impl VGA3DTrivector {
+impl Trivector {
     pub fn zero() -> Self {
         Self { e123: 0.0 }
     }
@@ -52,15 +52,15 @@ mod new {
 
     #[test]
     fn new() {
-        let trivec = VGA3DTrivector::new(2.0);
+        let trivec = Trivector::new(2.0);
         assert_eq!(trivec.e123, 2.0);
     }
 }
 
-impl Neg for VGA3DTrivector {
-    type Output = VGA3DTrivector;
-    fn neg(self) -> VGA3DTrivector {
-        VGA3DTrivector::new(-self.e123)
+impl Neg for Trivector {
+    type Output = Trivector;
+    fn neg(self) -> Trivector {
+        Trivector::new(-self.e123)
     }
 }
 
@@ -68,8 +68,8 @@ impl Neg for VGA3DTrivector {
 // \[ \overset\Rightarrow{a} \times \overset\Rightarrow{b} = \left <\overset\Rightarrow{a} \overset\Rightarrow{b} \right>_2 \]
 // The cross product for two trivectors gives the bivector orthogonal to both.
 // This does not exist in 3D
-impl VGA3DTrivector {
-    pub fn cross(self, _b: VGA3DTrivector) -> f32 {
+impl Trivector {
+    pub fn cross(self, _b: Trivector) -> f32 {
         0.0
     }
 }
@@ -80,8 +80,8 @@ mod trivector_cross {
     use approx::assert_relative_eq;
     #[test]
     fn trivec_trivec_cross() {
-        let trivector1 = VGA3DTrivector::new(3.0);
-        let trivector2 = VGA3DTrivector::new(6.0);
+        let trivector1 = Trivector::new(3.0);
+        let trivector2 = Trivector::new(6.0);
         let res = trivector1.cross(trivector2);
         assert_relative_eq!(res, 0.0, max_relative = 0.000001);
     }
@@ -92,7 +92,7 @@ mod trivector_cross {
 // \[ \overset\Rightarrow{b} \overset\Rrightarrow{i} = -\vec{v} \]
 // vector and bivectors in 3D VGA follows this pattern. Going up, going down
 // \[ \mathrm{e}_1,\,\mathrm{e}_2,\,\mathrm{e}_3,\,\mathrm{e}_3\star,\,\mathrm{e}_2\star,\,\mathrm{e}_1\star,\, \]
-impl VGA3DTrivector {
+impl Trivector {
     pub fn dual(self) -> f32 {
         -self.e123
     }
@@ -100,15 +100,15 @@ impl VGA3DTrivector {
 
 // Regressive Product
 // \[ (A \vee B)\star = ( A\star  \wedge B\star ) \]
-impl VGA3DTrivector {
-    pub fn regressive(self, b: VGA3DTrivector) -> VGA3DTrivector {
+impl Trivector {
+    pub fn regressive(self, b: Trivector) -> Trivector {
         // The exterior product of two scalars is a simple multiplication
         // The dual of scalar is the trivector
-        -VGA3DTrivector::new(self.dual() * b.dual())
+        -Trivector::new(self.dual() * b.dual())
     }
 }
 
-impl VGA3DOps for VGA3DTrivector {
+impl VGA3DOps for Trivector {
     // There is only one element.
     // The norm is the absolute value of e1e2e3
     fn norm(self) -> f32 {
@@ -144,7 +144,7 @@ impl VGA3DOps for VGA3DTrivector {
     }
 }
 
-impl VGA3DOpsRef for VGA3DTrivector {
+impl VGA3DOpsRef for Trivector {
     fn norm(&self) -> f32 {
         // sqrtf((self.reverse() * self).scalar())
         fabsf(self.e123())

@@ -18,8 +18,8 @@
 #![allow(dead_code)]
 
 use super::{
-    bivector::VGA3DBivector, multivector::VGA3DMultivector, rotor::VGA3DRotor,
-    trivector::VGA3DTrivector, vector::VGA3DVector, VGA3DOps, VGA3DOpsRef,
+    bivector::Bivector, multivector::Multivector, rotor::VGA3DRotor,
+    trivector::Trivector, vector::Vector, VGA3DOps, VGA3DOpsRef,
 };
 
 // Functions
@@ -66,10 +66,10 @@ macro_rules! impl_rotatable {
 }
 
 // Usage:
-impl_rotatable!(VGA3DVector, VGA3DVector, vector);
-impl_rotatable!(VGA3DBivector, VGA3DBivector, bivector);
-impl_rotatable!(VGA3DTrivector, VGA3DTrivector, trivector);
-impl_rotatable!(VGA3DMultivector, VGA3DMultivector, multivector);
+impl_rotatable!(Vector, Vector, vector);
+impl_rotatable!(Bivector, Bivector, bivector);
+impl_rotatable!(Trivector, Trivector, trivector);
+impl_rotatable!(Multivector, Multivector, multivector);
 
 #[cfg(test)]
 mod rotation {
@@ -81,9 +81,9 @@ mod rotation {
 
     #[test]
     fn vec_rot_quarter_e1e2() {
-        let vector = VGA3DVector::new(3.0, 0.0, 0.0);
+        let vector = Vector::new(3.0, 0.0, 0.0);
         let angle = TAU / 4.0;
-        let bivector = VGA3DBivector::new(1.0, 0.0, 0.0);
+        let bivector = Bivector::new(1.0, 0.0, 0.0);
         let rotor = VGA3DRotor::new(angle / 2.0, bivector);
         let vector_rot_ref1 = (&vector).rotate(&rotor);
         let vector_rot_ref2 = (&vector).rotate(rotor);
@@ -110,9 +110,9 @@ mod rotation {
     #[test]
     fn bivector() {
         let angle = TAU / 4.0;
-        let rotation_plane = VGA3DBivector::new(0.5, 5.2, -3.0);
+        let rotation_plane = Bivector::new(0.5, 5.2, -3.0);
         let rotor = VGA3DRotor::new(angle / 2.0, rotation_plane);
-        let bivector = VGA3DBivector::new(6.4, -4.5, 3.3);
+        let bivector = Bivector::new(6.4, -4.5, 3.3);
         let bivector_rot = bivector.rotate(rotor);
 
         assert_relative_eq!(bivector_rot.e12(), -1.0222723, max_relative = 0.000001);
@@ -123,8 +123,8 @@ mod rotation {
     // #[test]
     // fn vector() {
     //     let angle = TAU / 4;
-    //     let rotation_plane = VGA3DBivector::new(1.0, 0.0, 0.0);
-    //     let vector = VGA3DVector::new(e1, e2, e3)
+    //     let rotation_plane = Bivector::new(1.0, 0.0, 0.0);
+    //     let vector = Vector::new(e1, e2, e3)
     //     assert_eq!(trivec.e123, 2.0);
     // }
 }
@@ -132,59 +132,59 @@ mod rotation {
 // Projection
 // \[A_\parallel = (A\cdot B)B^{-1}\]
 pub trait HasVector {
-    fn vector(&self) -> VGA3DVector;
+    fn vector(&self) -> Vector;
 }
 
-impl HasVector for VGA3DVector {
-    fn vector(&self) -> VGA3DVector {
+impl HasVector for Vector {
+    fn vector(&self) -> Vector {
         *self
     }
 }
 
-impl HasVector for VGA3DMultivector {
-    fn vector(&self) -> VGA3DVector {
+impl HasVector for Multivector {
+    fn vector(&self) -> Vector {
         self.vector() // Or however you currently implement vector()
     }
 }
 
 pub trait HasBivector {
-    fn bivector(&self) -> VGA3DBivector;
+    fn bivector(&self) -> Bivector;
 }
 
-impl HasBivector for VGA3DBivector {
-    fn bivector(&self) -> VGA3DBivector {
+impl HasBivector for Bivector {
+    fn bivector(&self) -> Bivector {
         *self
     }
 }
 
-impl HasBivector for VGA3DMultivector {
-    fn bivector(&self) -> VGA3DBivector {
+impl HasBivector for Multivector {
+    fn bivector(&self) -> Bivector {
         self.bivector() // Or however you currently implement vector()
     }
 }
 
 pub trait HasTrivector {
-    fn trivector(&self) -> VGA3DTrivector;
+    fn trivector(&self) -> Trivector;
 }
 
-impl HasTrivector for VGA3DTrivector {
-    fn trivector(&self) -> VGA3DTrivector {
+impl HasTrivector for Trivector {
+    fn trivector(&self) -> Trivector {
         *self
     }
 }
 
-impl HasTrivector for VGA3DMultivector {
-    fn trivector(&self) -> VGA3DTrivector {
+impl HasTrivector for Multivector {
+    fn trivector(&self) -> Trivector {
         self.trivector() // Or however you currently implement vector()
     }
 }
 
 pub trait HasMultivector {
-    fn multivector(&self) -> VGA3DMultivector;
+    fn multivector(&self) -> Multivector;
 }
 
-impl HasMultivector for VGA3DMultivector {
-    fn multivector(&self) -> VGA3DMultivector {
+impl HasMultivector for Multivector {
+    fn multivector(&self) -> Multivector {
         *self
     }
 }
@@ -198,56 +198,56 @@ pub trait Projectable<T> {
 }
 
 // For vectors
-impl<T> Projectable<T> for VGA3DVector
+impl<T> Projectable<T> for Vector
 where
     T: VGA3DOps + Copy,
-    VGA3DVector: core::ops::BitOr<T>,
-    <VGA3DVector as core::ops::BitOr<T>>::Output: core::ops::Mul<T>,
-    <<VGA3DVector as core::ops::BitOr<T>>::Output as core::ops::Mul<T>>::Output: HasVector,
+    Vector: core::ops::BitOr<T>,
+    <Vector as core::ops::BitOr<T>>::Output: core::ops::Mul<T>,
+    <<Vector as core::ops::BitOr<T>>::Output as core::ops::Mul<T>>::Output: HasVector,
 {
-    type Output = VGA3DVector;
+    type Output = Vector;
     fn project(self, b: T) -> Self::Output {
         ((self | b) * (b.inverse())).vector()
     }
 }
 
-impl<T> Projectable<T> for VGA3DBivector
+impl<T> Projectable<T> for Bivector
 where
     T: VGA3DOps + Copy,
-    VGA3DBivector: core::ops::BitOr<T>,
-    <VGA3DBivector as core::ops::BitOr<T>>::Output: core::ops::Mul<T>,
-    <<VGA3DBivector as core::ops::BitOr<T>>::Output as core::ops::Mul<T>>::Output: HasBivector,
+    Bivector: core::ops::BitOr<T>,
+    <Bivector as core::ops::BitOr<T>>::Output: core::ops::Mul<T>,
+    <<Bivector as core::ops::BitOr<T>>::Output as core::ops::Mul<T>>::Output: HasBivector,
 {
-    type Output = VGA3DBivector;
+    type Output = Bivector;
 
     fn project(self, b: T) -> Self::Output {
         ((self | b) * (b.inverse())).bivector()
     }
 }
 
-impl<T> Projectable<T> for VGA3DTrivector
+impl<T> Projectable<T> for Trivector
 where
     T: VGA3DOps + Copy,
-    VGA3DTrivector: core::ops::BitOr<T>,
-    <VGA3DTrivector as core::ops::BitOr<T>>::Output: core::ops::Mul<T>,
-    <<VGA3DTrivector as core::ops::BitOr<T>>::Output as core::ops::Mul<T>>::Output: HasTrivector,
+    Trivector: core::ops::BitOr<T>,
+    <Trivector as core::ops::BitOr<T>>::Output: core::ops::Mul<T>,
+    <<Trivector as core::ops::BitOr<T>>::Output as core::ops::Mul<T>>::Output: HasTrivector,
 {
-    type Output = VGA3DTrivector;
+    type Output = Trivector;
 
     fn project(self, b: T) -> Self::Output {
         ((self | b) * (b.inverse())).trivector()
     }
 }
 
-impl<T> Projectable<T> for VGA3DMultivector
+impl<T> Projectable<T> for Multivector
 where
     T: VGA3DOps + Copy,
-    VGA3DMultivector: core::ops::BitOr<T>,
-    <VGA3DMultivector as core::ops::BitOr<T>>::Output: core::ops::Mul<T>,
-    <<VGA3DMultivector as core::ops::BitOr<T>>::Output as core::ops::Mul<T>>::Output:
+    Multivector: core::ops::BitOr<T>,
+    <Multivector as core::ops::BitOr<T>>::Output: core::ops::Mul<T>,
+    <<Multivector as core::ops::BitOr<T>>::Output as core::ops::Mul<T>>::Output:
         HasMultivector,
 {
-    type Output = VGA3DMultivector;
+    type Output = Multivector;
 
     fn project(self, b: T) -> Self::Output {
         ((self | b) * (b.inverse())).multivector()
@@ -262,8 +262,8 @@ mod projection {
 
     #[test]
     fn vector_vector() {
-        let vector1 = VGA3DVector::new(2.0, 0.0, 3.0);
-        let vector2 = VGA3DVector::new(-2.0, 0.0, 4.0);
+        let vector1 = Vector::new(2.0, 0.0, 3.0);
+        let vector2 = Vector::new(-2.0, 0.0, 4.0);
         let res = vector1.project(vector2);
         assert_relative_eq!(res.e1(), -0.8, max_relative = 0.000001);
         assert_relative_eq!(res.e2(), 0.0, max_relative = 0.000001);
@@ -273,9 +273,9 @@ mod projection {
     #[test]
     fn vector_bivector() {
         // 2e1+3e3
-        let vector = VGA3DVector::new(2.0, 0.0, 3.0);
+        let vector = Vector::new(2.0, 0.0, 3.0);
         // -2e12+4e23
-        let bivector = VGA3DBivector::new(-2.0, 0.0, 4.0);
+        let bivector = Bivector::new(-2.0, 0.0, 4.0);
         // ( (2e1+3e3) | (-2e12+4e23) ) * (( ~(-2e12+4e23) )/  ((-2e12+4e23) * ~(-2e12+4e23))  )
         // 1.5999999046e1​+3.1999998093e3
         let res = vector.project(bivector);
@@ -287,9 +287,9 @@ mod projection {
     #[test]
     fn vector_trivector() {
         // 2e1+3e3
-        let vector = VGA3DVector::new(2.0, 0.0, 3.0);
+        let vector = Vector::new(2.0, 0.0, 3.0);
         // -2e12+4e23
-        let trivector = VGA3DTrivector::new(-2.0);
+        let trivector = Trivector::new(-2.0);
         // ( (2e1+3e3) | (-2e12+4e23) ) * (( ~(-2e12+4e23) )/  ((-2e12+4e23) * ~(-2e12+4e23))  )
         // 1.5999999046e1​+3.1999998093e3
         let res = vector.project(trivector);
@@ -300,8 +300,8 @@ mod projection {
     #[test]
     fn bivector_vector() {
         // The projected bivector is orthogonal to the dual of the vector it is projected onto
-        let bivector = VGA3DBivector::new(-2.0, 5.0, -4.0);
-        let vector = VGA3DVector::new(3.0, 4.0, 0.0);
+        let bivector = Bivector::new(-2.0, 5.0, -4.0);
+        let vector = Vector::new(3.0, 4.0, 0.0);
         let res = bivector.project(vector);
         let dual = vector.dual();
         let inner = dual | res;
@@ -310,8 +310,8 @@ mod projection {
 
     // #[test]
     // fn bivector_bivector() {
-    //     let bivector1 = VGA3DVector::new(2.0, 0.0, 3.0);
-    //     let bivector2 = VGA3DBivector::new(-2.0, 0.0, 4.0);
+    //     let bivector1 = Vector::new(2.0, 0.0, 3.0);
+    //     let bivector2 = Bivector::new(-2.0, 0.0, 4.0);
     //     let res = bivector1.project(bivector2);
     //     assert_relative_eq!(res.e1(), 1.6, max_relative = 0.000001);
     //     assert_relative_eq!(res.e2(), 0.0, max_relative = 0.000001);
@@ -321,9 +321,9 @@ mod projection {
     // #[test]
     // fn bivector_trivector() {
     //     // 2e1+3e3
-    //     let vector = VGA3DVector::new(2.0, 0.0, 3.0);
+    //     let vector = Vector::new(2.0, 0.0, 3.0);
     //     // -2e12+4e23
-    //     let trivector = VGA3DTrivector::new(-2.0);
+    //     let trivector = Trivector::new(-2.0);
     //     // ( (2e1+3e3) | (-2e12+4e23) ) * (( ~(-2e12+4e23) )/  ((-2e12+4e23) * ~(-2e12+4e23))  )
     //     // 1.5999999046e1​+3.1999998093e3
     //     let res = vector.project(trivector);
@@ -343,56 +343,56 @@ pub trait Rejectable<T> {
 }
 
 // For vectors
-impl<T> Rejectable<T> for VGA3DVector
+impl<T> Rejectable<T> for Vector
 where
     T: VGA3DOps + Copy,
-    VGA3DVector: core::ops::BitXor<T>,
-    <VGA3DVector as core::ops::BitXor<T>>::Output: core::ops::Mul<T>,
-    <<VGA3DVector as core::ops::BitXor<T>>::Output as core::ops::Mul<T>>::Output: HasVector,
+    Vector: core::ops::BitXor<T>,
+    <Vector as core::ops::BitXor<T>>::Output: core::ops::Mul<T>,
+    <<Vector as core::ops::BitXor<T>>::Output as core::ops::Mul<T>>::Output: HasVector,
 {
-    type Output = VGA3DVector;
+    type Output = Vector;
     fn reject(self, b: T) -> Self::Output {
         ((self ^ b) * (b.inverse())).vector()
     }
 }
 
-impl<T> Rejectable<T> for VGA3DBivector
+impl<T> Rejectable<T> for Bivector
 where
     T: VGA3DOps + Copy,
-    VGA3DBivector: core::ops::BitXor<T>,
-    <VGA3DBivector as core::ops::BitXor<T>>::Output: core::ops::Mul<T>,
-    <<VGA3DBivector as core::ops::BitXor<T>>::Output as core::ops::Mul<T>>::Output: HasBivector,
+    Bivector: core::ops::BitXor<T>,
+    <Bivector as core::ops::BitXor<T>>::Output: core::ops::Mul<T>,
+    <<Bivector as core::ops::BitXor<T>>::Output as core::ops::Mul<T>>::Output: HasBivector,
 {
-    type Output = VGA3DBivector;
+    type Output = Bivector;
 
     fn reject(self, b: T) -> Self::Output {
         ((self ^ b) * (b.inverse())).bivector()
     }
 }
 
-impl<T> Rejectable<T> for VGA3DTrivector
+impl<T> Rejectable<T> for Trivector
 where
     T: VGA3DOps + Copy,
-    VGA3DTrivector: core::ops::BitXor<T>,
-    <VGA3DTrivector as core::ops::BitXor<T>>::Output: core::ops::Mul<T>,
-    <<VGA3DTrivector as core::ops::BitXor<T>>::Output as core::ops::Mul<T>>::Output: HasTrivector,
+    Trivector: core::ops::BitXor<T>,
+    <Trivector as core::ops::BitXor<T>>::Output: core::ops::Mul<T>,
+    <<Trivector as core::ops::BitXor<T>>::Output as core::ops::Mul<T>>::Output: HasTrivector,
 {
-    type Output = VGA3DTrivector;
+    type Output = Trivector;
 
     fn reject(self, b: T) -> Self::Output {
         ((self ^ b) * (b.inverse())).trivector()
     }
 }
 
-impl<T> Rejectable<T> for VGA3DMultivector
+impl<T> Rejectable<T> for Multivector
 where
     T: VGA3DOps + Copy,
-    VGA3DMultivector: core::ops::BitXor<T>,
-    <VGA3DMultivector as core::ops::BitXor<T>>::Output: core::ops::Mul<T>,
-    <<VGA3DMultivector as core::ops::BitXor<T>>::Output as core::ops::Mul<T>>::Output:
+    Multivector: core::ops::BitXor<T>,
+    <Multivector as core::ops::BitXor<T>>::Output: core::ops::Mul<T>,
+    <<Multivector as core::ops::BitXor<T>>::Output as core::ops::Mul<T>>::Output:
         HasMultivector,
 {
-    type Output = VGA3DMultivector;
+    type Output = Multivector;
 
     fn reject(self, b: T) -> Self::Output {
         ((self ^ b) * (b.inverse())).multivector()
@@ -407,8 +407,8 @@ mod rejection {
 
     // #[test]
     // fn vector_vector() {
-    //     let vector1 = VGA3DVector::new(2.0, 0.0, 3.0);
-    //     let vector2 = VGA3DVector::new(-2.0, 0.0, 4.0);
+    //     let vector1 = Vector::new(2.0, 0.0, 3.0);
+    //     let vector2 = Vector::new(-2.0, 0.0, 4.0);
     //     let res = vector1.project(vector2);
     //     assert_relative_eq!(res.e1(), -0.8, max_relative = 0.000001);
     //     assert_relative_eq!(res.e2(), 0.0, max_relative = 0.000001);
@@ -418,9 +418,9 @@ mod rejection {
     // #[test]
     // fn vector_bivector() {
     //     // 2e1+3e3
-    //     let vector = VGA3DVector::new(2.0, 0.0, 3.0);
+    //     let vector = Vector::new(2.0, 0.0, 3.0);
     //     // -2e12+4e23
-    //     let bivector = VGA3DBivector::new(-2.0, 0.0, 4.0);
+    //     let bivector = Bivector::new(-2.0, 0.0, 4.0);
     //     // ( (2e1+3e3) | (-2e12+4e23) ) * (( ~(-2e12+4e23) )/  ((-2e12+4e23) * ~(-2e12+4e23))  )
     //     // 1.5999999046e1​+3.1999998093e3
     //     let res = vector.project(bivector);
@@ -432,9 +432,9 @@ mod rejection {
     // #[test]
     // fn vector_trivector() {
     //     // 2e1+3e3
-    //     let vector = VGA3DVector::new(2.0, 0.0, 3.0);
+    //     let vector = Vector::new(2.0, 0.0, 3.0);
     //     // -2e12+4e23
-    //     let trivector = VGA3DTrivector::new(-2.0);
+    //     let trivector = Trivector::new(-2.0);
     //     // ( (2e1+3e3) | (-2e12+4e23) ) * (( ~(-2e12+4e23) )/  ((-2e12+4e23) * ~(-2e12+4e23))  )
     //     // 1.5999999046e1​+3.1999998093e3
     //     let res = vector.project(trivector);
@@ -445,8 +445,8 @@ mod rejection {
     // #[test]
     // fn bivector_vector() {
     //     // The projected bivector is orthogonal to the dual of the vector it is projected onto
-    //     let bivector = VGA3DBivector::new(-2.0, 5.0, -4.0);
-    //     let vector = VGA3DVector::new(3.0, 4.0, 0.0);
+    //     let bivector = Bivector::new(-2.0, 5.0, -4.0);
+    //     let vector = Vector::new(3.0, 4.0, 0.0);
     //     let res = bivector.project(vector);
     //     let dual = vector.dual();
     //     let inner = dual | res;
@@ -455,8 +455,8 @@ mod rejection {
 
     // #[test]
     // fn bivector_bivector() {
-    //     let bivector1 = VGA3DVector::new(2.0, 0.0, 3.0);
-    //     let bivector2 = VGA3DBivector::new(-2.0, 0.0, 4.0);
+    //     let bivector1 = Vector::new(2.0, 0.0, 3.0);
+    //     let bivector2 = Bivector::new(-2.0, 0.0, 4.0);
     //     let res = bivector1.project(bivector2);
     //     assert_relative_eq!(res.e1(), 1.6, max_relative = 0.000001);
     //     assert_relative_eq!(res.e2(), 0.0, max_relative = 0.000001);
@@ -466,9 +466,9 @@ mod rejection {
     // #[test]
     // fn bivector_trivector() {
     //     // 2e1+3e3
-    //     let vector = VGA3DVector::new(2.0, 0.0, 3.0);
+    //     let vector = Vector::new(2.0, 0.0, 3.0);
     //     // -2e12+4e23
-    //     let trivector = VGA3DTrivector::new(-2.0);
+    //     let trivector = Trivector::new(-2.0);
     //     // ( (2e1+3e3) | (-2e12+4e23) ) * (( ~(-2e12+4e23) )/  ((-2e12+4e23) * ~(-2e12+4e23))  )
     //     // 1.5999999046e1​+3.1999998093e3
     //     let res = vector.project(trivector);
@@ -488,53 +488,53 @@ pub trait Reflectable<T> {
         T: VGA3DOps + Copy;
 }
 
-impl<T> Reflectable<T> for VGA3DVector
+impl<T> Reflectable<T> for Vector
 where
     T: VGA3DOps + Copy,
-    T: core::ops::Mul<VGA3DVector>, // T can multiply a vector
-    <T as core::ops::Mul<VGA3DVector>>::Output: core::ops::Mul<T>, // Result can multiply T
-    <<T as core::ops::Mul<VGA3DVector>>::Output as core::ops::Mul<T>>::Output: HasVector, // Result has vector method
+    T: core::ops::Mul<Vector>, // T can multiply a vector
+    <T as core::ops::Mul<Vector>>::Output: core::ops::Mul<T>, // Result can multiply T
+    <<T as core::ops::Mul<Vector>>::Output as core::ops::Mul<T>>::Output: HasVector, // Result has vector method
 {
-    type Output = VGA3DVector;
+    type Output = Vector;
     fn reflect(self, b: T) -> Self::Output {
         ((b.inverse() * self) * b).vector()
     }
 }
 
-impl<T> Reflectable<T> for VGA3DBivector
+impl<T> Reflectable<T> for Bivector
 where
     T: VGA3DOps + Copy,
-    T: core::ops::Mul<VGA3DBivector>, // T can multiply a vector
-    <T as core::ops::Mul<VGA3DBivector>>::Output: core::ops::Mul<T>, // Result can multiply T
-    <<T as core::ops::Mul<VGA3DBivector>>::Output as core::ops::Mul<T>>::Output: HasBivector, // Result has vector method
+    T: core::ops::Mul<Bivector>, // T can multiply a vector
+    <T as core::ops::Mul<Bivector>>::Output: core::ops::Mul<T>, // Result can multiply T
+    <<T as core::ops::Mul<Bivector>>::Output as core::ops::Mul<T>>::Output: HasBivector, // Result has vector method
 {
-    type Output = VGA3DBivector;
+    type Output = Bivector;
     fn reflect(self, b: T) -> Self::Output {
         ((b.inverse() * self) * b).bivector()
     }
 }
 
-impl<T> Reflectable<T> for VGA3DTrivector
+impl<T> Reflectable<T> for Trivector
 where
     T: VGA3DOps + Copy,
-    T: core::ops::Mul<VGA3DTrivector>, // T can multiply a vector
-    <T as core::ops::Mul<VGA3DTrivector>>::Output: core::ops::Mul<T>, // Result can multiply T
-    <<T as core::ops::Mul<VGA3DTrivector>>::Output as core::ops::Mul<T>>::Output: HasTrivector, // Result has vector method
+    T: core::ops::Mul<Trivector>, // T can multiply a vector
+    <T as core::ops::Mul<Trivector>>::Output: core::ops::Mul<T>, // Result can multiply T
+    <<T as core::ops::Mul<Trivector>>::Output as core::ops::Mul<T>>::Output: HasTrivector, // Result has vector method
 {
-    type Output = VGA3DTrivector;
+    type Output = Trivector;
     fn reflect(self, b: T) -> Self::Output {
         ((b.inverse() * self) * b).trivector()
     }
 }
 
-impl<T> Reflectable<T> for VGA3DMultivector
+impl<T> Reflectable<T> for Multivector
 where
     T: VGA3DOps + Copy,
-    T: core::ops::Mul<VGA3DMultivector>, // T can multiply a vector
-    <T as core::ops::Mul<VGA3DMultivector>>::Output: core::ops::Mul<T>, // Result can multiply T
-    <<T as core::ops::Mul<VGA3DMultivector>>::Output as core::ops::Mul<T>>::Output: HasMultivector, // Result has vector method
+    T: core::ops::Mul<Multivector>, // T can multiply a vector
+    <T as core::ops::Mul<Multivector>>::Output: core::ops::Mul<T>, // Result can multiply T
+    <<T as core::ops::Mul<Multivector>>::Output as core::ops::Mul<T>>::Output: HasMultivector, // Result has vector method
 {
-    type Output = VGA3DMultivector;
+    type Output = Multivector;
     fn reflect(self, b: T) -> Self::Output {
         ((b.inverse() * self) * b).multivector()
     }
@@ -550,9 +550,9 @@ mod reflection {
     fn vector_vector() {
         // A vector reflection is the projection minus a rejction
         // 2e1 + 3e3
-        let vector1 = VGA3DVector::new(2.0, 0.0, 3.0);
+        let vector1 = Vector::new(2.0, 0.0, 3.0);
         // -2e1 + 4e3
-        let vector2 = VGA3DVector::new(-2.0, 0.0, 4.0);
+        let vector2 = Vector::new(-2.0, 0.0, 4.0);
         // −72e1​+4e3
         let res = vector1.reflect(vector2);
         let test = vector1.project(vector2) - vector1.reject(vector2);
@@ -565,9 +565,9 @@ mod reflection {
     // #[test]
     // fn vector_bivector() {
     //     // 2e1+3e3
-    //     let vector = VGA3DVector::new(2.0, 0.0, 3.0);
+    //     let vector = Vector::new(2.0, 0.0, 3.0);
     //     // -2e12+4e23
-    //     let bivector = VGA3DBivector::new(-2.0, 0.0, 4.0);
+    //     let bivector = Bivector::new(-2.0, 0.0, 4.0);
     //     // ( (2e1+3e3) | (-2e12+4e23) ) * (( ~(-2e12+4e23) )/  ((-2e12+4e23) * ~(-2e12+4e23))  )
     //     // 1.5999999046e1​+3.1999998093e3
     //     let res = vector.project(bivector);
@@ -579,9 +579,9 @@ mod reflection {
     // #[test]
     // fn vector_trivector() {
     //     // 2e1+3e3
-    //     let vector = VGA3DVector::new(2.0, 0.0, 3.0);
+    //     let vector = Vector::new(2.0, 0.0, 3.0);
     //     // -2e12+4e23
-    //     let trivector = VGA3DTrivector::new(-2.0);
+    //     let trivector = Trivector::new(-2.0);
     //     // ( (2e1+3e3) | (-2e12+4e23) ) * (( ~(-2e12+4e23) )/  ((-2e12+4e23) * ~(-2e12+4e23))  )
     //     // 1.5999999046e1​+3.1999998093e3
     //     let res = vector.project(trivector);
@@ -592,8 +592,8 @@ mod reflection {
     // #[test]
     // fn bivector_vector() {
     //     // The projected bivector is orthogonal to the dual of the vector it is projected onto
-    //     let bivector = VGA3DBivector::new(-2.0, 5.0, -4.0);
-    //     let vector = VGA3DVector::new(3.0, 4.0, 0.0);
+    //     let bivector = Bivector::new(-2.0, 5.0, -4.0);
+    //     let vector = Vector::new(3.0, 4.0, 0.0);
     //     let res = bivector.project(vector);
     //     let dual = vector.dual();
     //     let inner = dual | res;
@@ -602,8 +602,8 @@ mod reflection {
 
     // #[test]
     // fn bivector_bivector() {
-    //     let bivector1 = VGA3DVector::new(2.0, 0.0, 3.0);
-    //     let bivector2 = VGA3DBivector::new(-2.0, 0.0, 4.0);
+    //     let bivector1 = Vector::new(2.0, 0.0, 3.0);
+    //     let bivector2 = Bivector::new(-2.0, 0.0, 4.0);
     //     let res = bivector1.project(bivector2);
     //     assert_relative_eq!(res.e1(), 1.6, max_relative = 0.000001);
     //     assert_relative_eq!(res.e2(), 0.0, max_relative = 0.000001);
@@ -613,9 +613,9 @@ mod reflection {
     // #[test]
     // fn bivector_trivector() {
     //     // 2e1+3e3
-    //     let vector = VGA3DVector::new(2.0, 0.0, 3.0);
+    //     let vector = Vector::new(2.0, 0.0, 3.0);
     //     // -2e12+4e23
-    //     let trivector = VGA3DTrivector::new(-2.0);
+    //     let trivector = Trivector::new(-2.0);
     //     // ( (2e1+3e3) | (-2e12+4e23) ) * (( ~(-2e12+4e23) )/  ((-2e12+4e23) * ~(-2e12+4e23))  )
     //     // 1.5999999046e1​+3.1999998093e3
     //     let res = vector.project(trivector);

@@ -19,16 +19,16 @@
 
 //
 mod vector;
-pub use vector::VGA3DVector;
+pub use vector::Vector;
 //
 mod bivector;
-pub use bivector::VGA3DBivector;
+pub use bivector::Bivector;
 //
 mod trivector;
-pub use trivector::VGA3DTrivector;
+pub use trivector::Trivector;
 //
 mod multivector;
-pub use multivector::VGA3DMultivector;
+pub use multivector::Multivector;
 //
 mod rotor;
 pub use rotor::VGA3DRotor;

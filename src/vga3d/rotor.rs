@@ -25,8 +25,8 @@ use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Index, IndexMut, Mul, Neg, Not,
 use libm::{acosf, cosf, sinf, sqrtf};
 
 use super::{
-    bivector::VGA3DBivector, multivector::VGA3DMultivector, trivector::VGA3DTrivector,
-    vector::VGA3DVector, VGA3DOps, VGA3DOpsRef,
+    bivector::Bivector, multivector::Multivector, trivector::Trivector,
+    vector::Vector, VGA3DOps, VGA3DOpsRef,
 };
 
 /// # 3D Vector Geometric Algebra Rotor
@@ -37,7 +37,7 @@ use super::{
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct VGA3DRotor {
     scalar: f32,
-    bivector: VGA3DBivector,
+    bivector: Bivector,
 }
 
 impl VGA3DRotor {
@@ -45,7 +45,7 @@ impl VGA3DRotor {
     /// The plane of rotation is a bivector
     /// The direction of rotation is given by the orientation of the bivector
     /// The angle is half of the rotation angle
-    pub fn new(angle: f32, rotation_plane: VGA3DBivector) -> Self {
+    pub fn new(angle: f32, rotation_plane: Bivector) -> Self {
         let scalar = cosf(angle);
         let sin = sinf(angle);
         let norm = rotation_plane.norm();
@@ -61,7 +61,7 @@ impl VGA3DRotor {
     }
 
     /// Get the bivector grade of the rotor
-    pub fn bivector(&self) -> VGA3DBivector {
+    pub fn bivector(&self) -> Bivector {
         self.bivector
     }
 
@@ -86,7 +86,7 @@ impl VGA3DRotor {
     }
 
     /// Get the plane of rotation of the rotor
-    pub fn rotatino_plane(&self) -> VGA3DBivector {
+    pub fn rotatino_plane(&self) -> Bivector {
         let sin = sinf(self.angle());
         self.bivector * (1.0 / sin)
     }
@@ -101,7 +101,7 @@ mod rotor {
     #[test]
     fn new() {
         let angle = TAU / 4.0;
-        let rotation_plane = VGA3DBivector::new(4.0, 2.0, -3.0);
+        let rotation_plane = Bivector::new(4.0, 2.0, -3.0);
         let rotor = VGA3DRotor::new(angle / 2.0, rotation_plane);
         // 0.70710677+0.52522576e12+0.26261288e31-0.3939193e23
         assert_relative_eq!(rotor.scalar(), 0.70710677, max_relative = 0.000001);
@@ -113,7 +113,7 @@ mod rotor {
     #[test]
     fn get_angle() {
         let rotation_angle = TAU / 4.0;
-        let rotation_plane = VGA3DBivector::new(4.0, 2.0, -3.0);
+        let rotation_plane = Bivector::new(4.0, 2.0, -3.0);
         let rotor = VGA3DRotor::new(rotation_angle / 2.0, rotation_plane);
         assert_relative_eq!(rotor.angle(), rotation_angle / 2.0, max_relative = 0.000001);
     }
@@ -121,7 +121,7 @@ mod rotor {
     #[test]
     fn get_plane_of_rotation() {
         let angle = TAU / 4.0;
-        let rotation_plane = VGA3DBivector::new(4.0, 2.0, -3.0);
+        let rotation_plane = Bivector::new(4.0, 2.0, -3.0);
         let norm = rotation_plane.norm();
         let rotor = VGA3DRotor::new(angle / 2.0, rotation_plane);
         assert_relative_eq!(
@@ -174,10 +174,10 @@ mod rotor_geo {
     #[test]
     fn rotor_rotor_geo() {
         let angle1 = TAU / 4.0;
-        let rotation_plane1 = VGA3DBivector::new(1.0, 0.0, 0.0);
+        let rotation_plane1 = Bivector::new(1.0, 0.0, 0.0);
         let rotor1 = VGA3DRotor::new(angle1 / 2.0, rotation_plane1);
         let angle2 = TAU / 4.0;
-        let rotation_plane2 = VGA3DBivector::new(0.0, 1.0, 0.0);
+        let rotation_plane2 = Bivector::new(0.0, 1.0, 0.0);
         let rotor2 = VGA3DRotor::new(angle2 / 2.0, rotation_plane2);
 
         let res_rotor = rotor1 * rotor2;
@@ -294,11 +294,11 @@ mod rotor_reverse {
     #[test]
     fn rotor_rotor_reverse() {
         let angle1 = TAU / 4.0;
-        let rotation_plane1 = VGA3DBivector::new(3.0, 2.0, 10.0);
+        let rotation_plane1 = Bivector::new(3.0, 2.0, 10.0);
         let rotor1 = VGA3DRotor::new(angle1, rotation_plane1);
 
         let angle2 = TAU / 2.0;
-        let rotation_plane2 = VGA3DBivector::new(2.0, -3.0, -1.0);
+        let rotation_plane2 = Bivector::new(2.0, -3.0, -1.0);
         let rotor2 = VGA3DRotor::new(angle2, rotation_plane2);
 
         let rotor_reverse = (rotor1 * rotor2).reverse();

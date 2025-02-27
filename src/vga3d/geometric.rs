@@ -18,11 +18,11 @@
 #![allow(dead_code)]
 
 use super::{
-    bivector::{self, VGA3DBivector},
-    multivector::VGA3DMultivector,
+    bivector::{self, Bivector},
+    multivector::Multivector,
     rotor::VGA3DRotor,
-    trivector::{self, VGA3DTrivector},
-    vector::VGA3DVector,
+    trivector::{self, Trivector},
+    vector::Vector,
 };
 
 use crate::forward_ref_binop;
@@ -30,108 +30,108 @@ use core::ops::{BitAnd, BitOr, Div, Mul};
 
 // Geometric Product
 /// Scalar-Vector
-impl Mul<VGA3DVector> for f32 {
-    type Output = VGA3DVector;
-    fn mul(self, b: VGA3DVector) -> VGA3DVector {
+impl Mul<Vector> for f32 {
+    type Output = Vector;
+    fn mul(self, b: Vector) -> Vector {
         let e1 = b.e1() * self;
         let e2 = b.e2() * self;
         let e3 = b.e3() * self;
-        VGA3DVector::new(e1, e2, e3)
+        Vector::new(e1, e2, e3)
     }
 }
-forward_ref_binop!(impl Mul, mul for f32, VGA3DVector);
+forward_ref_binop!(impl Mul, mul for f32, Vector);
 
 /// Vector-Scalar
-impl Mul<f32> for VGA3DVector {
-    type Output = VGA3DVector;
-    fn mul(self, b: f32) -> VGA3DVector {
+impl Mul<f32> for Vector {
+    type Output = Vector;
+    fn mul(self, b: f32) -> Vector {
         let e1 = self.e1() * b;
         let e2 = self.e2() * b;
         let e3 = self.e3() * b;
-        VGA3DVector::new(e1, e2, e3)
+        Vector::new(e1, e2, e3)
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DVector,f32);
+forward_ref_binop!(impl Mul, mul for Vector,f32);
 
 /// Scalar-Bivector
-impl Mul<VGA3DBivector> for f32 {
-    type Output = VGA3DBivector;
-    fn mul(self, b: VGA3DBivector) -> VGA3DBivector {
+impl Mul<Bivector> for f32 {
+    type Output = Bivector;
+    fn mul(self, b: Bivector) -> Bivector {
         let e12 = self * b.e12();
         let e31 = self * b.e31();
         let e23 = self * b.e23();
-        VGA3DBivector::new(e12, e31, e23)
+        Bivector::new(e12, e31, e23)
     }
 }
-forward_ref_binop!(impl Mul, mul for f32, VGA3DBivector);
+forward_ref_binop!(impl Mul, mul for f32, Bivector);
 
 // Bivector-Scalar
-impl Mul<f32> for VGA3DBivector {
-    type Output = VGA3DBivector;
-    fn mul(self, b: f32) -> VGA3DBivector {
+impl Mul<f32> for Bivector {
+    type Output = Bivector;
+    fn mul(self, b: f32) -> Bivector {
         let e12 = self.e12() * b;
         let e31 = self.e31() * b;
         let e23 = self.e23() * b;
-        VGA3DBivector::new(e12, e31, e23)
+        Bivector::new(e12, e31, e23)
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DBivector,f32);
+forward_ref_binop!(impl Mul, mul for Bivector,f32);
 
 // Scalar-Trivector
-impl Mul<VGA3DTrivector> for f32 {
-    type Output = VGA3DTrivector;
-    fn mul(self, b: VGA3DTrivector) -> VGA3DTrivector {
+impl Mul<Trivector> for f32 {
+    type Output = Trivector;
+    fn mul(self, b: Trivector) -> Trivector {
         let e123 = self * b.e123();
-        VGA3DTrivector::new(e123)
+        Trivector::new(e123)
     }
 }
 
 // Trivector-Scalar
-impl Mul<f32> for VGA3DTrivector {
-    type Output = VGA3DTrivector;
-    fn mul(self, b: f32) -> VGA3DTrivector {
+impl Mul<f32> for Trivector {
+    type Output = Trivector;
+    fn mul(self, b: f32) -> Trivector {
         let e123 = self.e123() * b;
-        VGA3DTrivector::new(e123)
+        Trivector::new(e123)
     }
 }
-forward_ref_binop!(impl Mul, mul for f32, VGA3DTrivector);
+forward_ref_binop!(impl Mul, mul for f32, Trivector);
 
 // Scalar-Multivector
-impl Mul<VGA3DMultivector> for f32 {
-    type Output = VGA3DMultivector;
-    fn mul(self, b: VGA3DMultivector) -> VGA3DMultivector {
+impl Mul<Multivector> for f32 {
+    type Output = Multivector;
+    fn mul(self, b: Multivector) -> Multivector {
         let scalar = self * b.scalar();
         let vector = self * b.vector();
         let bivector = self * b.bivector();
         let trivector = self * b.trivector();
-        VGA3DMultivector::new(scalar, vector, bivector, trivector)
+        Multivector::new(scalar, vector, bivector, trivector)
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DTrivector,f32);
+forward_ref_binop!(impl Mul, mul for Trivector,f32);
 
 // Multivector-Scalar
-impl Mul<f32> for VGA3DMultivector {
-    type Output = VGA3DMultivector;
-    fn mul(self, b: f32) -> VGA3DMultivector {
+impl Mul<f32> for Multivector {
+    type Output = Multivector;
+    fn mul(self, b: f32) -> Multivector {
         let scalar = self.scalar() * b;
         let vector = self.vector() * b;
         let bivector = self.bivector() * b;
         let trivector = self.trivector() * b;
-        VGA3DMultivector::new(scalar, vector, bivector, trivector)
+        Multivector::new(scalar, vector, bivector, trivector)
     }
 }
-forward_ref_binop!(impl Mul, mul for f32, VGA3DMultivector);
+forward_ref_binop!(impl Mul, mul for f32, Multivector);
 
 // Scalar-Rotor
 // \[ s R\]
 impl Mul<VGA3DRotor> for f32 {
-    type Output = VGA3DMultivector;
-    fn mul(self: f32, b: VGA3DRotor) -> VGA3DMultivector {
-        VGA3DMultivector::new(
+    type Output = Multivector;
+    fn mul(self: f32, b: VGA3DRotor) -> Multivector {
+        Multivector::new(
             self * b.scalar(),
-            VGA3DVector::zero(),
+            Vector::zero(),
             self * b.bivector(),
-            VGA3DTrivector::zero(),
+            Trivector::zero(),
         )
     }
 }
@@ -140,13 +140,13 @@ forward_ref_binop!(impl Mul, mul for VGA3DRotor, f32);
 //Rotor-Scalar
 // \[ R b\]
 impl Mul<f32> for VGA3DRotor {
-    type Output = VGA3DMultivector;
-    fn mul(self: VGA3DRotor, b: f32) -> VGA3DMultivector {
-        VGA3DMultivector::new(
+    type Output = Multivector;
+    fn mul(self: VGA3DRotor, b: f32) -> Multivector {
+        Multivector::new(
             self.scalar() * b,
-            VGA3DVector::zero(),
+            Vector::zero(),
             self.bivector() * b,
-            VGA3DTrivector::zero(),
+            Trivector::zero(),
         )
     }
 }
@@ -154,84 +154,84 @@ forward_ref_binop!(impl Mul, mul for f32, VGA3DRotor);
 
 /// Vector-Vector
 /// $$ \vec{a} \vec{b} = \vec{a} \cdot \vec{b} +   \vec{a} \wedge \vec{b} $$
-impl Mul for VGA3DVector {
-    type Output = VGA3DMultivector;
+impl Mul for Vector {
+    type Output = Multivector;
 
-    fn mul(self: VGA3DVector, b: VGA3DVector) -> VGA3DMultivector {
+    fn mul(self: Vector, b: Vector) -> Multivector {
         let scalar = self | b;
-        let vector = VGA3DVector::zero();
+        let vector = Vector::zero();
         let bivector = self ^ b;
-        let trivector = VGA3DTrivector::zero();
-        VGA3DMultivector::new(scalar, vector, bivector, trivector)
+        let trivector = Trivector::zero();
+        Multivector::new(scalar, vector, bivector, trivector)
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DVector, VGA3DVector);
+forward_ref_binop!(impl Mul, mul for Vector, Vector);
 
 /// Vector-Bivector
 /// $$ \vec{a}\overset\Rightarrow{b} $$
-impl Mul<VGA3DBivector> for VGA3DVector {
-    type Output = VGA3DMultivector;
-    fn mul(self: VGA3DVector, b: VGA3DBivector) -> VGA3DMultivector {
+impl Mul<Bivector> for Vector {
+    type Output = Multivector;
+    fn mul(self: Vector, b: Bivector) -> Multivector {
         let e1 = -self.e2() * b.e12() + self.e3() * b.e31();
         let e2 = self.e1() * b.e12() - self.e3() * b.e23();
         let e3 = -self.e1() * b.e31() + self.e2() * b.e23();
-        let vector = VGA3DVector::new(e1, e2, e3);
+        let vector = Vector::new(e1, e2, e3);
 
         let e123 = self.e3() * b.e12() + self.e2() * b.e31() + self.e1() * b.e23();
-        let trivector = VGA3DTrivector::new(e123);
-        VGA3DMultivector::new(0.0, vector, VGA3DBivector::zero(), trivector)
+        let trivector = Trivector::new(e123);
+        Multivector::new(0.0, vector, Bivector::zero(), trivector)
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DBivector, VGA3DVector);
+forward_ref_binop!(impl Mul, mul for Bivector, Vector);
 
 // Bivector-Vector
 // \[ \overset\Rightarrow{a}\vec{b}\]
-impl Mul<VGA3DVector> for VGA3DBivector {
-    type Output = VGA3DMultivector;
-    fn mul(self: VGA3DBivector, b: VGA3DVector) -> VGA3DMultivector {
+impl Mul<Vector> for Bivector {
+    type Output = Multivector;
+    fn mul(self: Bivector, b: Vector) -> Multivector {
         let e1 = self.e12() * b.e2() - self.e31() * b.e3();
         let e2 = -self.e12() * b.e1() + self.e23() * b.e3();
         let e3 = self.e31() * b.e1() - self.e23() * b.e2();
-        let vector = VGA3DVector::new(e1, e2, e3);
+        let vector = Vector::new(e1, e2, e3);
 
         let e123 = self.e23() * b.e1() + self.e31() * b.e2() + self.e12() * b.e3();
-        let trivector = VGA3DTrivector::new(e123);
-        VGA3DMultivector::new(0.0, vector, VGA3DBivector::zero(), trivector)
+        let trivector = Trivector::new(e123);
+        Multivector::new(0.0, vector, Bivector::zero(), trivector)
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DVector, VGA3DBivector);
+forward_ref_binop!(impl Mul, mul for Vector, Bivector);
 
 // Vector-Trivector
 // \[ \vec{a}\overset\Rrightarrow{b}\]
-impl Mul<VGA3DTrivector> for VGA3DVector {
-    type Output = VGA3DBivector;
-    fn mul(self: VGA3DVector, b: VGA3DTrivector) -> VGA3DBivector {
+impl Mul<Trivector> for Vector {
+    type Output = Bivector;
+    fn mul(self: Vector, b: Trivector) -> Bivector {
         let e12 = self.e3() * b.e123();
         let e31 = self.e2() * b.e123();
         let e23 = self.e1() * b.e123();
-        VGA3DBivector::new(e12, e31, e23)
+        Bivector::new(e12, e31, e23)
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DTrivector, VGA3DVector);
+forward_ref_binop!(impl Mul, mul for Trivector, Vector);
 
 // Trivector-Vector
 // \[ \overset\Rrightarrow{a}\vec{b}\]
-impl Mul<VGA3DVector> for VGA3DTrivector {
-    type Output = VGA3DBivector;
-    fn mul(self: VGA3DTrivector, b: VGA3DVector) -> VGA3DBivector {
+impl Mul<Vector> for Trivector {
+    type Output = Bivector;
+    fn mul(self: Trivector, b: Vector) -> Bivector {
         let e12 = self.e123() * b.e3();
         let e31 = self.e123() * b.e2();
         let e23 = self.e123() * b.e1();
-        VGA3DBivector::new(e12, e31, e23)
+        Bivector::new(e12, e31, e23)
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DVector, VGA3DTrivector);
+forward_ref_binop!(impl Mul, mul for Vector, Trivector);
 
 // Vector-Multivector
 // \[ \vec{a}B\]
-impl Mul<VGA3DMultivector> for VGA3DVector {
-    type Output = VGA3DMultivector;
-    fn mul(self: VGA3DVector, b: VGA3DMultivector) -> VGA3DMultivector {
+impl Mul<Multivector> for Vector {
+    type Output = Multivector;
+    fn mul(self: Vector, b: Multivector) -> Multivector {
         let vec_scalar = self * b.scalar();
         let vec_vec = self * b.vector();
         let vec_bivec = self * b.bivector();
@@ -240,17 +240,17 @@ impl Mul<VGA3DMultivector> for VGA3DVector {
         let scalar = 0.0;
         let vector = vec_scalar;
         let bivector = vec_trivec;
-        let trivector = VGA3DTrivector::zero();
+        let trivector = Trivector::zero();
 
-        VGA3DMultivector::new(scalar, vector, bivector, trivector) + vec_vec + vec_bivec
+        Multivector::new(scalar, vector, bivector, trivector) + vec_vec + vec_bivec
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DMultivector, VGA3DVector);
+forward_ref_binop!(impl Mul, mul for Multivector, Vector);
 
 // Multivector-Vector
-impl Mul<VGA3DVector> for VGA3DMultivector {
-    type Output = VGA3DMultivector;
-    fn mul(self: VGA3DMultivector, b: VGA3DVector) -> VGA3DMultivector {
+impl Mul<Vector> for Multivector {
+    type Output = Multivector;
+    fn mul(self: Multivector, b: Vector) -> Multivector {
         let scalar_vec = self.scalar() * b;
         let vec_vec = self.vector() * b;
         let bivec_vec = self.bivector() * b;
@@ -259,85 +259,85 @@ impl Mul<VGA3DVector> for VGA3DMultivector {
         let scalar = 0.0;
         let vector = scalar_vec;
         let bivector = trivec_vec;
-        let trivector = VGA3DTrivector::zero();
+        let trivector = Trivector::zero();
 
-        VGA3DMultivector::new(scalar, vector, bivector, trivector) + vec_vec + bivec_vec
+        Multivector::new(scalar, vector, bivector, trivector) + vec_vec + bivec_vec
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DVector, VGA3DMultivector);
+forward_ref_binop!(impl Mul, mul for Vector, Multivector);
 
 // Vector-Rotor
 // \[ \vec{a}R\]
-impl Mul<VGA3DRotor> for VGA3DVector {
-    type Output = VGA3DMultivector;
-    fn mul(self: VGA3DVector, b: VGA3DRotor) -> VGA3DMultivector {
+impl Mul<VGA3DRotor> for Vector {
+    type Output = Multivector;
+    fn mul(self: Vector, b: VGA3DRotor) -> Multivector {
         let scalar = 0.0;
         let vector = self * b.scalar();
-        let bivector = VGA3DBivector::zero();
-        let trivector = VGA3DTrivector::zero();
-        VGA3DMultivector::new(scalar, vector, bivector, trivector) + self * b.bivector()
+        let bivector = Bivector::zero();
+        let trivector = Trivector::zero();
+        Multivector::new(scalar, vector, bivector, trivector) + self * b.bivector()
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DRotor, VGA3DVector);
+forward_ref_binop!(impl Mul, mul for VGA3DRotor, Vector);
 
 // Rotor-Vector
 // \[ \overset\Rrightarrow{a}\vec{b}\]
-impl Mul<VGA3DVector> for VGA3DRotor {
-    type Output = VGA3DMultivector;
-    fn mul(self: VGA3DRotor, b: VGA3DVector) -> VGA3DMultivector {
+impl Mul<Vector> for VGA3DRotor {
+    type Output = Multivector;
+    fn mul(self: VGA3DRotor, b: Vector) -> Multivector {
         let scalar = 0.0;
         let vector = b * self.scalar();
-        let bivector = VGA3DBivector::zero();
-        let trivector = VGA3DTrivector::zero();
-        VGA3DMultivector::new(scalar, vector, bivector, trivector) + self.bivector() * b
+        let bivector = Bivector::zero();
+        let trivector = Trivector::zero();
+        Multivector::new(scalar, vector, bivector, trivector) + self.bivector() * b
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DVector, VGA3DRotor);
+forward_ref_binop!(impl Mul, mul for Vector, VGA3DRotor);
 
 // Bivector-Bivector
 // \[ \overset\Rightarrow{a} \overset\Rightarrow{b} = \overset\Rightarrow{a} \cdot \overset\Rightarrow{b} +  \overset\Rightarrow{a} \times \overset\Rightarrow{b} + \overset\Rightarrow{a} \wedge \overset\Rightarrow{b} \]
-impl Mul for VGA3DBivector {
-    type Output = VGA3DMultivector;
-    fn mul(self: VGA3DBivector, b: VGA3DBivector) -> VGA3DMultivector {
+impl Mul for Bivector {
+    type Output = Multivector;
+    fn mul(self: Bivector, b: Bivector) -> Multivector {
         let scalar = (self | b) + (self ^ b);
-        let vector = VGA3DVector::zero();
+        let vector = Vector::zero();
         let bivector = self.cross(b);
-        let trivector = VGA3DTrivector::zero();
-        VGA3DMultivector::new(scalar, vector, bivector, trivector)
+        let trivector = Trivector::zero();
+        Multivector::new(scalar, vector, bivector, trivector)
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DBivector, VGA3DBivector);
+forward_ref_binop!(impl Mul, mul for Bivector, Bivector);
 
 // Bivector-Trivector
 // \[ \overset\Rightarrow{a}\overset\Rrightarrow{b}\]
-impl Mul<VGA3DTrivector> for VGA3DBivector {
-    type Output = VGA3DVector;
-    fn mul(self: VGA3DBivector, b: VGA3DTrivector) -> VGA3DVector {
+impl Mul<Trivector> for Bivector {
+    type Output = Vector;
+    fn mul(self: Bivector, b: Trivector) -> Vector {
         let e1 = -self.e23() * b.e123();
         let e2 = -self.e31() * b.e123();
         let e3 = -self.e12() * b.e123();
-        VGA3DVector::new(e1, e2, e3)
+        Vector::new(e1, e2, e3)
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DBivector, VGA3DTrivector);
+forward_ref_binop!(impl Mul, mul for Bivector, Trivector);
 
 // Trivector-Bivector
 // \[ \overset\Rrightarrow{a}\overset\Rightarrow{b}\]
-impl Mul<VGA3DBivector> for VGA3DTrivector {
-    type Output = VGA3DVector;
-    fn mul(self: VGA3DTrivector, b: VGA3DBivector) -> VGA3DVector {
+impl Mul<Bivector> for Trivector {
+    type Output = Vector;
+    fn mul(self: Trivector, b: Bivector) -> Vector {
         let e1 = -self.e123() * b.e23();
         let e2 = -self.e123() * b.e31();
         let e3 = -self.e123() * b.e12();
-        VGA3DVector::new(e1, e2, e3)
+        Vector::new(e1, e2, e3)
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DTrivector, VGA3DBivector);
+forward_ref_binop!(impl Mul, mul for Trivector, Bivector);
 
 // Bivector-Multivector
-impl Mul<VGA3DMultivector> for VGA3DBivector {
-    type Output = VGA3DMultivector;
-    fn mul(self: VGA3DBivector, b: VGA3DMultivector) -> VGA3DMultivector {
+impl Mul<Multivector> for Bivector {
+    type Output = Multivector;
+    fn mul(self: Bivector, b: Multivector) -> Multivector {
         let bivec_scalar = self * b.scalar();
         let bivec_vec = self * b.vector();
         let bivec_bivec = self * b.bivector();
@@ -346,17 +346,17 @@ impl Mul<VGA3DMultivector> for VGA3DBivector {
         let scalar = 0.0;
         let vector = bivec_trivec;
         let bivector = bivec_scalar;
-        let trivector = VGA3DTrivector::zero();
+        let trivector = Trivector::zero();
 
-        VGA3DMultivector::new(scalar, vector, bivector, trivector) + bivec_vec + bivec_bivec
+        Multivector::new(scalar, vector, bivector, trivector) + bivec_vec + bivec_bivec
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DBivector, VGA3DMultivector);
+forward_ref_binop!(impl Mul, mul for Bivector, Multivector);
 
 // Multivector-Bivector
-impl Mul<VGA3DBivector> for VGA3DMultivector {
-    type Output = VGA3DMultivector;
-    fn mul(self: VGA3DMultivector, b: VGA3DBivector) -> VGA3DMultivector {
+impl Mul<Bivector> for Multivector {
+    type Output = Multivector;
+    fn mul(self: Multivector, b: Bivector) -> Multivector {
         let scalar_bivec = self.scalar() * b;
         let vec_bivec = self.vector() * b;
         let bivec_bivec = self.bivector() * b;
@@ -365,47 +365,47 @@ impl Mul<VGA3DBivector> for VGA3DMultivector {
         let scalar = 0.0;
         let vector = trivec_bivec;
         let bivector = scalar_bivec;
-        let trivector = VGA3DTrivector::zero();
+        let trivector = Trivector::zero();
 
-        VGA3DMultivector::new(scalar, vector, bivector, trivector) + vec_bivec + bivec_bivec
+        Multivector::new(scalar, vector, bivector, trivector) + vec_bivec + bivec_bivec
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DMultivector, VGA3DBivector);
+forward_ref_binop!(impl Mul, mul for Multivector, Bivector);
 
 // Bivector-Rotor
 // \[ \vec{a}R\]
-impl Mul<VGA3DRotor> for VGA3DBivector {
-    type Output = VGA3DMultivector;
-    fn mul(self: VGA3DBivector, b: VGA3DRotor) -> VGA3DMultivector {
+impl Mul<VGA3DRotor> for Bivector {
+    type Output = Multivector;
+    fn mul(self: Bivector, b: VGA3DRotor) -> Multivector {
         self * b.scalar() + self * b.bivector()
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DBivector, VGA3DRotor);
+forward_ref_binop!(impl Mul, mul for Bivector, VGA3DRotor);
 
 // Rotor-Bivector
 // \[ \overset\Rrightarrow{a}\vec{b}\]
-impl Mul<VGA3DBivector> for VGA3DRotor {
-    type Output = VGA3DMultivector;
-    fn mul(self: VGA3DRotor, b: VGA3DBivector) -> VGA3DMultivector {
+impl Mul<Bivector> for VGA3DRotor {
+    type Output = Multivector;
+    fn mul(self: VGA3DRotor, b: Bivector) -> Multivector {
         self.scalar() * b + self.bivector() * b
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DRotor, VGA3DBivector);
+forward_ref_binop!(impl Mul, mul for VGA3DRotor, Bivector);
 
 // Trivector-Trivector
 // \[ \overset\Rrightarrow{a}\overset\Rrightarrow{b}= \overset\Rrightarrow{a} \cdot \overset\Rrightarrow{b}\]
-impl Mul for VGA3DTrivector {
+impl Mul for Trivector {
     type Output = f32;
-    fn mul(self: VGA3DTrivector, b: VGA3DTrivector) -> f32 {
+    fn mul(self: Trivector, b: Trivector) -> f32 {
         -self.e123() * b.e123()
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DTrivector, VGA3DTrivector);
+forward_ref_binop!(impl Mul, mul for Trivector, Trivector);
 
 // Trivector-Multivector
-impl Mul<VGA3DMultivector> for VGA3DTrivector {
-    type Output = VGA3DMultivector;
-    fn mul(self: VGA3DTrivector, b: VGA3DMultivector) -> VGA3DMultivector {
+impl Mul<Multivector> for Trivector {
+    type Output = Multivector;
+    fn mul(self: Trivector, b: Multivector) -> Multivector {
         let trivec_scalar = self * b.scalar();
         let trivec_vec = self * b.vector();
         let trivec_bivec = self * b.bivector();
@@ -416,15 +416,15 @@ impl Mul<VGA3DMultivector> for VGA3DTrivector {
         let bivector = trivec_vec;
         let trivector = trivec_scalar;
 
-        VGA3DMultivector::new(scalar, vector, bivector, trivector)
+        Multivector::new(scalar, vector, bivector, trivector)
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DTrivector,VGA3DMultivector);
+forward_ref_binop!(impl Mul, mul for Trivector,Multivector);
 
 // Multivector-Trivector
-impl Mul<VGA3DTrivector> for VGA3DMultivector {
-    type Output = VGA3DMultivector;
-    fn mul(self: VGA3DMultivector, b: VGA3DTrivector) -> VGA3DMultivector {
+impl Mul<Trivector> for Multivector {
+    type Output = Multivector;
+    fn mul(self: Multivector, b: Trivector) -> Multivector {
         let scalar_trivec = self.scalar() * b;
         let vec_trivec = self.vector() * b;
         let bivec_trivec = self.bivector() * b;
@@ -435,67 +435,67 @@ impl Mul<VGA3DTrivector> for VGA3DMultivector {
         let bivector = vec_trivec;
         let trivector = scalar_trivec;
 
-        VGA3DMultivector::new(scalar, vector, bivector, trivector)
+        Multivector::new(scalar, vector, bivector, trivector)
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DMultivector, VGA3DTrivector);
+forward_ref_binop!(impl Mul, mul for Multivector, Trivector);
 
 // Trivector-Rotor
 // \[ \vec{a}R\]
-impl Mul<VGA3DRotor> for VGA3DTrivector {
-    type Output = VGA3DMultivector;
-    fn mul(self: VGA3DTrivector, b: VGA3DRotor) -> VGA3DMultivector {
+impl Mul<VGA3DRotor> for Trivector {
+    type Output = Multivector;
+    fn mul(self: Trivector, b: VGA3DRotor) -> Multivector {
         let scalar = 0.0;
         let vector = self * b.bivector();
-        let bivector = VGA3DBivector::zero();
+        let bivector = Bivector::zero();
         let trivector = self * b.scalar();
-        VGA3DMultivector::new(scalar, vector, bivector, trivector)
+        Multivector::new(scalar, vector, bivector, trivector)
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DTrivector,VGA3DRotor);
+forward_ref_binop!(impl Mul, mul for Trivector,VGA3DRotor);
 
 // Rotor-Trivector
 // \[ \overset\Rrightarrow{a}\vec{b}\]
-impl Mul<VGA3DTrivector> for VGA3DRotor {
-    type Output = VGA3DMultivector;
-    fn mul(self: VGA3DRotor, b: VGA3DTrivector) -> VGA3DMultivector {
+impl Mul<Trivector> for VGA3DRotor {
+    type Output = Multivector;
+    fn mul(self: VGA3DRotor, b: Trivector) -> Multivector {
         let scalar = 0.0;
         let vector = self.bivector() * b;
-        let bivector = VGA3DBivector::zero();
+        let bivector = Bivector::zero();
         let trivector = b * self.scalar();
-        VGA3DMultivector::new(scalar, vector, bivector, trivector)
+        Multivector::new(scalar, vector, bivector, trivector)
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DRotor, VGA3DTrivector);
+forward_ref_binop!(impl Mul, mul for VGA3DRotor, Trivector);
 
 // Multivector-Multivector
-impl Mul for VGA3DMultivector {
-    type Output = VGA3DMultivector;
-    fn mul(self: VGA3DMultivector, b: VGA3DMultivector) -> VGA3DMultivector {
+impl Mul for Multivector {
+    type Output = Multivector;
+    fn mul(self: Multivector, b: Multivector) -> Multivector {
         (self.scalar() * b) + (self.vector() * b) + (self.bivector() * b) + (self.trivector() * b)
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DMultivector, VGA3DMultivector);
+forward_ref_binop!(impl Mul, mul for Multivector, Multivector);
 
 // Multivector-Rotor
 // \[ \vec{a}R\]
-impl Mul<VGA3DRotor> for VGA3DMultivector {
-    type Output = VGA3DMultivector;
-    fn mul(self: VGA3DMultivector, b: VGA3DRotor) -> VGA3DMultivector {
+impl Mul<VGA3DRotor> for Multivector {
+    type Output = Multivector;
+    fn mul(self: Multivector, b: VGA3DRotor) -> Multivector {
         (self * b.scalar()) + (self * b.bivector())
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DMultivector, VGA3DRotor);
+forward_ref_binop!(impl Mul, mul for Multivector, VGA3DRotor);
 
 // Rotor-Multivector
 // \[ \overset\Rrightarrow{a}\vec{b}\]
-impl Mul<VGA3DMultivector> for VGA3DRotor {
-    type Output = VGA3DMultivector;
-    fn mul(self: VGA3DRotor, b: VGA3DMultivector) -> VGA3DMultivector {
+impl Mul<Multivector> for VGA3DRotor {
+    type Output = Multivector;
+    fn mul(self: VGA3DRotor, b: Multivector) -> Multivector {
         (self.scalar() * b) + (self.bivector() * b)
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DRotor, VGA3DMultivector);
+forward_ref_binop!(impl Mul, mul for VGA3DRotor, Multivector);
 
 // Test
 #[cfg(test)]
@@ -507,9 +507,9 @@ mod geometric_product {
     #[test]
     fn vector_bivector_geo() {
         // 3e1+5e2+4e3
-        let vector = VGA3DVector::new(3.0, 5.0, 4.0);
+        let vector = Vector::new(3.0, 5.0, 4.0);
         // 2e12+e31+6e23
-        let bivector = VGA3DBivector::new(2.0, 1.0, 6.0);
+        let bivector = Bivector::new(2.0, 1.0, 6.0);
         let mvec = vector * bivector;
         // −6e1​−18e2​+27e3​+31e123​
         assert_relative_eq!(mvec.e1(), -6.0, max_relative = 0.000001);
@@ -521,9 +521,9 @@ mod geometric_product {
     #[test]
     fn bivector_vector_geo() {
         // 2e12+e31+6e23
-        let bivector = VGA3DBivector::new(2.0, 1.0, 6.0);
+        let bivector = Bivector::new(2.0, 1.0, 6.0);
         // 3e1+5e2+4e3
-        let vector = VGA3DVector::new(3.0, 5.0, 4.0);
+        let vector = Vector::new(3.0, 5.0, 4.0);
         let mvec = bivector * vector;
         // 6e1​+18e2​−27e3​+31e123​
         assert_relative_eq!(mvec.e1(), 6.0, max_relative = 0.000001);
@@ -535,9 +535,9 @@ mod geometric_product {
     #[test]
     fn bivector_bivector_mul() {
         // 3e12+5e31+4e23
-        let bivector1 = VGA3DBivector::new(3.0, 5.0, 4.0);
+        let bivector1 = Bivector::new(3.0, 5.0, 4.0);
         // 2e12+e31+6e23
-        let bivector2 = VGA3DBivector::new(2.0, 1.0, 6.0);
+        let bivector2 = Bivector::new(2.0, 1.0, 6.0);
         let mvec = bivector1 * bivector2;
         // −35+26e12​-10e31​−7e23​
         assert_relative_eq!(mvec.scalar(), -35.0, max_relative = 0.000001);
@@ -549,10 +549,10 @@ mod geometric_product {
     #[test]
     fn rotor_bivector_geo() {
         let angle = TAU / 4.0;
-        let rotation_plane = VGA3DBivector::new(4.0, 2.0, -3.0);
+        let rotation_plane = Bivector::new(4.0, 2.0, -3.0);
         let rotor = VGA3DRotor::new(angle / 2.0, rotation_plane);
         // 2e12+e31+6e23
-        let bivector = VGA3DBivector::new(2.0, 1.0, 6.0);
+        let bivector = Bivector::new(2.0, 1.0, 6.0);
         // 0.7071+0.5252e12+0.2626e31-0.3939e23
         let res = rotor * bivector;
         // 1.0504512787+3.3838100433e12​-3.2320864201e31​+4.2426404953e23
@@ -565,10 +565,10 @@ mod geometric_product {
     #[test]
     fn bivector_rotor_geo() {
         // 2e12+e31+6e23
-        let bivector = VGA3DBivector::new(2.0, 1.0, 6.0);
+        let bivector = Bivector::new(2.0, 1.0, 6.0);
         // 0.7071+0.5252e12+0.2626e31-0.3939e23
         let angle = TAU / 4.0;
-        let rotation_plane = VGA3DBivector::new(4.0, 2.0, -3.0);
+        let rotation_plane = Bivector::new(4.0, 2.0, -3.0);
         let rotor = VGA3DRotor::new(angle / 2.0, rotation_plane);
         let mvec = bivector * rotor;
         // 1.0504512787−0.5553830266e12​+4.646299839e31​+4.2426404953e23
@@ -580,16 +580,16 @@ mod geometric_product {
 
     #[test]
     fn trivec_trivec_geo() {
-        let trivector1 = VGA3DTrivector::new(3.0);
-        let trivector2 = VGA3DTrivector::new(6.0);
+        let trivector1 = Trivector::new(3.0);
+        let trivector2 = Trivector::new(6.0);
         let res = trivector1 * trivector2;
         assert_relative_eq!(res, -18.0, max_relative = 0.000001);
     }
 
     #[test]
     fn mvec_mvec_mul() {
-        let mvec1 = VGA3DMultivector::new_components(6.0, 9.0, 7.0, 4.0, 7.0, 4.0, 8.0, 7.0);
-        let mvec2 = VGA3DMultivector::new_components(5.0, 8.0, 7.0, 3.0, 2.0, 8.0, 2.0, 1.0);
+        let mvec1 = Multivector::new_components(6.0, 9.0, 7.0, 4.0, 7.0, 4.0, 8.0, 7.0);
+        let mvec2 = Multivector::new_components(5.0, 8.0, 7.0, 3.0, 2.0, 8.0, 2.0, 1.0);
         let mvec_res = mvec1 * mvec2;
         // 94+126e1​−5e2​−65e3​+23e12​−131e13​+158e23​+236e123
         assert_relative_eq!(mvec_res.scalar(), 94.0, max_relative = 0.000001);
@@ -605,9 +605,9 @@ mod geometric_product {
     fn negetive_mvec_mvec_mul() {
         // let mvec1 = GaMultivector::new_mvec(-6.0, -8.0, -4.0, -1.0, -6.0, -4.0, -8.0, -5.0);
         let mvec1 =
-            VGA3DMultivector::new_components(-4.0, -1.0, -3.0, -2.0, -9.0, -6.0, -3.0, -10.0);
+            Multivector::new_components(-4.0, -1.0, -3.0, -2.0, -9.0, -6.0, -3.0, -10.0);
         let mvec2 =
-            VGA3DMultivector::new_components(-4.0, -2.0, -4.0, -9.0, -2.0, -1.0, -7.0, -1.0);
+            Multivector::new_components(-4.0, -2.0, -4.0, -9.0, -2.0, -1.0, -7.0, -1.0);
         let mvec_res = mvec1 * mvec2;
         // −7−83e1​+9e2​+35e3​+173e12​−9e13​+77e23​+169e123
         assert_relative_eq!(mvec_res.scalar(), -7.0, max_relative = 0.000001);
