@@ -20,7 +20,7 @@
 use super::{
     bivector::{self, Bivector},
     multivector::Multivector,
-    rotor::VGA3DRotor,
+    rotor::Rotor,
     trivector::{self, Trivector},
     vector::Vector,
 };
@@ -120,23 +120,23 @@ forward_ref_binop!(impl BitOr, bitor for Multivector, f32);
 
 // Scalar-Rotor
 // \[ s \cdot R\]
-impl BitOr<VGA3DRotor> for f32 {
+impl BitOr<Rotor> for f32 {
     type Output = Multivector;
-    fn bitor(self: f32, b: VGA3DRotor) -> Multivector {
+    fn bitor(self: f32, b: Rotor) -> Multivector {
         self * b
     }
 }
-forward_ref_binop!(impl BitOr, bitor for f32, VGA3DRotor);
+forward_ref_binop!(impl BitOr, bitor for f32, Rotor);
 
 //Rotor-Scalar
 // \[ R \cdot b\]
-impl BitOr<f32> for VGA3DRotor {
+impl BitOr<f32> for Rotor {
     type Output = Multivector;
-    fn bitor(self: VGA3DRotor, b: f32) -> Multivector {
+    fn bitor(self: Rotor, b: f32) -> Multivector {
         self * b
     }
 }
-forward_ref_binop!(impl BitOr, bitor for VGA3DRotor, f32);
+forward_ref_binop!(impl BitOr, bitor for Rotor, f32);
 
 // Vector-Vector
 // \[ \vec{u} \cdot \vec{v} = u_1 \cdot v_1 + u_2 \cdot v_2 + u_3 \cdot v_3 \]
@@ -224,9 +224,9 @@ forward_ref_binop!(impl BitOr, bitor for Multivector, Vector);
 
 // Vector-Rotor
 // \[ \vec{a} \cdot R\]
-impl BitOr<VGA3DRotor> for Vector {
+impl BitOr<Rotor> for Vector {
     type Output = Multivector;
-    fn bitor(self: Vector, b: VGA3DRotor) -> Multivector {
+    fn bitor(self: Vector, b: Rotor) -> Multivector {
         Multivector::new(
             0.0,
             (self | b.scalar()) + (self | b.bivector()),
@@ -235,13 +235,13 @@ impl BitOr<VGA3DRotor> for Vector {
         )
     }
 }
-forward_ref_binop!(impl BitOr, bitor for Vector, VGA3DRotor);
+forward_ref_binop!(impl BitOr, bitor for Vector, Rotor);
 
 // Rotor-Vector
 // \[ R \cdot \vec{b}\]
-impl BitOr<Vector> for VGA3DRotor {
+impl BitOr<Vector> for Rotor {
     type Output = Multivector;
-    fn bitor(self: VGA3DRotor, b: Vector) -> Multivector {
+    fn bitor(self: Rotor, b: Vector) -> Multivector {
         Multivector::new(
             0.0,
             (self.scalar() | b) + (self.bivector() | b),
@@ -250,7 +250,7 @@ impl BitOr<Vector> for VGA3DRotor {
         )
     }
 }
-forward_ref_binop!(impl BitOr, bitor for VGA3DRotor, Vector);
+forward_ref_binop!(impl BitOr, bitor for Rotor, Vector);
 
 // Bivector-Bivector
 // \[ \overset\Rightarrow{a} \cdot \overset\Rightarrow{b} = \left <\overset\Rightarrow{a} \overset\Rightarrow{b} \right>_0 \]
@@ -318,9 +318,9 @@ forward_ref_binop!(impl BitOr, bitor for Multivector, Bivector);
 
 // Bivector-Rotor
 // \[ \overset\Rightarrow{a} \cdot R\]
-impl BitOr<VGA3DRotor> for Bivector {
+impl BitOr<Rotor> for Bivector {
     type Output = Multivector;
-    fn bitor(self: Bivector, b: VGA3DRotor) -> Multivector {
+    fn bitor(self: Bivector, b: Rotor) -> Multivector {
         let scalar = self | b.bivector();
         let vector = Vector::zero();
         let bivector = self | b.scalar();
@@ -328,13 +328,13 @@ impl BitOr<VGA3DRotor> for Bivector {
         Multivector::new(scalar, vector, bivector, trivector)
     }
 }
-forward_ref_binop!(impl BitOr, bitor for Bivector, VGA3DRotor);
+forward_ref_binop!(impl BitOr, bitor for Bivector, Rotor);
 
 // Rotor-Bivector
 // \[ R \cdot \overset\Rightarrow{b}\]
-impl BitOr<Bivector> for VGA3DRotor {
+impl BitOr<Bivector> for Rotor {
     type Output = Multivector;
-    fn bitor(self: VGA3DRotor, b: Bivector) -> Multivector {
+    fn bitor(self: Rotor, b: Bivector) -> Multivector {
         let scalar = self.bivector() | b;
         let vector = Vector::zero();
         let bivector = self.scalar() | b;
@@ -342,7 +342,7 @@ impl BitOr<Bivector> for VGA3DRotor {
         Multivector::new(scalar, vector, bivector, trivector)
     }
 }
-forward_ref_binop!(impl BitOr, bitor for VGA3DRotor, Bivector);
+forward_ref_binop!(impl BitOr, bitor for Rotor, Bivector);
 
 // Trivector-Trivector
 // In 3D there the geometric product of two trivectors is there inner product
@@ -384,9 +384,9 @@ forward_ref_binop!(impl BitOr, bitor for Multivector, Trivector);
 
 // Trivector-Rotor
 // \[ \overset\Rrightarrow{a} \cdot R\]
-impl BitOr<VGA3DRotor> for Trivector {
+impl BitOr<Rotor> for Trivector {
     type Output = Multivector;
-    fn bitor(self: Trivector, b: VGA3DRotor) -> Multivector {
+    fn bitor(self: Trivector, b: Rotor) -> Multivector {
         let scalar = 0.0;
         let vector = self | b.bivector();
         let bivector = Bivector::zero();
@@ -394,13 +394,13 @@ impl BitOr<VGA3DRotor> for Trivector {
         Multivector::new(scalar, vector, bivector, trivector)
     }
 }
-forward_ref_binop!(impl BitOr, bitor for Trivector, VGA3DRotor);
+forward_ref_binop!(impl BitOr, bitor for Trivector, Rotor);
 
 // Rotor-Trivector
 // \[ R \cdot \overset\Rrightarrow{b}\]
-impl BitOr<Trivector> for VGA3DRotor {
+impl BitOr<Trivector> for Rotor {
     type Output = Multivector;
-    fn bitor(self: VGA3DRotor, b: Trivector) -> Multivector {
+    fn bitor(self: Rotor, b: Trivector) -> Multivector {
         let scalar = 0.0;
         let vector = self.bivector() | b;
         let bivector = Bivector::zero();
@@ -408,7 +408,7 @@ impl BitOr<Trivector> for VGA3DRotor {
         Multivector::new(scalar, vector, bivector, trivector)
     }
 }
-forward_ref_binop!(impl BitOr, bitor for VGA3DRotor, Trivector);
+forward_ref_binop!(impl BitOr, bitor for Rotor, Trivector);
 
 // Multivector-Multivector
 // // \[ A \cdot B = \left <A B \right>_{|a-b|} \]
@@ -422,9 +422,9 @@ forward_ref_binop!(impl BitOr, bitor for Multivector, Multivector);
 
 // Multivector-Rotor
 // \[ A \cdot R\]
-impl BitOr<VGA3DRotor> for Multivector {
+impl BitOr<Rotor> for Multivector {
     type Output = Multivector;
-    fn bitor(self: Multivector, b: VGA3DRotor) -> Multivector {
+    fn bitor(self: Multivector, b: Rotor) -> Multivector {
         let scalar = (self.scalar() * b.scalar()) + (self.bivector() | b.bivector());
         let vector = (self.vector() | b.scalar())
             + (self.vector() | b.bivector())
@@ -434,13 +434,13 @@ impl BitOr<VGA3DRotor> for Multivector {
         Multivector::new(scalar, vector, bivector, trivector)
     }
 }
-forward_ref_binop!(impl BitOr, bitor for Multivector, VGA3DRotor);
+forward_ref_binop!(impl BitOr, bitor for Multivector, Rotor);
 
 // Rotor-Multivector
 // \[ R \cdot B\]
-impl BitOr<Multivector> for VGA3DRotor {
+impl BitOr<Multivector> for Rotor {
     type Output = Multivector;
-    fn bitor(self: VGA3DRotor, b: Multivector) -> Multivector {
+    fn bitor(self: Rotor, b: Multivector) -> Multivector {
         let scalar = (self.scalar() * b.scalar()) + (self.bivector() | b.bivector());
         let vector = (self.scalar() ^ b.vector())
             + (self.bivector() | b.vector())
@@ -450,13 +450,13 @@ impl BitOr<Multivector> for VGA3DRotor {
         Multivector::new(scalar, vector, bivector, trivector)
     }
 }
-forward_ref_binop!(impl BitOr, bitor for VGA3DRotor, Multivector);
+forward_ref_binop!(impl BitOr, bitor for Rotor, Multivector);
 
 // Inner Product
 // \[ R_1 \cdot R_2\]
-impl BitOr for VGA3DRotor {
+impl BitOr for Rotor {
     type Output = Multivector;
-    fn bitor(self: VGA3DRotor, b: VGA3DRotor) -> Multivector {
+    fn bitor(self: Rotor, b: Rotor) -> Multivector {
         let scalar = (self.scalar() * b.scalar()) + (self.bivector() | b.bivector());
         let vector = Vector::zero();
         let bivector = (self.scalar() | b.bivector()) + (self.bivector() | b.scalar());
@@ -464,7 +464,7 @@ impl BitOr for VGA3DRotor {
         Multivector::new(scalar, vector, bivector, trivector)
     }
 }
-forward_ref_binop!(impl BitOr, bitor for VGA3DRotor, VGA3DRotor);
+forward_ref_binop!(impl BitOr, bitor for Rotor, Rotor);
 
 #[cfg(test)]
 mod inner {

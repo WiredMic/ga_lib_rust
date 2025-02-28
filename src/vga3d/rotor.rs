@@ -35,12 +35,12 @@ use super::{
 /// $$ R\left (\frac{\theta}{2},\overset\Rightarrow{b} \right ) = \mathrm{e}^{ \overset\Rightarrow{b} \frac{\theta}{2}} = \cos \left( \frac{\theta}{2}  \right) + \sin \left( \frac{\theta}{2} \right)(b_1 \mathrm{e}_1\mathrm{e}_2 + b_2 \mathrm{e}_3\mathrm{e}_1 + b_3 \mathrm{e}_2\mathrm{e}_3) $$
 /// The norm of a rotor is always 1
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
-pub struct VGA3DRotor {
+pub struct Rotor {
     scalar: f32,
     bivector: Bivector,
 }
 
-impl VGA3DRotor {
+impl Rotor {
     /// Creates new rotor from plane of rotation and angle of rotationen
     /// The plane of rotation is a bivector
     /// The direction of rotation is given by the orientation of the bivector
@@ -102,7 +102,7 @@ mod rotor {
     fn new() {
         let angle = TAU / 4.0;
         let rotation_plane = Bivector::new(4.0, 2.0, -3.0);
-        let rotor = VGA3DRotor::new(angle / 2.0, rotation_plane);
+        let rotor = Rotor::new(angle / 2.0, rotation_plane);
         // 0.70710677+0.52522576e12+0.26261288e31-0.3939193e23
         assert_relative_eq!(rotor.scalar(), 0.70710677, max_relative = 0.000001);
         assert_relative_eq!(rotor.e12(), 0.52522576, max_relative = 0.000001);
@@ -114,7 +114,7 @@ mod rotor {
     fn get_angle() {
         let rotation_angle = TAU / 4.0;
         let rotation_plane = Bivector::new(4.0, 2.0, -3.0);
-        let rotor = VGA3DRotor::new(rotation_angle / 2.0, rotation_plane);
+        let rotor = Rotor::new(rotation_angle / 2.0, rotation_plane);
         assert_relative_eq!(rotor.angle(), rotation_angle / 2.0, max_relative = 0.000001);
     }
 
@@ -123,7 +123,7 @@ mod rotor {
         let angle = TAU / 4.0;
         let rotation_plane = Bivector::new(4.0, 2.0, -3.0);
         let norm = rotation_plane.norm();
-        let rotor = VGA3DRotor::new(angle / 2.0, rotation_plane);
+        let rotor = Rotor::new(angle / 2.0, rotation_plane);
         assert_relative_eq!(
             rotor.rotatino_plane().e12() * norm,
             rotation_plane.e12(),
@@ -145,23 +145,23 @@ mod rotor {
 /// # Geometric Product
 /// The geometric product of two rotors is another rotor
 /// $$ R_1 R_2 = R_3$$
-impl Mul for VGA3DRotor {
-    type Output = VGA3DRotor;
+impl Mul for Rotor {
+    type Output = Rotor;
 
-    fn mul(self: VGA3DRotor, b: VGA3DRotor) -> VGA3DRotor {
+    fn mul(self: Rotor, b: Rotor) -> Rotor {
         let a = self.bivector * b.bivector;
         let scalar = self.scalar * b.scalar + a.scalar();
         let bivector = self.scalar * b.bivector + self.bivector * b.scalar + a.bivector();
 
         // Normelize
         let norm = sqrtf(scalar * scalar + (bivector * bivector.reverse()).scalar());
-        VGA3DRotor {
+        Rotor {
             scalar: scalar * norm,
             bivector: bivector * norm,
         }
     }
 }
-forward_ref_binop!(impl Mul, mul for VGA3DRotor, VGA3DRotor);
+forward_ref_binop!(impl Mul, mul for Rotor, Rotor);
 
 #[cfg(test)]
 mod rotor_geo {
@@ -175,10 +175,10 @@ mod rotor_geo {
     fn rotor_rotor_geo() {
         let angle1 = TAU / 4.0;
         let rotation_plane1 = Bivector::new(1.0, 0.0, 0.0);
-        let rotor1 = VGA3DRotor::new(angle1 / 2.0, rotation_plane1);
+        let rotor1 = Rotor::new(angle1 / 2.0, rotation_plane1);
         let angle2 = TAU / 4.0;
         let rotation_plane2 = Bivector::new(0.0, 1.0, 0.0);
-        let rotor2 = VGA3DRotor::new(angle2 / 2.0, rotation_plane2);
+        let rotor2 = Rotor::new(angle2 / 2.0, rotation_plane2);
 
         let res_rotor = rotor1 * rotor2;
         assert_relative_eq!(res_rotor.scalar(), 0.5, max_relative = 0.000001);
@@ -188,7 +188,7 @@ mod rotor_geo {
     }
 }
 
-impl VGA3DOps for VGA3DRotor {
+impl VGA3DOps for Rotor {
     // \[ |R|^2=\left< R^\dag A \right>_0 \]
     fn norm(self) -> f32 {
         sqrtf(
@@ -199,9 +199,9 @@ impl VGA3DOps for VGA3DRotor {
 
     // Inverse
     // \[A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>}\]
-    fn inverse(self) -> VGA3DRotor {
+    fn inverse(self) -> Rotor {
         let a = 1.0 / (self * self.reverse()).scalar();
-        VGA3DRotor {
+        Rotor {
             scalar: self.reverse().scalar * a,
             bivector: self.reverse().bivector * a,
         }
@@ -210,8 +210,8 @@ impl VGA3DOps for VGA3DRotor {
     // Reverse
     // It follows the patten (Each is a grade)
     // \[+ + - - + + - - \dots (-1)^{k(k-1)/2}\]
-    fn reverse(self) -> VGA3DRotor {
-        VGA3DRotor {
+    fn reverse(self) -> Rotor {
+        Rotor {
             scalar: self.scalar,
             bivector: -self.bivector,
         }
@@ -220,8 +220,8 @@ impl VGA3DOps for VGA3DRotor {
     // It follows the patten (Each is a grade)
     // \[+--+--+\dots(-1)^{k(k+1)/2}\]
 
-    fn conjugate(self) -> VGA3DRotor {
-        VGA3DRotor {
+    fn conjugate(self) -> Rotor {
+        Rotor {
             scalar: self.scalar,
             bivector: -self.bivector,
         }
@@ -235,7 +235,7 @@ impl VGA3DOps for VGA3DRotor {
     }
 }
 
-impl VGA3DOpsRef for VGA3DRotor {
+impl VGA3DOpsRef for Rotor {
     fn norm(&self) -> f32 {
         sqrtf(
             (self.scalar() * self.scalar())
@@ -245,9 +245,9 @@ impl VGA3DOpsRef for VGA3DRotor {
 
     // Inverse
     // \[A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>}\]
-    fn inverse(&self) -> VGA3DRotor {
+    fn inverse(&self) -> Rotor {
         let a = 1.0 / (self * self.reverse()).scalar();
-        VGA3DRotor {
+        Rotor {
             scalar: self.reverse().scalar * a,
             bivector: self.reverse().bivector * a,
         }
@@ -256,8 +256,8 @@ impl VGA3DOpsRef for VGA3DRotor {
     // Reverse
     // It follows the patten (Each is a grade)
     // \[+ + - - + + - - \dots (-1)^{k(k-1)/2}\]
-    fn reverse(&self) -> VGA3DRotor {
-        VGA3DRotor {
+    fn reverse(&self) -> Rotor {
+        Rotor {
             scalar: self.scalar,
             bivector: -self.bivector,
         }
@@ -266,8 +266,8 @@ impl VGA3DOpsRef for VGA3DRotor {
     // It follows the patten (Each is a grade)
     // \[+--+--+\dots(-1)^{k(k+1)/2}\]
 
-    fn conjugate(&self) -> VGA3DRotor {
-        VGA3DRotor {
+    fn conjugate(&self) -> Rotor {
+        Rotor {
             scalar: self.scalar,
             bivector: -self.bivector,
         }
@@ -277,7 +277,7 @@ impl VGA3DOpsRef for VGA3DRotor {
     // \[+ - + - + -\dots (-1)^{k}\]
 
     fn involute(&self) -> Self {
-        VGA3DRotor {
+        Rotor {
             scalar: self.scalar,
             bivector: self.bivector,
         }
@@ -295,11 +295,11 @@ mod rotor_reverse {
     fn rotor_rotor_reverse() {
         let angle1 = TAU / 4.0;
         let rotation_plane1 = Bivector::new(3.0, 2.0, 10.0);
-        let rotor1 = VGA3DRotor::new(angle1, rotation_plane1);
+        let rotor1 = Rotor::new(angle1, rotation_plane1);
 
         let angle2 = TAU / 2.0;
         let rotation_plane2 = Bivector::new(2.0, -3.0, -1.0);
-        let rotor2 = VGA3DRotor::new(angle2, rotation_plane2);
+        let rotor2 = Rotor::new(angle2, rotation_plane2);
 
         let rotor_reverse = (rotor1 * rotor2).reverse();
         let reverse_rotor = rotor2.reverse() * rotor1.reverse();

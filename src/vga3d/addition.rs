@@ -20,7 +20,7 @@
 use super::{
     bivector::{self, Bivector},
     multivector::Multivector,
-    rotor::VGA3DRotor,
+    rotor::Rotor,
     trivector::{self, Trivector},
     vector::Vector,
 };
@@ -120,9 +120,9 @@ forward_ref_binop!(impl Add, add for Multivector, f32);
 
 // Scalar-Rotor
 // \[ s+R\]
-impl Add<VGA3DRotor> for f32 {
+impl Add<Rotor> for f32 {
     type Output = Multivector;
-    fn add(self: f32, b: VGA3DRotor) -> Multivector {
+    fn add(self: f32, b: Rotor) -> Multivector {
         Multivector::new(
             self + b.scalar(),
             Vector::zero(),
@@ -131,13 +131,13 @@ impl Add<VGA3DRotor> for f32 {
         )
     }
 }
-forward_ref_binop!(impl Add, add for f32, VGA3DRotor);
+forward_ref_binop!(impl Add, add for f32, Rotor);
 
 //Rotor-Scalar
 // \[ R+b\]
-impl Add<f32> for VGA3DRotor {
+impl Add<f32> for Rotor {
     type Output = Multivector;
-    fn add(self: VGA3DRotor, b: f32) -> Multivector {
+    fn add(self: Rotor, b: f32) -> Multivector {
         Multivector::new(
             b + self.scalar(),
             Vector::zero(),
@@ -146,7 +146,7 @@ impl Add<f32> for VGA3DRotor {
         )
     }
 }
-forward_ref_binop!(impl Add, add for VGA3DRotor, f32);
+forward_ref_binop!(impl Add, add for Rotor, f32);
 
 impl Add for Vector {
     type Output = Vector;
@@ -222,23 +222,23 @@ forward_ref_binop!(impl Add, add for Multivector, Vector);
 
 // Vector-Rotor
 // \[ \vec{a}+R\]
-impl Add<VGA3DRotor> for Vector {
+impl Add<Rotor> for Vector {
     type Output = Multivector;
-    fn add(self: Vector, b: VGA3DRotor) -> Multivector {
+    fn add(self: Vector, b: Rotor) -> Multivector {
         Multivector::new(b.scalar(), self, b.bivector(), Trivector::zero())
     }
 }
-forward_ref_binop!(impl Add, add for Vector, VGA3DRotor);
+forward_ref_binop!(impl Add, add for Vector, Rotor);
 
 // Multivector-Vector
 // \[ R+\vec{b}\]
-impl Add<Vector> for VGA3DRotor {
+impl Add<Vector> for Rotor {
     type Output = Multivector;
-    fn add(self: VGA3DRotor, b: Vector) -> Multivector {
+    fn add(self: Rotor, b: Vector) -> Multivector {
         Multivector::new(self.scalar(), b, self.bivector(), Trivector::zero())
     }
 }
-forward_ref_binop!(impl Add, add for VGA3DRotor, Vector);
+forward_ref_binop!(impl Add, add for Rotor, Vector);
 
 // Bivector-Bivector
 impl Add for Bivector {
@@ -294,9 +294,9 @@ forward_ref_binop!(impl Add, add for Multivector, Bivector);
 
 // Bivector-Rotor
 // \[ \overset\Rightarrow{a}+R\]
-impl Add<VGA3DRotor> for Bivector {
+impl Add<Rotor> for Bivector {
     type Output = Multivector;
-    fn add(self: Bivector, b: VGA3DRotor) -> Multivector {
+    fn add(self: Bivector, b: Rotor) -> Multivector {
         Multivector::new(
             b.scalar(),
             Vector::zero(),
@@ -305,13 +305,13 @@ impl Add<VGA3DRotor> for Bivector {
         )
     }
 }
-forward_ref_binop!(impl Add, add for Bivector, VGA3DRotor);
+forward_ref_binop!(impl Add, add for Bivector, Rotor);
 
 // Rotor-Bivector
 // \[ R+\overset\Rightarrow{b}\]
-impl Add<Bivector> for VGA3DRotor {
+impl Add<Bivector> for Rotor {
     type Output = Multivector;
-    fn add(self: VGA3DRotor, b: Bivector) -> Multivector {
+    fn add(self: Rotor, b: Bivector) -> Multivector {
         Multivector::new(
             self.scalar(),
             Vector::zero(),
@@ -320,7 +320,7 @@ impl Add<Bivector> for VGA3DRotor {
         )
     }
 }
-forward_ref_binop!(impl Add, add for VGA3DRotor, Bivector);
+forward_ref_binop!(impl Add, add for Rotor, Bivector);
 
 // Trivector-Trivector
 impl Add for Trivector {
@@ -354,23 +354,23 @@ forward_ref_binop!(impl Add, add for Multivector, Trivector);
 
 // Trivector-Rotor
 // \[ \overset\Rrightarrow{a}+R\]
-impl Add<VGA3DRotor> for Trivector {
+impl Add<Rotor> for Trivector {
     type Output = Multivector;
-    fn add(self: Trivector, b: VGA3DRotor) -> Multivector {
+    fn add(self: Trivector, b: Rotor) -> Multivector {
         Multivector::new(b.scalar(), Vector::zero(), b.bivector(), self)
     }
 }
-forward_ref_binop!(impl Add, add for Trivector, VGA3DRotor);
+forward_ref_binop!(impl Add, add for Trivector, Rotor);
 
 // Rotor-Trivector
 // \[ R+\overset\Rrightarrow{b}\]
-impl Add<Trivector> for VGA3DRotor {
+impl Add<Trivector> for Rotor {
     type Output = Multivector;
-    fn add(self: VGA3DRotor, b: Trivector) -> Multivector {
+    fn add(self: Rotor, b: Trivector) -> Multivector {
         Multivector::new(self.scalar(), Vector::zero(), self.bivector(), b)
     }
 }
-forward_ref_binop!(impl Add, add for VGA3DRotor, Trivector);
+forward_ref_binop!(impl Add, add for Rotor, Trivector);
 
 // Multivector-Multivector
 impl Add for Multivector {
@@ -387,9 +387,9 @@ forward_ref_binop!(impl Add, add for Multivector, Multivector);
 
 // Multivector-Rotor
 // \[ A+R\]
-impl Add<VGA3DRotor> for Multivector {
+impl Add<Rotor> for Multivector {
     type Output = Multivector;
-    fn add(self: Multivector, b: VGA3DRotor) -> Multivector {
+    fn add(self: Multivector, b: Rotor) -> Multivector {
         Multivector::new(
             b.scalar(),
             Vector::zero(),
@@ -398,13 +398,13 @@ impl Add<VGA3DRotor> for Multivector {
         ) + self
     }
 }
-forward_ref_binop!(impl Add, add for VGA3DRotor, Multivector);
+forward_ref_binop!(impl Add, add for Rotor, Multivector);
 
 // Rotor-Multivector
 // \[ R+B\]
-impl Add<Multivector> for VGA3DRotor {
+impl Add<Multivector> for Rotor {
     type Output = Multivector;
-    fn add(self: VGA3DRotor, b: Multivector) -> Multivector {
+    fn add(self: Rotor, b: Multivector) -> Multivector {
         Multivector::new(
             self.scalar(),
             Vector::zero(),
@@ -413,11 +413,11 @@ impl Add<Multivector> for VGA3DRotor {
         ) + b
     }
 }
-forward_ref_binop!(impl Add, add for Multivector, VGA3DRotor);
+forward_ref_binop!(impl Add, add for Multivector, Rotor);
 
-impl Add for VGA3DRotor {
+impl Add for Rotor {
     type Output = Multivector;
-    fn add(self: VGA3DRotor, b: VGA3DRotor) -> Multivector {
+    fn add(self: Rotor, b: Rotor) -> Multivector {
         let scalar = self.scalar() + b.scalar();
         let bivector = self.bivector() + b.bivector();
         Multivector::new(
@@ -428,4 +428,4 @@ impl Add for VGA3DRotor {
         )
     }
 }
-forward_ref_binop!(impl Add, add for VGA3DRotor, VGA3DRotor);
+forward_ref_binop!(impl Add, add for Rotor, Rotor);

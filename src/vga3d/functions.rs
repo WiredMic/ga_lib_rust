@@ -18,13 +18,13 @@
 #![allow(dead_code)]
 
 use super::{
-    bivector::Bivector, multivector::Multivector, rotor::VGA3DRotor,
-    trivector::Trivector, vector::Vector, VGA3DOps, VGA3DOpsRef,
+    bivector::Bivector, multivector::Multivector, rotor::Rotor, trivector::Trivector,
+    vector::Vector, VGA3DOps, VGA3DOpsRef,
 };
 
 // Functions
 // Rotation
-pub trait Rotatable<R = VGA3DRotor> {
+pub trait Rotatable<R = Rotor> {
     type Output;
     fn rotate(self, rotor: R) -> Self::Output;
 }
@@ -34,15 +34,15 @@ macro_rules! impl_rotatable {
         // Owned vector, owned rotor
         impl Rotatable for $vec {
             type Output = $output;
-            fn rotate(self, rotor: VGA3DRotor) -> Self::Output {
+            fn rotate(self, rotor: Rotor) -> Self::Output {
                 (rotor.reverse() * self * rotor).$extract()
             }
         }
 
         // Owned vector, reference rotor
-        impl Rotatable<&VGA3DRotor> for $vec {
+        impl Rotatable<&Rotor> for $vec {
             type Output = $output;
-            fn rotate(self, rotor: &VGA3DRotor) -> Self::Output {
+            fn rotate(self, rotor: &Rotor) -> Self::Output {
                 (rotor.reverse() * self * *rotor).$extract()
             }
         }
@@ -50,15 +50,15 @@ macro_rules! impl_rotatable {
         // Reference vector, owned rotor
         impl<'a> Rotatable for &'a $vec {
             type Output = $output;
-            fn rotate(self, rotor: VGA3DRotor) -> Self::Output {
+            fn rotate(self, rotor: Rotor) -> Self::Output {
                 (rotor.reverse() * *self * rotor).$extract()
             }
         }
 
         // Reference vector, reference rotor
-        impl<'a, 'b> Rotatable<&'b VGA3DRotor> for &'a $vec {
+        impl<'a, 'b> Rotatable<&'b Rotor> for &'a $vec {
             type Output = $output;
-            fn rotate(self, rotor: &VGA3DRotor) -> Self::Output {
+            fn rotate(self, rotor: &Rotor) -> Self::Output {
                 (rotor.reverse() * *self * *rotor).$extract()
             }
         }
@@ -84,7 +84,7 @@ mod rotation {
         let vector = Vector::new(3.0, 0.0, 0.0);
         let angle = TAU / 4.0;
         let bivector = Bivector::new(1.0, 0.0, 0.0);
-        let rotor = VGA3DRotor::new(angle / 2.0, bivector);
+        let rotor = Rotor::new(angle / 2.0, bivector);
         let vector_rot_ref1 = (&vector).rotate(&rotor);
         let vector_rot_ref2 = (&vector).rotate(rotor);
         let vector_rot_ref3 = vector.rotate(&rotor);
@@ -111,7 +111,7 @@ mod rotation {
     fn bivector() {
         let angle = TAU / 4.0;
         let rotation_plane = Bivector::new(0.5, 5.2, -3.0);
-        let rotor = VGA3DRotor::new(angle / 2.0, rotation_plane);
+        let rotor = Rotor::new(angle / 2.0, rotation_plane);
         let bivector = Bivector::new(6.4, -4.5, 3.3);
         let bivector_rot = bivector.rotate(rotor);
 
@@ -244,8 +244,7 @@ where
     T: VGA3DOps + Copy,
     Multivector: core::ops::BitOr<T>,
     <Multivector as core::ops::BitOr<T>>::Output: core::ops::Mul<T>,
-    <<Multivector as core::ops::BitOr<T>>::Output as core::ops::Mul<T>>::Output:
-        HasMultivector,
+    <<Multivector as core::ops::BitOr<T>>::Output as core::ops::Mul<T>>::Output: HasMultivector,
 {
     type Output = Multivector;
 
@@ -389,8 +388,7 @@ where
     T: VGA3DOps + Copy,
     Multivector: core::ops::BitXor<T>,
     <Multivector as core::ops::BitXor<T>>::Output: core::ops::Mul<T>,
-    <<Multivector as core::ops::BitXor<T>>::Output as core::ops::Mul<T>>::Output:
-        HasMultivector,
+    <<Multivector as core::ops::BitXor<T>>::Output as core::ops::Mul<T>>::Output: HasMultivector,
 {
     type Output = Multivector;
 

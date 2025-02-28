@@ -31,7 +31,7 @@ mod multivector;
 pub use multivector::Multivector;
 //
 mod rotor;
-pub use rotor::VGA3DRotor;
+pub use rotor::Rotor;
 // Interactions
 mod addition;
 mod exterior;
@@ -41,6 +41,7 @@ mod regressive;
 mod subtraction;
 // Functions
 mod functions;
+pub use functions::{Projectable, Reflectable, Rejectable, Rotatable};
 
 pub trait VGA3DOps {
     fn reverse(self) -> Self;

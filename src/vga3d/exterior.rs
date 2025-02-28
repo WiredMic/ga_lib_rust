@@ -20,7 +20,7 @@
 use super::{
     bivector::{self, Bivector},
     multivector::Multivector,
-    rotor::VGA3DRotor,
+    rotor::Rotor,
     trivector::{self, Trivector},
     vector::Vector,
 };
@@ -119,23 +119,23 @@ forward_ref_binop!(impl BitXor, bitxor for Multivector, f32);
 
 // Scalar-Rotor
 // \[ s\wedge R\]
-impl BitXor<VGA3DRotor> for f32 {
+impl BitXor<Rotor> for f32 {
     type Output = Multivector;
-    fn bitxor(self: f32, b: VGA3DRotor) -> Multivector {
+    fn bitxor(self: f32, b: Rotor) -> Multivector {
         self * b
     }
 }
-forward_ref_binop!(impl BitXor, bitxor for f32, VGA3DRotor);
+forward_ref_binop!(impl BitXor, bitxor for f32, Rotor);
 
 //Rotor-Scalar
 // \[ R\wedge b\]
-impl BitXor<f32> for VGA3DRotor {
+impl BitXor<f32> for Rotor {
     type Output = Multivector;
-    fn bitxor(self: VGA3DRotor, b: f32) -> Multivector {
+    fn bitxor(self: Rotor, b: f32) -> Multivector {
         self * b
     }
 }
-forward_ref_binop!(impl BitXor, bitxor for VGA3DRotor, f32);
+forward_ref_binop!(impl BitXor, bitxor for Rotor, f32);
 
 // Vector-Vector
 impl BitXor for Vector {
@@ -219,9 +219,9 @@ forward_ref_binop!(impl BitXor, bitxor for Multivector, Vector);
 
 // Vector-Rotor
 // \[ \vec{a} \wedge R\]
-impl BitXor<VGA3DRotor> for Vector {
+impl BitXor<Rotor> for Vector {
     type Output = Multivector;
-    fn bitxor(self: Vector, b: VGA3DRotor) -> Multivector {
+    fn bitxor(self: Vector, b: Rotor) -> Multivector {
         Multivector::new(
             0.0,
             self ^ b.scalar(),
@@ -230,13 +230,13 @@ impl BitXor<VGA3DRotor> for Vector {
         )
     }
 }
-forward_ref_binop!(impl BitXor, bitxor for Vector, VGA3DRotor);
+forward_ref_binop!(impl BitXor, bitxor for Vector, Rotor);
 
 // Rotor-Vector
 // \[ R\wedge \vec{b}\]
-impl BitXor<Vector> for VGA3DRotor {
+impl BitXor<Vector> for Rotor {
     type Output = Multivector;
-    fn bitxor(self: VGA3DRotor, b: Vector) -> Multivector {
+    fn bitxor(self: Rotor, b: Vector) -> Multivector {
         Multivector::new(
             0.0,
             self.scalar() ^ b,
@@ -245,7 +245,7 @@ impl BitXor<Vector> for VGA3DRotor {
         )
     }
 }
-forward_ref_binop!(impl BitXor, bitxor for VGA3DRotor, Vector);
+forward_ref_binop!(impl BitXor, bitxor for Rotor, Vector);
 
 // Bivector-Bivector
 // \[ \overset\Rightarrow{a} \wedge \overset\Rightarrow{b} = \left <\overset\Rightarrow{a} \overset\Rightarrow{b} \right>_4 \]
@@ -308,9 +308,9 @@ forward_ref_binop!(impl BitXor, bitxor for Multivector, Bivector);
 
 // Bivector-Rotor
 // \[ \overset\Rightarrow{a}\wedge R\]
-impl BitXor<VGA3DRotor> for Bivector {
+impl BitXor<Rotor> for Bivector {
     type Output = Multivector;
-    fn bitxor(self: Bivector, b: VGA3DRotor) -> Multivector {
+    fn bitxor(self: Bivector, b: Rotor) -> Multivector {
         let scalar = self ^ b.bivector();
         let vector = Vector::zero();
         let bivector = self ^ b.scalar();
@@ -318,13 +318,13 @@ impl BitXor<VGA3DRotor> for Bivector {
         Multivector::new(scalar, vector, bivector, trivector)
     }
 }
-forward_ref_binop!(impl BitXor, bitxor for Bivector, VGA3DRotor);
+forward_ref_binop!(impl BitXor, bitxor for Bivector, Rotor);
 
 // Rotor-Bivector
 // \[ R\wedge \overset\Rightarrow{b}\]
-impl BitXor<Bivector> for VGA3DRotor {
+impl BitXor<Bivector> for Rotor {
     type Output = Multivector;
-    fn bitxor(self: VGA3DRotor, b: Bivector) -> Multivector {
+    fn bitxor(self: Rotor, b: Bivector) -> Multivector {
         let scalar = self.bivector() ^ b;
         let vector = Vector::zero();
         let bivector = self.scalar() ^ b;
@@ -332,7 +332,7 @@ impl BitXor<Bivector> for VGA3DRotor {
         Multivector::new(scalar, vector, bivector, trivector)
     }
 }
-forward_ref_binop!(impl BitXor, bitxor for VGA3DRotor, Bivector);
+forward_ref_binop!(impl BitXor, bitxor for Rotor, Bivector);
 
 // Trivector-Trivector
 // \[ \overset\Rrightarrow{a} \wedge \overset\Rrightarrow{b} = \left <\overset\Rrightarrow{a} \overset\Rrightarrow{b} \right>_4 \]
@@ -375,9 +375,9 @@ forward_ref_binop!(impl BitXor, bitxor for Multivector, Trivector);
 
 // Trivector-Rotor
 // \[ \overset\Rrightarrow{a}\wedge R\]
-impl BitXor<VGA3DRotor> for Trivector {
+impl BitXor<Rotor> for Trivector {
     type Output = Multivector;
-    fn bitxor(self: Trivector, b: VGA3DRotor) -> Multivector {
+    fn bitxor(self: Trivector, b: Rotor) -> Multivector {
         let scalar = self ^ b.bivector();
         let vector = Vector::zero();
         let bivector = Bivector::zero();
@@ -385,13 +385,13 @@ impl BitXor<VGA3DRotor> for Trivector {
         Multivector::new(scalar, vector, bivector, trivector)
     }
 }
-forward_ref_binop!(impl BitXor, bitxor for Trivector, VGA3DRotor);
+forward_ref_binop!(impl BitXor, bitxor for Trivector, Rotor);
 
 // Rotor-Trivector
 // \[ R\wedge \overset\Rrightarrow{b}\]
-impl BitXor<Trivector> for VGA3DRotor {
+impl BitXor<Trivector> for Rotor {
     type Output = Multivector;
-    fn bitxor(self: VGA3DRotor, b: Trivector) -> Multivector {
+    fn bitxor(self: Rotor, b: Trivector) -> Multivector {
         let scalar = self.bivector() ^ b;
         let vector = Vector::zero();
         let bivector = Bivector::zero();
@@ -399,7 +399,7 @@ impl BitXor<Trivector> for VGA3DRotor {
         Multivector::new(scalar, vector, bivector, trivector)
     }
 }
-forward_ref_binop!(impl BitXor, bitxor for VGA3DRotor, Trivector);
+forward_ref_binop!(impl BitXor, bitxor for Rotor, Trivector);
 
 // Multivector-Multivector
 // \[ A \wedge B = \left <A B \right>_{a+b} \]
@@ -412,9 +412,9 @@ impl BitXor for Multivector {
 
 // Multivector-Rotor
 // \[ A\wedge R\]
-impl BitXor<VGA3DRotor> for Multivector {
+impl BitXor<Rotor> for Multivector {
     type Output = Multivector;
-    fn bitxor(self: Multivector, b: VGA3DRotor) -> Multivector {
+    fn bitxor(self: Multivector, b: Rotor) -> Multivector {
         let scalar = (self.scalar() * b.scalar())
             + (self.bivector() ^ b.bivector())
             + (self.trivector() ^ b.bivector());
@@ -424,13 +424,13 @@ impl BitXor<VGA3DRotor> for Multivector {
         Multivector::new(scalar, vector, bivector, trivector)
     }
 }
-forward_ref_binop!(impl BitXor, bitxor for Multivector, VGA3DRotor);
+forward_ref_binop!(impl BitXor, bitxor for Multivector, Rotor);
 
 // Rotor-Multivector
 // \[ R\wedge B\]
-impl BitXor<Multivector> for VGA3DRotor {
+impl BitXor<Multivector> for Rotor {
     type Output = Multivector;
-    fn bitxor(self: VGA3DRotor, b: Multivector) -> Multivector {
+    fn bitxor(self: Rotor, b: Multivector) -> Multivector {
         let scalar = (self.scalar() * b.scalar())
             + (self.bivector() ^ b.bivector())
             + (self.bivector() ^ b.trivector());
@@ -440,13 +440,13 @@ impl BitXor<Multivector> for VGA3DRotor {
         Multivector::new(scalar, vector, bivector, trivector)
     }
 }
-forward_ref_binop!(impl BitXor, bitxor for VGA3DRotor, Multivector);
+forward_ref_binop!(impl BitXor, bitxor for Rotor, Multivector);
 
 // Rotor-Rotor
 // \[ R_1 \wedge R_2\]
-impl BitXor for VGA3DRotor {
+impl BitXor for Rotor {
     type Output = Multivector;
-    fn bitxor(self: VGA3DRotor, b: VGA3DRotor) -> Multivector {
+    fn bitxor(self: Rotor, b: Rotor) -> Multivector {
         let scalar = (self.scalar() * b.scalar()) + (self.bivector() ^ b.bivector());
         let vector = Vector::zero();
         let bivector = (self.scalar() ^ b.bivector()) + (self.bivector() ^ b.scalar());
@@ -454,7 +454,7 @@ impl BitXor for VGA3DRotor {
         Multivector::new(scalar, vector, bivector, trivector)
     }
 }
-forward_ref_binop!(impl BitXor, bitxor for VGA3DRotor, VGA3DRotor);
+forward_ref_binop!(impl BitXor, bitxor for Rotor, Rotor);
 
 #[cfg(test)]
 mod exterior {
