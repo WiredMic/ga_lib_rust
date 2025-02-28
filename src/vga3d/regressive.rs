@@ -20,7 +20,7 @@
 use super::{
     bivector::{self, Bivector},
     multivector::Multivector,
-    rotor::VGA3DRotor,
+    rotor::Rotor,
     trivector::{self, Trivector},
     vector::Vector,
 };
