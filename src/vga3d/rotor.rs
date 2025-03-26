@@ -25,8 +25,8 @@ use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Index, IndexMut, Mul, Neg, Not,
 use libm::{acosf, cosf, sinf, sqrtf};
 
 use super::{
-    bivector::Bivector, multivector::Multivector, trivector::Trivector,
-    vector::Vector, VGA3DOps, VGA3DOpsRef,
+    bivector::Bivector, multivector::Multivector, trivector::Trivector, vector::Vector, VGA3DOps,
+    VGA3DOpsRef,
 };
 
 /// # 3D Vector Geometric Algebra Rotor
@@ -53,6 +53,14 @@ impl Rotor {
 
         let bivector = bi_pre * rotation_plane;
         Self { scalar, bivector }
+    }
+
+    /// Creates new rotor from an angle bivector $\overset\Rightarrow{\theta}$.
+    /// The angle must be in radians and must be half the rotational angle.
+    pub fn new_angle_bivector(angle_bivector: Bivector) -> Self {
+        let norm = angle_bivector.norm();
+        let rotation_plane = angle_bivector * (1.0 / norm);
+        Rotor::new(norm, rotation_plane)
     }
 
     /// Get the scalar grade of the rotor

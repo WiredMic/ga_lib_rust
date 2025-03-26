@@ -18,10 +18,7 @@
 #![allow(dead_code)]
 
 use super::{
-    bivector::{self, Bivector},
-    multivector::Multivector,
-    rotor::Rotor,
-    trivector::{self, Trivector},
+    bivector::Bivector, multivector::Multivector, rotor::Rotor, trivector::Trivector,
     vector::Vector,
 };
 
@@ -69,10 +66,7 @@ forward_ref_binop!(impl Mul, mul for f32, Bivector);
 impl Mul<f32> for Bivector {
     type Output = Bivector;
     fn mul(self, b: f32) -> Bivector {
-        let e12 = self.e12() * b;
-        let e31 = self.e31() * b;
-        let e23 = self.e23() * b;
-        Bivector::new(e12, e31, e23)
+        Bivector::new(self.e12() * b, self.e31() * b, self.e23() * b)
     }
 }
 forward_ref_binop!(impl Mul, mul for Bivector,f32);
@@ -85,6 +79,7 @@ impl Mul<Trivector> for f32 {
         Trivector::new(e123)
     }
 }
+forward_ref_binop!(impl Mul, mul for f32,Trivector);
 
 // Trivector-Scalar
 impl Mul<f32> for Trivector {
@@ -94,7 +89,7 @@ impl Mul<f32> for Trivector {
         Trivector::new(e123)
     }
 }
-forward_ref_binop!(impl Mul, mul for f32, Trivector);
+forward_ref_binop!(impl Mul, mul for Trivector, f32);
 
 // Scalar-Multivector
 impl Mul<Multivector> for f32 {
@@ -107,7 +102,7 @@ impl Mul<Multivector> for f32 {
         Multivector::new(scalar, vector, bivector, trivector)
     }
 }
-forward_ref_binop!(impl Mul, mul for Trivector,f32);
+forward_ref_binop!(impl Mul, mul for f32, Multivector);
 
 // Multivector-Scalar
 impl Mul<f32> for Multivector {
@@ -120,7 +115,7 @@ impl Mul<f32> for Multivector {
         Multivector::new(scalar, vector, bivector, trivector)
     }
 }
-forward_ref_binop!(impl Mul, mul for f32, Multivector);
+forward_ref_binop!(impl Mul, mul for Multivector, f32);
 
 // Scalar-Rotor
 // \[ s R\]
@@ -156,13 +151,21 @@ forward_ref_binop!(impl Mul, mul for f32, Rotor);
 /// $$ \vec{a} \vec{b} = \vec{a} \cdot \vec{b} +   \vec{a} \wedge \vec{b} $$
 impl Mul for Vector {
     type Output = Multivector;
-
     fn mul(self: Vector, b: Vector) -> Multivector {
-        let scalar = self | b;
+        let scalar = self.e1() * b.e1() + self.e2() * b.e2() + self.e3() * b.e3();
         let vector = Vector::zero();
-        let bivector = self ^ b;
+        let bivector = Bivector::new(
+            self.e1() * b.e2() - self.e2() * b.e1(),
+            self.e3() * b.e1() - self.e1() * b.e3(),
+            self.e2() * b.e3() - self.e3() * b.e2(),
+        );
         let trivector = Trivector::zero();
         Multivector::new(scalar, vector, bivector, trivector)
+        // let scalar = self | b;
+        // let vector = Vector::zero();
+        // let bivector = self ^ b;
+        // let trivector = Trivector::zero();
+        // Multivector::new(scalar, vector, bivector, trivector)
     }
 }
 forward_ref_binop!(impl Mul, mul for Vector, Vector);
@@ -172,13 +175,13 @@ forward_ref_binop!(impl Mul, mul for Vector, Vector);
 impl Mul<Bivector> for Vector {
     type Output = Multivector;
     fn mul(self: Vector, b: Bivector) -> Multivector {
-        let e1 = -self.e2() * b.e12() + self.e3() * b.e31();
-        let e2 = self.e1() * b.e12() - self.e3() * b.e23();
-        let e3 = -self.e1() * b.e31() + self.e2() * b.e23();
-        let vector = Vector::new(e1, e2, e3);
-
-        let e123 = self.e3() * b.e12() + self.e2() * b.e31() + self.e1() * b.e23();
-        let trivector = Trivector::new(e123);
+        let vector = Vector::new(
+            -self.e2() * b.e12() + self.e3() * b.e31(),
+            self.e1() * b.e12() - self.e3() * b.e23(),
+            -self.e1() * b.e31() + self.e2() * b.e23(),
+        );
+        let trivector =
+            Trivector::new(self.e3() * b.e12() + self.e2() * b.e31() + self.e1() * b.e23());
         Multivector::new(0.0, vector, Bivector::zero(), trivector)
     }
 }
@@ -189,13 +192,13 @@ forward_ref_binop!(impl Mul, mul for Bivector, Vector);
 impl Mul<Vector> for Bivector {
     type Output = Multivector;
     fn mul(self: Bivector, b: Vector) -> Multivector {
-        let e1 = self.e12() * b.e2() - self.e31() * b.e3();
-        let e2 = -self.e12() * b.e1() + self.e23() * b.e3();
-        let e3 = self.e31() * b.e1() - self.e23() * b.e2();
-        let vector = Vector::new(e1, e2, e3);
-
-        let e123 = self.e23() * b.e1() + self.e31() * b.e2() + self.e12() * b.e3();
-        let trivector = Trivector::new(e123);
+        let vector = Vector::new(
+            self.e12() * b.e2() - self.e31() * b.e3(),
+            -self.e12() * b.e1() + self.e23() * b.e3(),
+            self.e31() * b.e1() - self.e23() * b.e2(),
+        );
+        let trivector =
+            Trivector::new(self.e23() * b.e1() + self.e31() * b.e2() + self.e12() * b.e3());
         Multivector::new(0.0, vector, Bivector::zero(), trivector)
     }
 }
@@ -206,10 +209,11 @@ forward_ref_binop!(impl Mul, mul for Vector, Bivector);
 impl Mul<Trivector> for Vector {
     type Output = Bivector;
     fn mul(self: Vector, b: Trivector) -> Bivector {
-        let e12 = self.e3() * b.e123();
-        let e31 = self.e2() * b.e123();
-        let e23 = self.e1() * b.e123();
-        Bivector::new(e12, e31, e23)
+        Bivector::new(
+            self.e3() * b.e123(),
+            self.e2() * b.e123(),
+            self.e1() * b.e123(),
+        )
     }
 }
 forward_ref_binop!(impl Mul, mul for Trivector, Vector);
@@ -219,10 +223,11 @@ forward_ref_binop!(impl Mul, mul for Trivector, Vector);
 impl Mul<Vector> for Trivector {
     type Output = Bivector;
     fn mul(self: Trivector, b: Vector) -> Bivector {
-        let e12 = self.e123() * b.e3();
-        let e31 = self.e123() * b.e2();
-        let e23 = self.e123() * b.e1();
-        Bivector::new(e12, e31, e23)
+        Bivector::new(
+            self.e123() * b.e3(),
+            self.e123() * b.e2(),
+            self.e123() * b.e1(),
+        )
     }
 }
 forward_ref_binop!(impl Mul, mul for Vector, Trivector);
@@ -232,17 +237,20 @@ forward_ref_binop!(impl Mul, mul for Vector, Trivector);
 impl Mul<Multivector> for Vector {
     type Output = Multivector;
     fn mul(self: Vector, b: Multivector) -> Multivector {
-        let vec_scalar = self * b.scalar();
-        let vec_vec = self * b.vector();
-        let vec_bivec = self * b.bivector();
-        let vec_trivec = self * b.trivector();
-
-        let scalar = 0.0;
-        let vector = vec_scalar;
-        let bivector = vec_trivec;
-        let trivector = Trivector::zero();
-
-        Multivector::new(scalar, vector, bivector, trivector) + vec_vec + vec_bivec
+        let scalar = self.e1() * b.e1() + self.e2() * b.e2() + self.e3() * b.e3();
+        let vector = Vector::new(
+            self.e1() * b.scalar() - self.e2() * b.e12() + self.e3() * b.e31(),
+            self.e2() * b.scalar() + self.e1() * b.e12() - self.e3() * b.e23(),
+            self.e3() * b.scalar() - self.e1() * b.e31() + self.e2() * b.e23(),
+        );
+        let bivector = Bivector::new(
+            self.e1() * b.e2() - self.e2() * b.e1() + self.e3() * b.e123(),
+            self.e3() * b.e1() - self.e1() * b.e3() + self.e2() * b.e123(),
+            self.e2() * b.e3() - self.e3() * b.e2() + self.e1() * b.e123(),
+        );
+        let trivector =
+            Trivector::new(self.e3() * b.e12() + self.e2() * b.e31() + self.e1() * b.e23());
+        Multivector::new(scalar, vector, bivector, trivector)
     }
 }
 forward_ref_binop!(impl Mul, mul for Multivector, Vector);
@@ -272,12 +280,18 @@ impl Mul<Rotor> for Vector {
     type Output = Multivector;
     fn mul(self: Vector, b: Rotor) -> Multivector {
         let scalar = 0.0;
-        let vector = self * b.scalar();
+        let vector = Vector::new(
+            self.e1() * b.scalar() - self.e2() * b.e12() + self.e3() * b.e31(),
+            self.e2() * b.scalar() + self.e1() * b.e12() - self.e3() * b.e23(),
+            self.e3() * b.scalar() - self.e1() * b.e31() + self.e2() * b.e23(),
+        );
         let bivector = Bivector::zero();
-        let trivector = Trivector::zero();
-        Multivector::new(scalar, vector, bivector, trivector) + self * b.bivector()
+        let trivector =
+            Trivector::new(self.e3() * b.e12() + self.e2() * b.e31() + self.e1() * b.e23());
+        Multivector::new(scalar, vector, bivector, trivector)
     }
 }
+
 forward_ref_binop!(impl Mul, mul for Rotor, Vector);
 
 // Rotor-Vector
@@ -286,10 +300,20 @@ impl Mul<Vector> for Rotor {
     type Output = Multivector;
     fn mul(self: Rotor, b: Vector) -> Multivector {
         let scalar = 0.0;
-        let vector = b * self.scalar();
+        let vector = Vector::new(
+            self.scalar() * b.e1() + self.e12() * b.e2() - self.e31() * b.e3(),
+            self.scalar() * b.e2() - self.e12() * b.e1() + self.e23() * b.e3(),
+            self.scalar() * b.e3() + self.e31() * b.e1() - self.e23() * b.e2(),
+        );
         let bivector = Bivector::zero();
-        let trivector = Trivector::zero();
-        Multivector::new(scalar, vector, bivector, trivector) + self.bivector() * b
+        let trivector =
+            Trivector::new(self.e23() * b.e1() + self.e31() * b.e2() + self.e12() * b.e3());
+        Multivector::new(scalar, vector, bivector, trivector)
+        // let scalar = 0.0;
+        // let vector = b * self.scalar();
+        // let bivector = Bivector::zero();
+        // let trivector = Trivector::zero();
+        // Multivector::new(scalar, vector, bivector, trivector) + self.bivector() * b
     }
 }
 forward_ref_binop!(impl Mul, mul for Vector, Rotor);
@@ -299,11 +323,16 @@ forward_ref_binop!(impl Mul, mul for Vector, Rotor);
 impl Mul for Bivector {
     type Output = Multivector;
     fn mul(self: Bivector, b: Bivector) -> Multivector {
-        let scalar = (self | b) + (self ^ b);
-        let vector = Vector::zero();
-        let bivector = self.cross(b);
-        let trivector = Trivector::zero();
-        Multivector::new(scalar, vector, bivector, trivector)
+        Multivector::new(
+            -self.e12() * b.e12() - self.e31() * b.e31() - self.e23() * b.e23(),
+            Vector::zero(),
+            Bivector::new(
+                self.e31() * b.e23() - self.e23() * b.e31(),
+                self.e23() * b.e12() - self.e12() * b.e23(),
+                self.e12() * b.e31() - self.e31() * b.e12(),
+            ),
+            Trivector::zero(),
+        )
     }
 }
 forward_ref_binop!(impl Mul, mul for Bivector, Bivector);
@@ -313,10 +342,11 @@ forward_ref_binop!(impl Mul, mul for Bivector, Bivector);
 impl Mul<Trivector> for Bivector {
     type Output = Vector;
     fn mul(self: Bivector, b: Trivector) -> Vector {
-        let e1 = -self.e23() * b.e123();
-        let e2 = -self.e31() * b.e123();
-        let e3 = -self.e12() * b.e123();
-        Vector::new(e1, e2, e3)
+        Vector::new(
+            -self.e23() * b.e123(),
+            -self.e31() * b.e123(),
+            -self.e12() * b.e123(),
+        )
     }
 }
 forward_ref_binop!(impl Mul, mul for Bivector, Trivector);
@@ -326,10 +356,11 @@ forward_ref_binop!(impl Mul, mul for Bivector, Trivector);
 impl Mul<Bivector> for Trivector {
     type Output = Vector;
     fn mul(self: Trivector, b: Bivector) -> Vector {
-        let e1 = -self.e123() * b.e23();
-        let e2 = -self.e123() * b.e31();
-        let e3 = -self.e123() * b.e12();
-        Vector::new(e1, e2, e3)
+        Vector::new(
+            -self.e123() * b.e23(),
+            -self.e123() * b.e31(),
+            -self.e123() * b.e12(),
+        )
     }
 }
 forward_ref_binop!(impl Mul, mul for Trivector, Bivector);
@@ -338,17 +369,22 @@ forward_ref_binop!(impl Mul, mul for Trivector, Bivector);
 impl Mul<Multivector> for Bivector {
     type Output = Multivector;
     fn mul(self: Bivector, b: Multivector) -> Multivector {
-        let bivec_scalar = self * b.scalar();
-        let bivec_vec = self * b.vector();
-        let bivec_bivec = self * b.bivector();
-        let bivec_trivec = self * b.trivector();
+        Multivector::new(
+            -self.e12() * b.e12() - self.e31() * b.e31() - self.e23() * b.e23(),
+            Vector::new(
+                self.e12() * b.e2() - self.e31() * b.e3() - self.e23() * b.e123(),
+                -self.e12() * b.e1() + self.e23() * b.e3() - self.e31() * b.e123(),
+                self.e31() * b.e1() - self.e23() * b.e2() - self.e12() * b.e123(),
+            ),
+            Bivector::new(
+                self.e12() * b.scalar() + self.e31() * b.e23() - self.e23() * b.e31(),
+                self.e31() * b.scalar() + self.e23() * b.e12() - self.e12() * b.e23(),
+                self.e23() * b.scalar() + self.e12() * b.e31() - self.e31() * b.e12(),
+            ),
+            Trivector::new(self.e23() * b.e1() + self.e31() * b.e2() + self.e12() * b.e3()),
+        )
 
-        let scalar = 0.0;
-        let vector = bivec_trivec;
-        let bivector = bivec_scalar;
-        let trivector = Trivector::zero();
-
-        Multivector::new(scalar, vector, bivector, trivector) + bivec_vec + bivec_bivec
+        // Multivector::new(scalar, vector, bivector, trivector) + bivec_vec + bivec_bivec
     }
 }
 forward_ref_binop!(impl Mul, mul for Bivector, Multivector);
@@ -357,17 +393,20 @@ forward_ref_binop!(impl Mul, mul for Bivector, Multivector);
 impl Mul<Bivector> for Multivector {
     type Output = Multivector;
     fn mul(self: Multivector, b: Bivector) -> Multivector {
-        let scalar_bivec = self.scalar() * b;
-        let vec_bivec = self.vector() * b;
-        let bivec_bivec = self.bivector() * b;
-        let trivec_bivec = self.trivector() * b;
-
-        let scalar = 0.0;
-        let vector = trivec_bivec;
-        let bivector = scalar_bivec;
-        let trivector = Trivector::zero();
-
-        Multivector::new(scalar, vector, bivector, trivector) + vec_bivec + bivec_bivec
+        Multivector::new(
+            -self.e12() * b.e12() - self.e31() * b.e31() - self.e23() * b.e23(),
+            Vector::new(
+                -self.e2() * b.e12() + self.e3() * b.e31() - self.e123() * b.e23(),
+                self.e1() * b.e12() - self.e3() * b.e23() - self.e123() * b.e31(),
+                -self.e1() * b.e31() + self.e2() * b.e23() - self.e123() * b.e12(),
+            ),
+            Bivector::new(
+                self.scalar() * b.e12() + self.e31() * b.e23() - self.e23() * b.e31(),
+                self.scalar() * b.e31() + self.e23() * b.e12() - self.e12() * b.e23(),
+                self.scalar() * b.e23() + self.e12() * b.e31() - self.e31() * b.e12(),
+            ),
+            Trivector::new(self.e3() * b.e23() + self.e2() * b.e31() + self.e1() * b.e23()),
+        )
     }
 }
 forward_ref_binop!(impl Mul, mul for Multivector, Bivector);
@@ -377,7 +416,16 @@ forward_ref_binop!(impl Mul, mul for Multivector, Bivector);
 impl Mul<Rotor> for Bivector {
     type Output = Multivector;
     fn mul(self: Bivector, b: Rotor) -> Multivector {
-        self * b.scalar() + self * b.bivector()
+        Multivector::new(
+            -self.e12() * b.e12() - self.e31() * b.e31() - self.e23() * b.e23(),
+            Vector::zero(),
+            Bivector::new(
+                self.e12() * b.scalar() + self.e31() * b.e23() - self.e23() * b.e31(),
+                self.e31() * b.scalar() + self.e23() * b.e12() - self.e12() * b.e23(),
+                self.e23() * b.scalar() + self.e12() * b.e31() - self.e31() * b.e12(),
+            ),
+            Trivector::zero(),
+        )
     }
 }
 forward_ref_binop!(impl Mul, mul for Bivector, Rotor);
@@ -387,7 +435,16 @@ forward_ref_binop!(impl Mul, mul for Bivector, Rotor);
 impl Mul<Bivector> for Rotor {
     type Output = Multivector;
     fn mul(self: Rotor, b: Bivector) -> Multivector {
-        self.scalar() * b + self.bivector() * b
+        Multivector::new(
+            -self.e12() * b.e12() - self.e31() * b.e31() - self.e23() * b.e23(),
+            Vector::zero(),
+            Bivector::new(
+                self.scalar() * b.e12() + self.e31() * b.e23() - self.e23() * b.e31(),
+                self.scalar() * b.e31() + self.e23() * b.e12() - self.e12() * b.e23(),
+                self.scalar() * b.e23() + self.e12() * b.e31() - self.e31() * b.e12(),
+            ),
+            Trivector::zero(),
+        )
     }
 }
 forward_ref_binop!(impl Mul, mul for Rotor, Bivector);
@@ -406,17 +463,20 @@ forward_ref_binop!(impl Mul, mul for Trivector, Trivector);
 impl Mul<Multivector> for Trivector {
     type Output = Multivector;
     fn mul(self: Trivector, b: Multivector) -> Multivector {
-        let trivec_scalar = self * b.scalar();
-        let trivec_vec = self * b.vector();
-        let trivec_bivec = self * b.bivector();
-        let trivec_trivec = self * b.trivector();
-
-        let scalar = trivec_trivec;
-        let vector = trivec_bivec;
-        let bivector = trivec_vec;
-        let trivector = trivec_scalar;
-
-        Multivector::new(scalar, vector, bivector, trivector)
+        Multivector::new(
+            -self.e123() * b.e123(),
+            Vector::new(
+                -self.e123() * b.e23(),
+                -self.e123() * b.e31(),
+                -self.e123() * b.e12(),
+            ),
+            Bivector::new(
+                self.e123() * b.e3(),
+                self.e123() * b.e2(),
+                self.e123() * b.e1(),
+            ),
+            Trivector::new(self.e123() * b.scalar()),
+        )
     }
 }
 forward_ref_binop!(impl Mul, mul for Trivector,Multivector);
@@ -425,17 +485,20 @@ forward_ref_binop!(impl Mul, mul for Trivector,Multivector);
 impl Mul<Trivector> for Multivector {
     type Output = Multivector;
     fn mul(self: Multivector, b: Trivector) -> Multivector {
-        let scalar_trivec = self.scalar() * b;
-        let vec_trivec = self.vector() * b;
-        let bivec_trivec = self.bivector() * b;
-        let trivec_trivec = self.trivector() * b;
-
-        let scalar = trivec_trivec;
-        let vector = bivec_trivec;
-        let bivector = vec_trivec;
-        let trivector = scalar_trivec;
-
-        Multivector::new(scalar, vector, bivector, trivector)
+        Multivector::new(
+            -self.e123() * b.e123(),
+            Vector::new(
+                -self.e23() * b.e123(),
+                -self.e31() * b.e123(),
+                -self.e12() * b.e123(),
+            ),
+            Bivector::new(
+                self.e3() * b.e123(),
+                self.e2() * b.e123(),
+                self.e1() * b.e123(),
+            ),
+            Trivector::new(self.scalar() * b.e123()),
+        )
     }
 }
 forward_ref_binop!(impl Mul, mul for Multivector, Trivector);
@@ -445,11 +508,16 @@ forward_ref_binop!(impl Mul, mul for Multivector, Trivector);
 impl Mul<Rotor> for Trivector {
     type Output = Multivector;
     fn mul(self: Trivector, b: Rotor) -> Multivector {
-        let scalar = 0.0;
-        let vector = self * b.bivector();
-        let bivector = Bivector::zero();
-        let trivector = self * b.scalar();
-        Multivector::new(scalar, vector, bivector, trivector)
+        Multivector::new(
+            0.0,
+            Vector::new(
+                -self.e123() * b.e23(),
+                -self.e123() * b.e31(),
+                -self.e123() * b.e12(),
+            ),
+            Bivector::zero(),
+            Trivector::new(self.e123() * b.scalar()),
+        )
     }
 }
 forward_ref_binop!(impl Mul, mul for Trivector,Rotor);
@@ -459,11 +527,16 @@ forward_ref_binop!(impl Mul, mul for Trivector,Rotor);
 impl Mul<Trivector> for Rotor {
     type Output = Multivector;
     fn mul(self: Rotor, b: Trivector) -> Multivector {
-        let scalar = 0.0;
-        let vector = self.bivector() * b;
-        let bivector = Bivector::zero();
-        let trivector = b * self.scalar();
-        Multivector::new(scalar, vector, bivector, trivector)
+        Multivector::new(
+            0.0,
+            Vector::new(
+                -self.e23() * b.e123(),
+                -self.e31() * b.e123(),
+                -self.e12() * b.e123(),
+            ),
+            Bivector::zero(),
+            Trivector::new(self.scalar() * b.e123()),
+        )
     }
 }
 forward_ref_binop!(impl Mul, mul for Rotor, Trivector);
@@ -472,7 +545,54 @@ forward_ref_binop!(impl Mul, mul for Rotor, Trivector);
 impl Mul for Multivector {
     type Output = Multivector;
     fn mul(self: Multivector, b: Multivector) -> Multivector {
-        (self.scalar() * b) + (self.vector() * b) + (self.bivector() * b) + (self.trivector() * b)
+        Multivector::new(
+            self.scalar() * b.scalar()
+                + self.e1() * b.e1()
+                + self.e2() * b.e2()
+                + self.e3() * b.e3()
+                - self.e12() * b.e12()
+                - self.e31() * b.e31()
+                - self.e23() * b.e23()
+                - self.e123() * b.e123(),
+            Vector::new(
+                (self.scalar() * b.e1() + self.e1() * b.scalar())
+                    + (self.e12() * b.e2() - self.e2() * b.e12())
+                    + (self.e3() * b.e31() - self.e31() * b.e3())
+                    + (-self.e23() * b.e123() - self.e123() * b.e23()),
+                (self.scalar() * b.e2() + self.e2() * b.scalar())
+                    + (self.e1() * b.e12() - self.e12() * b.e1())
+                    + (self.e23() * b.e3() - self.e3() * b.e23())
+                    + (-self.e31() * b.e123() - self.e123() * b.e31()),
+                (self.scalar() * b.e3() + self.e3() * b.scalar())
+                    + (self.e31() * b.e1() - self.e1() * b.e31())
+                    + (self.e2() * b.e23() - self.e23() * b.e2())
+                    + (-self.e12() * b.e123() - self.e123() * b.e12()),
+            ),
+            Bivector::new(
+                (self.scalar() * b.e12() + self.e12() * b.scalar())
+                    + (self.e1() * b.e2() - self.e2() * b.e1())
+                    + (self.e31() * b.e23() - self.e23() * b.e31())
+                    + (self.e3() * b.e123() + self.e123() * b.e3()),
+                (self.scalar() * b.e31() + self.e31() * b.scalar())
+                    + (self.e3() * b.e1() - self.e1() * b.e3())
+                    + (self.e23() * b.e12() - self.e12() * b.e23())
+                    + (self.e2() * b.e123() + self.e123() * b.e2()),
+                (self.scalar() * b.e23() + self.e23() * b.scalar())
+                    + (self.e2() * b.e3() - self.e3() * b.e2())
+                    + (self.e12() * b.e31() - self.e31() * b.e12())
+                    + (self.e1() * b.e123() + self.e123() * b.e1()),
+            ),
+            Trivector::new(
+                self.e123() * b.scalar()
+                    + self.e23() * b.e1()
+                    + self.e31() * b.e2()
+                    + self.e12() * b.e3()
+                    + self.e3() * b.e12()
+                    + self.e2() * b.e31()
+                    + self.e1() * b.e23()
+                    + self.scalar() * b.e123(),
+            ),
+        )
     }
 }
 forward_ref_binop!(impl Mul, mul for Multivector, Multivector);
@@ -482,7 +602,35 @@ forward_ref_binop!(impl Mul, mul for Multivector, Multivector);
 impl Mul<Rotor> for Multivector {
     type Output = Multivector;
     fn mul(self: Multivector, b: Rotor) -> Multivector {
-        (self * b.scalar()) + (self * b.bivector())
+        Multivector::new(
+            self.scalar() * b.scalar()
+                - self.e12() * b.e12()
+                - self.e31() * b.e31()
+                - self.e23() * b.e23(),
+            Vector::new(
+                self.e1() * b.scalar() - self.e2() * b.e12() + self.e3() * b.e31()
+                    - self.e123() * b.e23(),
+                self.e2() * b.scalar() + self.e1() * b.e12()
+                    - self.e3() * b.e23()
+                    - self.e123() * b.e31(),
+                self.e3() * b.scalar() - self.e1() * b.e31() + self.e2() * b.e23()
+                    - self.e123() * b.e12(),
+            ),
+            Bivector::new(
+                (self.scalar() * b.e12() + self.e12() * b.scalar())
+                    + (self.e31() * b.e23() - self.e23() * b.e31()),
+                (self.scalar() * b.e31() + self.e31() * b.scalar())
+                    + (self.e23() * b.e12() - self.e12() * b.e23()),
+                (self.scalar() * b.e23() + self.e23() * b.scalar())
+                    + (self.e12() * b.e31() - self.e31() * b.e12()),
+            ),
+            Trivector::new(
+                self.e123() * b.scalar()
+                    + self.e3() * b.e12()
+                    + self.e2() * b.e31()
+                    + self.e1() * b.e23(),
+            ),
+        )
     }
 }
 forward_ref_binop!(impl Mul, mul for Multivector, Rotor);
@@ -492,7 +640,36 @@ forward_ref_binop!(impl Mul, mul for Multivector, Rotor);
 impl Mul<Multivector> for Rotor {
     type Output = Multivector;
     fn mul(self: Rotor, b: Multivector) -> Multivector {
-        (self.scalar() * b) + (self.bivector() * b)
+        Multivector::new(
+            self.scalar() * b.scalar()
+                - self.e12() * b.e12()
+                - self.e31() * b.e31()
+                - self.e23() * b.e23(),
+            Vector::new(
+                self.scalar() * b.e1() + self.e12() * b.e2()
+                    - self.e31() * b.e3()
+                    - self.e23() * b.e123(),
+                self.scalar() * b.e2() - self.e12() * b.e1() + self.e23() * b.e3()
+                    - self.e31() * b.e123(),
+                self.scalar() * b.e3() + self.e31() * b.e1()
+                    - self.e23() * b.e2()
+                    - self.e12() * b.e123(),
+            ),
+            Bivector::new(
+                (self.scalar() * b.e12() + self.e12() * b.scalar())
+                    + (self.e31() * b.e23() - self.e23() * b.e31()),
+                (self.scalar() * b.e31() + self.e31() * b.scalar())
+                    + (self.e23() * b.e12() - self.e12() * b.e23()),
+                (self.scalar() * b.e23() + self.e23() * b.scalar())
+                    + (self.e12() * b.e31() - self.e31() * b.e12()),
+            ),
+            Trivector::new(
+                self.e23() * b.e1()
+                    + self.e31() * b.e2()
+                    + self.e12() * b.e3()
+                    + self.scalar() * b.e123(),
+            ),
+        )
     }
 }
 forward_ref_binop!(impl Mul, mul for Rotor, Multivector);
@@ -533,7 +710,7 @@ mod geometric_product {
     }
 
     #[test]
-    fn bivector_bivector_mul() {
+    fn bivector_bivector_geo() {
         // 3e12+5e31+4e23
         let bivector1 = Bivector::new(3.0, 5.0, 4.0);
         // 2e12+e31+6e23
@@ -544,6 +721,36 @@ mod geometric_product {
         assert_relative_eq!(mvec.e12(), 26.0, max_relative = 0.000001);
         assert_relative_eq!(mvec.e31(), -10.0, max_relative = 0.000001);
         assert_relative_eq!(mvec.e23(), -7.0, max_relative = 0.000001);
+    }
+
+    #[test]
+    fn rotor_vector_geo() {
+        let angle = TAU / 4.0;
+        let rotation_plane = Bivector::new(4.0, 2.0, -3.0);
+        let rotor = Rotor::new(angle / 2.0, rotation_plane);
+        // 2e12+e31+6e23
+        let vector = Vector::new(2.0, 1.0, 6.0);
+        // 0.7071+0.5252e12+0.2626e31-0.3939e23
+        let res_impl = vector * rotor;
+        let res_new = Multivector::new(
+            0.0,
+            Vector::new(
+                vector.e1() * rotor.scalar() - vector.e2() * rotor.e12()
+                    + vector.e3() * rotor.e31(),
+                vector.e2() * rotor.scalar() + vector.e1() * rotor.e12()
+                    - vector.e3() * rotor.e23(),
+                vector.e3() * rotor.scalar() - vector.e1() * rotor.e31()
+                    + vector.e2() * rotor.e23(),
+            ),
+            Bivector::zero(),
+            Trivector::new(
+                vector.e3() * rotor.e12() + vector.e2() * rotor.e31() + vector.e1() * rotor.e23(),
+            ),
+        );
+
+        assert_relative_eq!(res_impl.e1(), res_new.e1(), max_relative = 0.000001);
+        assert_relative_eq!(res_impl.e2(), res_new.e2(), max_relative = 0.000001);
+        assert_relative_eq!(res_impl.e3(), res_new.e3(), max_relative = 0.000001);
     }
 
     #[test]
@@ -602,12 +809,10 @@ mod geometric_product {
         assert_relative_eq!(mvec_res.e123(), 236.0, max_relative = 0.000001);
     }
     #[test]
-    fn negetive_mvec_mvec_mul() {
+    fn negetive_mvec_mvec_geo() {
         // let mvec1 = GaMultivector::new_mvec(-6.0, -8.0, -4.0, -1.0, -6.0, -4.0, -8.0, -5.0);
-        let mvec1 =
-            Multivector::new_components(-4.0, -1.0, -3.0, -2.0, -9.0, -6.0, -3.0, -10.0);
-        let mvec2 =
-            Multivector::new_components(-4.0, -2.0, -4.0, -9.0, -2.0, -1.0, -7.0, -1.0);
+        let mvec1 = Multivector::new_components(-4.0, -1.0, -3.0, -2.0, -9.0, -6.0, -3.0, -10.0);
+        let mvec2 = Multivector::new_components(-4.0, -2.0, -4.0, -9.0, -2.0, -1.0, -7.0, -1.0);
         let mvec_res = mvec1 * mvec2;
         // −7−83e1​+9e2​+35e3​+173e12​−9e13​+77e23​+169e123
         assert_relative_eq!(mvec_res.scalar(), -7.0, max_relative = 0.000001);
@@ -618,5 +823,61 @@ mod geometric_product {
         assert_relative_eq!(mvec_res.e31(), 9.0, max_relative = 0.000001);
         assert_relative_eq!(mvec_res.e23(), 77.0, max_relative = 0.000001);
         assert_relative_eq!(mvec_res.e123(), 169.0, max_relative = 0.000001);
+    }
+
+    #[test]
+    fn mvec_rotor_geo() {
+        // ( 0 + 0.55708605e12 + 0.3713907e31 + 0.7427814e23)
+        let scalar = TAU / 2.0;
+        let bivector = Bivector::new(6.0 / 10.770, 4.0 / 10.770, 8.0 / 10.770);
+        let rotor = Rotor::new(scalar / 2.0, bivector);
+
+        assert_relative_eq!(rotor.scalar(), 0.0, max_relative = 0.000001);
+        assert_relative_eq!(rotor.e12(), 0.55708605, max_relative = 0.000001);
+        assert_relative_eq!(rotor.e31(), 0.3713907, max_relative = 0.000001);
+        assert_relative_eq!(rotor.e23(), 0.7427814, max_relative = 0.000001);
+
+        // ( 5.0 + 8.0e1 + 7.0e2 + 3.0e3 + 2.0e12 + 8.0e31 + 2.0e23 + 1.0e123 )
+        let mvec = Multivector::new_components(5.0, 8.0, 7.0, 3.0, 2.0, 8.0, 2.0, 1.0);
+
+        // -5.5708603859 -3.5282115936e1​ +1.8569535017e2​ +1.6712582111e3 ​+7.9848999977e12​ +1.4855628014e31​ +10.2132444382e123
+        let mvec_res = mvec * rotor;
+
+        assert_relative_eq!(mvec_res.scalar(), -5.5708603859, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e1(), -3.5282115936, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e2(), 1.8569535017, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e3(), 1.6712582111, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e12(), 7.9848999977, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e31(), 1.4855628014, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e23(), 0.0, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e123(), 10.2132444382, max_relative = 0.000001);
+    }
+
+    #[test]
+    fn rotor_mvec_geo() {
+        // ( 0 + 0.55708605e12 + 0.3713907e31 + 0.7427814e23)
+        let scalar = TAU / 2.0;
+        let bivector = Bivector::new(6.0 / 10.770, 4.0 / 10.770, 8.0 / 10.770);
+        let rotor = Rotor::new(scalar / 2.0, bivector);
+
+        assert_relative_eq!(rotor.scalar(), 0.0, max_relative = 0.000001);
+        assert_relative_eq!(rotor.e12(), 0.55708605, max_relative = 0.000001);
+        assert_relative_eq!(rotor.e31(), 0.3713907, max_relative = 0.000001);
+        assert_relative_eq!(rotor.e23(), 0.7427814, max_relative = 0.000001);
+
+        // ( 5.0 + 8.0e1 + 7.0e2 + 3.0e3 + 2.0e12 + 8.0e31 + 2.0e23 + 1.0e123 )
+        let mvec2 = Multivector::new_components(5.0, 8.0, 7.0, 3.0, 2.0, 8.0, 2.0, 1.0);
+
+        // -5.5708603859+2.0426487923e1​-2.5997347832e2​-2.7854301929e3​-2.4140396118e12​+2.228344202e31​+7.4278140068e23​+10.2132444382e123
+        let mvec_res = rotor * mvec2;
+
+        assert_relative_eq!(mvec_res.scalar(), -5.5708603859, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e1(), 2.0426487923, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e2(), -2.5997347832, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e3(), -2.7854301929, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e12(), -2.4140396118, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e31(), 2.228344202, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e23(), 7.4278140068, max_relative = 0.000001);
+        assert_relative_eq!(mvec_res.e123(), 10.2132444382, max_relative = 0.000001);
     }
 }
