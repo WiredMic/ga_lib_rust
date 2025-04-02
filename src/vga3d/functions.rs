@@ -1,18 +1,20 @@
 // ga_lib is a rust library that implements different geometric algbras.
 // Copyright (C) 2025 Rasmus Enevoldsen
-
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//
+// This file is part of ga_lib.
+//
+// ga_lib is free software: you can redistribute it and/or modify it under the
+// terms of the GNU Lesser General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option) any
+// later version.
+//
+// ga_lib is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+// details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with ga_lib. If not, see <https://www.gnu.org/licenses/>.
 
 #![allow(unused_imports)]
 #![allow(dead_code)]
@@ -105,6 +107,19 @@ mod rotation {
         assert_relative_eq!(vector_rot.e1(), 0.0, max_relative = 0.000001);
         assert_relative_eq!(vector_rot.e2(), 3.0, max_relative = 0.000001);
         assert_relative_eq!(vector_rot.e3(), 0.0, max_relative = 0.000001);
+    }
+
+    #[test]
+    fn vector() {
+        let angle = TAU / 4.0;
+        let rotation_plane = Bivector::new(0.5, 5.2, -3.0);
+        let rotor = Rotor::new(angle / 2.0, rotation_plane);
+        let vector = Vector::new(6.4, -4.5, 3.3);
+        let res = vector.rotate(rotor);
+
+        assert_relative_eq!(res.e1(), 6.6072783, max_relative = 0.000001);
+        assert_relative_eq!(res.e2(), -3.6931403, max_relative = 0.000001);
+        assert_relative_eq!(res.e3(), -3.847674, max_relative = 0.000001);
     }
 
     #[test]

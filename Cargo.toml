@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 authors = [ "Rasmus Enevoldsen" ]
 readme = "README.org"
-license = "GPL-3.0-or-later"
+license = "LGPL-3.0-or-later"
 
 [dependencies]
 libm = {version = "0.2.11"} # math lib for embedded

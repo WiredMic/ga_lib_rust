@@ -1,18 +1,20 @@
 // ga_lib is a rust library that implements different geometric algbras.
 // Copyright (C) 2025 Rasmus Enevoldsen
-
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//
+// This file is part of ga_lib.
+//
+// ga_lib is free software: you can redistribute it and/or modify it under the
+// terms of the GNU Lesser General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option) any
+// later version.
+//
+// ga_lib is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+// details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with ga_lib. If not, see <https://www.gnu.org/licenses/>.
 
 #![allow(unused_imports)]
 #![allow(dead_code)]
@@ -58,9 +60,9 @@ impl Rotor {
     /// Creates new rotor from an angle bivector $\overset\Rightarrow{\theta}$.
     /// The angle must be in radians and must be half the rotational angle.
     pub fn new_angle_bivector(angle_bivector: Bivector) -> Self {
-        let norm = angle_bivector.norm();
-        let rotation_plane = angle_bivector * (1.0 / norm);
-        Rotor::new(norm, rotation_plane)
+        let angle = angle_bivector.norm();
+        let rotation_plane = angle_bivector * (1.0 / angle);
+        Rotor::new(angle, rotation_plane)
     }
 
     /// Get the scalar grade of the rotor

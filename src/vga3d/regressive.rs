@@ -1,27 +1,26 @@
 // ga_lib is a rust library that implements different geometric algbras.
 // Copyright (C) 2025 Rasmus Enevoldsen
-
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//
+// This file is part of ga_lib.
+//
+// ga_lib is free software: you can redistribute it and/or modify it under the
+// terms of the GNU Lesser General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option) any
+// later version.
+//
+// ga_lib is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+// details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with ga_lib. If not, see <https://www.gnu.org/licenses/>.
 
 #![allow(unused_imports)]
 #![allow(dead_code)]
 
 use super::{
-    bivector::{self, Bivector},
-    multivector::Multivector,
-    rotor::Rotor,
-    trivector::{self, Trivector},
+    bivector::Bivector, multivector::Multivector, rotor::Rotor, trivector::Trivector,
     vector::Vector,
 };
 
@@ -31,7 +30,6 @@ use core::ops::BitAnd;
 
 /// # Regressive Product
 /// $$ A \vee B = ( -A\star  \wedge -B\star )\star $$
-/// NOT IMPLEMENTED
 
 // /// Scalar-Vector
 // impl BitAnd<Vector> for f32 {
@@ -192,7 +190,7 @@ forward_ref_binop!(impl BitAnd, bitand for Bivector, Vector);
 impl BitAnd<Trivector> for Vector {
     type Output = Vector;
     fn bitand(self: Vector, b: Trivector) -> Vector {
-        (-self.dual() ^ -b.dual()).dual()
+        (-self.dual() * -b.dual()).dual()
     }
 }
 forward_ref_binop!(impl BitAnd, bitand for Vector, Trivector);
@@ -202,7 +200,7 @@ forward_ref_binop!(impl BitAnd, bitand for Vector, Trivector);
 impl BitAnd<Vector> for Trivector {
     type Output = Vector;
     fn bitand(self: Trivector, b: Vector) -> Vector {
-        (-self.dual() ^ -b.dual()).dual()
+        (-self.dual() * -b.dual()).dual()
     }
 }
 forward_ref_binop!(impl BitAnd, bitand for Trivector, Vector);
@@ -270,7 +268,7 @@ forward_ref_binop!(impl BitAnd, bitand for Bivector, Bivector);
 impl BitAnd<Trivector> for Bivector {
     type Output = Bivector;
     fn bitand(self: Bivector, b: Trivector) -> Bivector {
-        (-self.dual() ^ -b.dual()).dual()
+        (-self.dual() * -b.dual()).dual()
     }
 }
 forward_ref_binop!(impl BitAnd, bitand for Bivector, Trivector);
@@ -280,7 +278,7 @@ forward_ref_binop!(impl BitAnd, bitand for Bivector, Trivector);
 impl BitAnd<Bivector> for Trivector {
     type Output = Bivector;
     fn bitand(self: Trivector, b: Bivector) -> Bivector {
-        (-self.dual() ^ -b.dual()).dual()
+        (-self.dual() * -b.dual()).dual()
     }
 }
 forward_ref_binop!(impl BitAnd, bitand for Trivector, Bivector);
@@ -340,7 +338,7 @@ forward_ref_binop!(impl BitAnd, bitand for Trivector, Trivector);
 impl BitAnd<Multivector> for Trivector {
     type Output = Multivector;
     fn bitand(self: Trivector, b: Multivector) -> Multivector {
-        (-self.dual() ^ -b.dual()).dual()
+        (-self.dual() * -b.dual()).dual()
     }
 }
 forward_ref_binop!(impl BitAnd, bitand for Trivector,Multivector);
@@ -350,7 +348,7 @@ forward_ref_binop!(impl BitAnd, bitand for Trivector,Multivector);
 impl BitAnd<Trivector> for Multivector {
     type Output = Multivector;
     fn bitand(self: Multivector, b: Trivector) -> Multivector {
-        (-self.dual() ^ -b.dual()).dual()
+        (-self.dual() * -b.dual()).dual()
     }
 }
 forward_ref_binop!(impl BitAnd, bitand for Multivector, Trivector);
@@ -415,13 +413,13 @@ forward_ref_binop!(impl BitAnd, bitand for Multivector, Multivector);
 
 // Test
 #[cfg(test)]
-mod geometric_product {
+mod regressive_product {
     use core::f32::consts::TAU;
 
     use super::*;
     use approx::assert_relative_eq;
     #[test]
-    fn vector_vector_reg() {
+    fn vector_vector() {
         // 3e1+5e2+4e3
         let vector1 = Vector::new(3.0, 5.0, 4.0);
         // 2e1+e2+6e3
@@ -432,7 +430,7 @@ mod geometric_product {
     }
 
     #[test]
-    fn vector_bivector_reg() {
+    fn vector_bivector() {
         // 3e1+5e2+4e3
         let vector = Vector::new(3.0, 5.0, 4.0);
         // 2e12+e31+6e23
@@ -443,7 +441,7 @@ mod geometric_product {
     }
 
     #[test]
-    fn bivector_vector_reg() {
+    fn bivector_vector() {
         // 2e12+e31+6e23
         let bivector = Bivector::new(2.0, 1.0, 6.0);
         // 3e1+5e2+4e3
@@ -454,7 +452,7 @@ mod geometric_product {
     }
 
     #[test]
-    fn vector_trivector_reg() {
+    fn vector_trivector() {
         // 3e1+5e2+4e3
         let vector = Vector::new(3.0, 5.0, 4.0);
         // 2e123
@@ -467,7 +465,7 @@ mod geometric_product {
     }
 
     #[test]
-    fn trivector_vector_reg() {
+    fn trivector_vector() {
         // 2e12+e31+6e23
         let trivector = Trivector::new(2.0);
         // 3e1+5e2+4e3
@@ -480,7 +478,7 @@ mod geometric_product {
     }
 
     #[test]
-    fn vector_multivector_reg() {
+    fn vector_multivector() {
         // 3e1+5e2+4e3
         let vector = Vector::new(3.0, 5.0, 4.0);
         // ( 5.0 + 8.0e1 + 7.0e2 + 3.0e3 + 2.0e12 + 8.0e31 + 2.0e23 + 1.0e123 )
@@ -494,7 +492,7 @@ mod geometric_product {
     }
 
     #[test]
-    fn multivector_vector_reg() {
+    fn multivector_vector() {
         // ( 5.0 + 8.0e1 + 7.0e2 + 3.0e3 + 2.0e12 + 8.0e31 + 2.0e23 + 1.0e123 )
         let mvec = Multivector::new_components(5.0, 8.0, 7.0, 3.0, 2.0, 8.0, 2.0, 1.0);
         // 3e1+5e2+4e3
@@ -508,7 +506,7 @@ mod geometric_product {
     }
 
     #[test]
-    fn bivector_bivector_reg() {
+    fn bivector_bivector() {
         // 2e12+e31+6e23
         let bivector1 = Bivector::new(2.0, 1.0, 6.0);
         // 3e12+5e31+4e23
@@ -521,7 +519,7 @@ mod geometric_product {
     }
 
     #[test]
-    fn bivector_trivector_reg() {
+    fn bivector_trivector() {
         // 3e12+5e31+4e23
         let bivector = Bivector::new(3.0, 5.0, 4.0);
         // 2e123
@@ -534,7 +532,7 @@ mod geometric_product {
     }
 
     #[test]
-    fn trivector_bivector_reg() {
+    fn trivector_bivector() {
         // 2e123
         let trivector = Trivector::new(2.0);
         // 3e12+5e31+4e23
@@ -547,7 +545,7 @@ mod geometric_product {
     }
 
     #[test]
-    fn bivector_multivector_reg() {
+    fn bivector_multivector() {
         // 3e12+5e31+4e23
         let bivector = Bivector::new(3.0, 5.0, 4.0);
         // ( 5.0 + 8.0e1 + 7.0e2 + 3.0e3 + 2.0e12 + 8.0e31 + 2.0e23 + 1.0e123 )
@@ -564,7 +562,7 @@ mod geometric_product {
     }
 
     #[test]
-    fn multivector_bivector_reg() {
+    fn multivector_bivector() {
         // ( 5.0 + 8.0e1 + 7.0e2 + 3.0e3 + 2.0e12 + 8.0e31 + 2.0e23 + 1.0e123 )
         let mvec = Multivector::new_components(5.0, 8.0, 7.0, 3.0, 2.0, 8.0, 2.0, 1.0);
         // 3e12+5e31+4e23
@@ -581,7 +579,7 @@ mod geometric_product {
     }
 
     #[test]
-    fn trivector_trivector_reg() {
+    fn trivector_trivector() {
         // 2e123
         let trivector1 = Trivector::new(2.0);
         // 3e123
@@ -592,7 +590,7 @@ mod geometric_product {
     }
 
     #[test]
-    fn trivector_multivector_reg() {
+    fn trivector_multivector() {
         // 3e123
         let trivector = Trivector::new(3.0);
         // ( 5.0 + 8.0e1 + 7.0e2 + 3.0e3 + 2.0e12 + 8.0e31 + 2.0e23 + 1.0e123 )
@@ -610,7 +608,7 @@ mod geometric_product {
     }
 
     #[test]
-    fn multivector_trivector_reg() {
+    fn multivector_trivector() {
         // ( 5.0 + 8.0e1 + 7.0e2 + 3.0e3 + 2.0e12 + 8.0e31 + 2.0e23 + 1.0e123 )
         let mvec = Multivector::new_components(5.0, 8.0, 7.0, 3.0, 2.0, 8.0, 2.0, 1.0);
         // 3e123
@@ -628,7 +626,7 @@ mod geometric_product {
     }
 
     #[test]
-    fn multivector_multivector_reg() {
+    fn multivector_multivector() {
         // ( 5.0 + 8.0e1 + 7.0e2 + 3.0e3 + 2.0e12 + 8.0e31 + 2.0e23 + 1.0e123 )
         let mvec1 = Multivector::new_components(5.0, 8.0, 7.0, 3.0, 2.0, 8.0, 2.0, 1.0);
         // -4-2e1-4e2-9e3-2e12-1e31-7e23-1e123

@@ -1,18 +1,20 @@
 // ga_lib is a rust library that implements different geometric algbras.
 // Copyright (C) 2025 Rasmus Enevoldsen
-
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//
+// This file is part of ga_lib.
+//
+// ga_lib is free software: you can redistribute it and/or modify it under the
+// terms of the GNU Lesser General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option) any
+// later version.
+//
+// ga_lib is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+// details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with ga_lib. If not, see <https://www.gnu.org/licenses/>.
 
 #![allow(unused_imports)]
 #![allow(dead_code)]
@@ -93,12 +95,7 @@ forward_ref_binop!(impl Add, add for Trivector, f32);
 impl Add<Multivector> for f32 {
     type Output = Multivector;
     fn add(self: f32, b: Multivector) -> Multivector {
-        Multivector::new(
-            self,
-            Vector::zero(),
-            Bivector::zero(),
-            Trivector::zero(),
-        ) + b
+        Multivector::new(self, Vector::zero(), Bivector::zero(), Trivector::zero()) + b
     }
 }
 forward_ref_binop!(impl Add, add for f32, Multivector);
@@ -108,12 +105,7 @@ forward_ref_binop!(impl Add, add for f32, Multivector);
 impl Add<f32> for Multivector {
     type Output = Multivector;
     fn add(self: Multivector, b: f32) -> Multivector {
-        Multivector::new(
-            b,
-            Vector::zero(),
-            Bivector::zero(),
-            Trivector::zero(),
-        ) + self
+        Multivector::new(b, Vector::zero(), Bivector::zero(), Trivector::zero()) + self
     }
 }
 forward_ref_binop!(impl Add, add for Multivector, f32);
@@ -390,12 +382,7 @@ forward_ref_binop!(impl Add, add for Multivector, Multivector);
 impl Add<Rotor> for Multivector {
     type Output = Multivector;
     fn add(self: Multivector, b: Rotor) -> Multivector {
-        Multivector::new(
-            b.scalar(),
-            Vector::zero(),
-            b.bivector(),
-            Trivector::zero(),
-        ) + self
+        Multivector::new(b.scalar(), Vector::zero(), b.bivector(), Trivector::zero()) + self
     }
 }
 forward_ref_binop!(impl Add, add for Rotor, Multivector);
@@ -420,12 +407,7 @@ impl Add for Rotor {
     fn add(self: Rotor, b: Rotor) -> Multivector {
         let scalar = self.scalar() + b.scalar();
         let bivector = self.bivector() + b.bivector();
-        Multivector::new(
-            scalar,
-            Vector::zero(),
-            bivector,
-            Trivector::zero(),
-        )
+        Multivector::new(scalar, Vector::zero(), bivector, Trivector::zero())
     }
 }
 forward_ref_binop!(impl Add, add for Rotor, Rotor);

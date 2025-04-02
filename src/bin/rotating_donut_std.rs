@@ -1,3 +1,21 @@
+// ga_lib is a rust library that implements different geometric algbras.
+// Copyright (C) 2025 Rasmus Enevoldsen
+//
+// This file is part of ga_lib.
+//
+// ga_lib is free software: you can redistribute it and/or modify it under the
+// terms of the GNU Lesser General Public License as published by the Free
+// Software Foundation, either version 3 of the License, or (at your option) any
+// later version.
+//
+// ga_lib is distributed in the hope that it will be useful, but WITHOUT ANY
+// WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+// FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+// details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with ga_lib. If not, see <https://www.gnu.org/licenses/>.
+
 #![allow(dead_code)]
 #![allow(non_upper_case_globals)]
 #![allow(unused_imports)]
@@ -68,7 +86,7 @@ fn main() {
         }
         rotate_torus(&mut torus_array, angle3, angle4);
 
-        let screen = project_torus(&mut torus_array);
+        let screen = project_torus(&torus_array);
 
         display_torus(screen);
     }
@@ -185,7 +203,7 @@ fn project_torus(point_array: &[Multivector; NUM_POINT_IN_TORUS]) -> Screen {
     let light_ray_direction = Vector::new(1.0, 0.2, 1.0);
     let light_ray_direction = light_ray_direction * (1.0 / light_ray_direction.norm());
 
-    for point in point_array.into_iter() {
+    for point in point_array.iter() {
         // Project point vector onto the screen plane
         let point_proj = point.project(screen_plane);
 
