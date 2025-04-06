@@ -22,3 +22,8 @@ It has implemented a full 3D Vector Geometric Algebra.
 - Do scalars need their own type?
 - Regressive product needs to be implemented
 - Generic float for all. (One is f64, all is)
+
+* Extra Features
+** Quaternion
+When the quaternion flag is enabled, then quaternion and unit quaternion are available as struct.
+Unit quaternions can only rotate vectors and quaternions.
