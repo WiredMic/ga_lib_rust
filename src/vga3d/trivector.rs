@@ -25,6 +25,7 @@ use libm::{fabsf, sqrtf};
 
 use super::{bivector::Bivector, vector::Vector, VGA3DOps, VGA3DOpsRef};
 
+/// 3D Vector Geometric Algebra Bivector
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct Trivector {
     e123: f32,

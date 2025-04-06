@@ -9,13 +9,22 @@ license = "LGPL-3.0-or-later"
 [dependencies]
 libm = {version = "0.2.11"} # math lib for embedded
 approx = {version = "0.5.1"} # approx test for floats
+nalgebra = { version = "0.33.2", optional = true }
+
 
 [dev-dependencies]
 criterion = { version = "0.4", features = ["html_reports"] }
+nalgebra = { version = "0.33.2" }
 
 [[bench]]
 name = "benchmark"
 harness = false
+
+
+[features]
+default = []
+nalgebra-interop = ["dep:nalgebra"]
+quaternion = []
 
 
 [package.metadata.docs.rs]

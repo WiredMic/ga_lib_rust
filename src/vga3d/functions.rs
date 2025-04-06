@@ -123,6 +123,19 @@ mod rotation {
     }
 
     #[test]
+    fn vector_2() {
+        let angle = TAU * 4.0 / 7.0;
+        let rotation_plane = Bivector::new(0.5, 5.2, -3.0);
+        let rotor = Rotor::new(angle / 2.0, rotation_plane);
+        let vector = Vector::new(6.4, -4.5, 3.3);
+        let res = vector.rotate(rotor);
+        // -0.72899,-8.04355,-2.62105
+        assert_relative_eq!(res.e1(), -0.72897816, max_relative = 0.000001);
+        assert_relative_eq!(res.e2(), -8.043535, max_relative = 0.000001);
+        assert_relative_eq!(res.e3(), -2.6210902, max_relative = 0.000001);
+    }
+
+    #[test]
     fn bivector() {
         let angle = TAU / 4.0;
         let rotation_plane = Bivector::new(0.5, 5.2, -3.0);

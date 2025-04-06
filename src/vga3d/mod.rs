@@ -34,6 +34,16 @@ pub use multivector::Multivector;
 //
 mod rotor;
 pub use rotor::Rotor;
+//
+//
+#[cfg(feature = "quaternion")]
+mod quaternion;
+#[cfg(feature = "quaternion")]
+pub use quaternion::Quaternion;
+//
+#[cfg(feature = "quaternion")]
+pub use quaternion::UnitQuaternion;
+
 // Interactions
 mod addition;
 mod exterior;

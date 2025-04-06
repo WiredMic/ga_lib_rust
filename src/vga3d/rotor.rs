@@ -38,8 +38,8 @@ use super::{
 /// The norm of a rotor is always 1
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct Rotor {
-    scalar: f32,
-    bivector: Bivector,
+    pub(super) scalar: f32,
+    pub(super) bivector: Bivector,
 }
 
 impl Rotor {
@@ -47,9 +47,9 @@ impl Rotor {
     /// The plane of rotation is a bivector
     /// The direction of rotation is given by the orientation of the bivector
     /// The angle is half of the rotation angle
-    pub fn new(angle: f32, rotation_plane: Bivector) -> Self {
-        let scalar = cosf(angle);
-        let sin = sinf(angle);
+    pub fn new(half_angle: f32, rotation_plane: Bivector) -> Self {
+        let scalar = cosf(half_angle);
+        let sin = sinf(half_angle);
         let norm = rotation_plane.norm();
         let bi_pre = sin / norm;
 
@@ -91,13 +91,13 @@ impl Rotor {
     }
 
     /// Get the angle of the rotor
-    pub fn angle(&self) -> f32 {
+    pub fn half_angle(&self) -> f32 {
         acosf(self.scalar())
     }
 
     /// Get the plane of rotation of the rotor
     pub fn rotatino_plane(&self) -> Bivector {
-        let sin = sinf(self.angle());
+        let sin = sinf(self.half_angle());
         self.bivector * (1.0 / sin)
     }
 }
@@ -125,7 +125,11 @@ mod rotor {
         let rotation_angle = TAU / 4.0;
         let rotation_plane = Bivector::new(4.0, 2.0, -3.0);
         let rotor = Rotor::new(rotation_angle / 2.0, rotation_plane);
-        assert_relative_eq!(rotor.angle(), rotation_angle / 2.0, max_relative = 0.000001);
+        assert_relative_eq!(
+            rotor.half_angle(),
+            rotation_angle / 2.0,
+            max_relative = 0.000001
+        );
     }
 
     #[test]
