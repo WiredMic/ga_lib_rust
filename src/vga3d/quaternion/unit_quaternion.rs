@@ -15,6 +15,7 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with ga_lib. If not, see <https://www.gnu.org/licenses/>.
+#![warn(missing_docs)]
 
 use crate::forward_ref_binop;
 use crate::vga3d::{
@@ -26,6 +27,14 @@ use core::ops::Mul;
 
 use libm::{acosf, cosf, sinf, sqrtf};
 
+#[cfg(feature = "std")]
+extern crate std;
+#[cfg(feature = "std")]
+use std::fmt;
+
+#[cfg(feature = "defmt")]
+use defmt::Format;
+
 use super::Quaternion;
 
 /// Unit Quaternion
@@ -35,7 +44,61 @@ pub struct UnitQuaternion {
     pub(super) vector: Vector,
 }
 
+#[cfg(feature = "std")]
+impl fmt::Display for UnitQuaternion {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // write!(f, "{}e12, {}e31, {}e23", self.e12, self.e31, self.e23)
+
+        write!(f, "Unit Quaternion {{\n")?;
+        write!(f, "\treal: {}\n", self.scalar)?;
+        write!(f, "\timaginary: {}i", self.e1())?;
+
+        // For j component, add appropriate sign
+        if self.e2() >= 0.0 {
+            write!(f, " + {}j", self.e2())?;
+        } else {
+            write!(f, " - {}j", self.e2().abs())?;
+        }
+
+        // For k component, add appropriate sign
+        if self.e3() >= 0.0 {
+            write!(f, " + {}k", self.e3())?;
+        } else {
+            write!(f, " - {}k\n", self.e3().abs())?;
+        }
+        write!(f, "}}")?;
+
+        Ok(())
+    }
+}
+
+#[cfg(feature = "defmt")]
+impl Format for UnitQuaternion {
+    fn format(&self, fmt: defmt::Formatter) {
+        // the defmt version - similar structure but using defmt macros
+        defmt::write!(fmt, "Unit Quaternion {{\n");
+        defmt::write!(fmt, "\treal: {}\n", self.scalar);
+        defmt::write!(fmt, "\timaginary: {}i", self.e1());
+
+        // for j component, add appropriate sign
+        if self.e2() >= 0.0 {
+            defmt::write!(fmt, " + {}j", self.e2());
+        } else {
+            defmt::write!(fmt, " - {}j", self.e2().abs());
+        }
+
+        // for k component, add appropriate sign
+        if self.e3() >= 0.0 {
+            defmt::write!(fmt, " + {}k", self.e3());
+        } else {
+            defmt::write!(fmt, " - {}k", self.e3().abs());
+        }
+        defmt::write!(fmt, "\n}}");
+    }
+}
+
 impl UnitQuaternion {
+    /// New Unit Quaternion from the halv of  the Rotation Angle and Axis of Rotation
     pub fn new(half_angle: f32, rotation_axis: Vector) -> Self {
         let scalar = cosf(half_angle);
         let sin = sinf(half_angle);
@@ -90,6 +153,7 @@ impl UnitQuaternion {
         }
     }
 
+    /// The complex conjugate of a quaternion is another quaterion with the vector part negated.
     pub fn conjugate(self) -> UnitQuaternion {
         UnitQuaternion {
             scalar: self.scalar(),

@@ -31,6 +31,10 @@ use super::{
     VGA3DOps, VGA3DOpsRef,
 };
 
+#[cfg(feature = "std")]
+extern crate std;
+#[cfg(feature = "std")]
+use std::fmt;
 /// # 3D Vector Geometric Algebra Multivector
 /// Geometric algebra is the studie of multivectors
 ///
@@ -42,6 +46,23 @@ pub struct Multivector {
     vector: Vector,
     bivector: Bivector,
     trivector: Trivector,
+}
+
+#[cfg(feature = "std")]
+impl fmt::Display for Multivector {
+    // This trait requires `fmt` with this exact signature.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // Write strictly the first element into the supplied output
+        // stream: `f`. Returns `fmt::Result` which indicates whether the
+        // operation succeeded or failed. Note that `write!` uses syntax which
+        // is very similar to `println!`.
+        write!(f, "Multivector {{\n")?;
+        write!(f, "\tscalar: {}\n", self.scalar,)?;
+        write!(f, "\tvector: {}\n", self.vector,)?;
+        write!(f, "\tbivector: {}\n", self.bivector,)?;
+        write!(f, "\ttrivector: {}\n", self.trivector,)?;
+        write!(f, "}}")
+    }
 }
 
 impl Multivector {

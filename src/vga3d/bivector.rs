@@ -15,10 +15,16 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with ga_lib. If not, see <https://www.gnu.org/licenses/>.
-
-#![allow(unused_imports)]
-#![allow(dead_code)]
 #![warn(missing_docs)]
+// #![warn(rustdoc::missing_doc_code_examples)]
+
+#[cfg(feature = "std")]
+extern crate std;
+#[cfg(feature = "std")]
+use std::fmt;
+
+#[cfg(feature = "defmt")]
+use defmt::Format;
 
 use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Index, IndexMut, Mul, Neg, Not, Sub};
 
@@ -42,6 +48,58 @@ pub struct Bivector {
     e12: f32,
     e31: f32,
     e23: f32,
+}
+
+#[cfg(feature = "std")]
+impl fmt::Display for Bivector {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // write!(f, "{}e12, {}e31, {}e23", self.e12, self.e31, self.e23)
+
+        write!(f, "Bivector {{")?;
+        write!(f, " {}e1e2", self.e12)?;
+
+        // For e2 component, add appropriate sign
+        if self.e31 >= 0.0 {
+            write!(f, " + {}e31", self.e31)?;
+        } else {
+            write!(f, " - {}e31", self.e31.abs())?;
+        }
+
+        // For e3 component, add appropriate sign
+        if self.e23 >= 0.0 {
+            write!(f, " + {}e23", self.e23)?;
+        } else {
+            write!(f, " - {}e23", self.e23.abs())?;
+        }
+        write!(f, " }}")?;
+
+        Ok(())
+    }
+}
+
+#[cfg(feature = "defmt")]
+impl defmt::Format for Bivector {
+    fn format(&self, f: defmt::Formatter) {
+        // defmt::write!(f, "{}e12, {}e31, {}e23", self.e12, self.e31, self.e23)
+
+        defmt::write!(f, "Bivector {{");
+        defmt::write!(f, " {}e1e2", self.e12);
+
+        // For e2 component, add appropriate sign
+        if self.e31 >= 0.0 {
+            defmt::write!(f, " + {}e31", self.e31);
+        } else {
+            defmt::write!(f, " - {}e31", self.e31.abs());
+        }
+
+        // For e3 component, add appropriate sign
+        if self.e23 >= 0.0 {
+            defmt::write!(f, " + {}e23", self.e23);
+        } else {
+            defmt::write!(f, " - {}e23", self.e23.abs());
+        }
+        defmt::write!(f, " }}")?;
+    }
 }
 
 impl Bivector {

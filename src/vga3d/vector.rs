@@ -15,10 +15,16 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with ga_lib. If not, see <https://www.gnu.org/licenses/>.
-
-#![allow(unused_imports)]
-#![allow(dead_code)]
 #![warn(missing_docs)]
+// #![warn(rustdoc::missing_doc_code_examples)]
+
+#[cfg(feature = "std")]
+extern crate std;
+#[cfg(feature = "std")]
+use std::fmt;
+
+#[cfg(feature = "defmt")]
+use defmt::Format;
 
 use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Index, IndexMut, Mul, Neg, Not, Sub};
 
@@ -37,6 +43,57 @@ pub struct Vector {
     e1: f32,
     e2: f32,
     e3: f32,
+}
+
+#[cfg(feature = "std")]
+impl fmt::Display for Vector {
+    // This trait requires `fmt` with this exact signature.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // write!(f, "{}e1, {}e2, {}e3", self.e1, self.e2, self.e3)
+        write!(f, "Vector {{")?;
+        write!(f, " {}e1", self.e1)?;
+
+        // For e2 component, add appropriate sign
+        if self.e2 >= 0.0 {
+            write!(f, " + {}e2", self.e2)?;
+        } else {
+            write!(f, " - {}e2", self.e2.abs())?;
+        }
+
+        // For e3 component, add appropriate sign
+        if self.e3 >= 0.0 {
+            write!(f, " + {}e3", self.e3)?;
+        } else {
+            write!(f, " - {}e3", self.e3.abs())?;
+        }
+        write!(f, " }}")?;
+
+        Ok(())
+    }
+}
+
+#[cfg(feature = "defmt")]
+impl defmt::Format for Vector {
+    fn format(&self, f: defmt::Formatter) {
+        // write!(f, "{}e1, {}e2, {}e3", self.e1, self.e2, self.e3)
+        defmt::write!(f, "Vector {{");
+        defmt::write!(f, " {}e1", self.e1);
+
+        // For e2 component, add appropriate sign
+        if self.e2 >= 0.0 {
+            defmt::write!(f, " + {}e2", self.e2);
+        } else {
+            defmt::write!(f, " - {}e2", self.e2.abs());
+        }
+
+        // For e3 component, add appropriate sign
+        if self.e3 >= 0.0 {
+            defmt::write!(f, " + {}e3", self.e3)?;
+        } else {
+            defmt::write!(f, " - {}e3", self.e3.abs());
+        }
+        defmt::write!(f, " }}");
+    }
 }
 
 impl Vector {

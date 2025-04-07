@@ -15,9 +15,15 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with ga_lib. If not, see <https://www.gnu.org/licenses/>.
+#![warn(missing_docs)]
 
-#![allow(unused_imports)]
-#![allow(dead_code)]
+#[cfg(feature = "std")]
+extern crate std;
+#[cfg(feature = "std")]
+use std::fmt;
+
+#[cfg(feature = "defmt")]
+use defmt::Format;
 
 use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Index, IndexMut, Mul, Neg, Not, Sub};
 
@@ -31,19 +37,45 @@ pub struct Trivector {
     e123: f32,
 }
 
+#[cfg(feature = "std")]
+impl fmt::Display for Trivector {
+    // This trait requires `fmt` with this exact signature.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // write!(f, "{}e123", self.e123)
+        write!(f, "Trivector {{")?;
+        write!(f, " {}e123", self.e123)?;
+        write!(f, " }}")?;
+
+        Ok(())
+    }
+}
+
+#[cfg(feature = "defmt")]
+impl defmt::Format for Trivector {
+    fn format(&self, f: defmt::Formatter) {
+        // defmt::write!(f, "{}e123", self.e123)
+        defmt::write!(f, "Trivector {{");
+        defmt::write!(f, " {}e123", self.e123);
+        defmt::write!(f, " }}");
+    }
+}
 impl Trivector {
+    /// The zero trivector
     pub fn zero() -> Self {
         Self { e123: 0.0 }
     }
 
+    ///  New trivector
     pub fn new(e123: f32) -> Self {
         Self { e123 }
     }
 
+    /// Get trivector
     pub fn trivector(self) -> Self {
         self
     }
 
+    /// Get e123 part of trivector
     pub fn e123(&self) -> f32 {
         self.e123
     }
@@ -67,11 +99,11 @@ impl Neg for Trivector {
     }
 }
 
-// Cross Product
-// \[ \overset\Rightarrow{a} \times \overset\Rightarrow{b} = \left <\overset\Rightarrow{a} \overset\Rightarrow{b} \right>_2 \]
-// The cross product for two trivectors gives the bivector orthogonal to both.
-// This does not exist in 3D
 impl Trivector {
+    /// Cross Product
+    /// $$ \overset\Rightarrow{a} \times \overset\Rightarrow{b} = \left <\overset\Rightarrow{a} \overset\Rightarrow{b} \right>_2 $$
+    /// The cross product for two trivectors gives the bivector orthogonal to both.
+    /// This does not exist in 3D
     pub fn cross(self, _b: Trivector) -> f32 {
         0.0
     }
@@ -90,24 +122,14 @@ mod trivector_cross {
     }
 }
 
-// Dual
-// In VGA 3D, the dual is the pseudoscalar
-// \[ \overset\Rightarrow{b} \overset\Rrightarrow{i} = -\vec{v} \]
-// vector and bivectors in 3D VGA follows this pattern. Going up, going down
-// \[ \mathrm{e}_1,\,\mathrm{e}_2,\,\mathrm{e}_3,\,\mathrm{e}_3\star,\,\mathrm{e}_2\star,\,\mathrm{e}_1\star,\, \]
 impl Trivector {
+    /// Dual
+    /// In VGA 3D, the dual is the pseudoscalar
+    /// $$ \overset\Rightarrow{b} \overset\Rrightarrow{i} = -\vec{v} $$
+    /// vector and bivectors in 3D VGA follows this pattern. Going up, going down
+    /// $$ \mathrm{e}_1,\,\mathrm{e}_2,\,\mathrm{e}_3,\,\mathrm{e}_3\star,\,\mathrm{e}_2\star,\,\mathrm{e}_1\star $$
     pub fn dual(self) -> f32 {
         -self.e123
-    }
-}
-
-// Regressive Product
-// \[ (A \vee B)\star = ( A\star  \wedge B\star ) \]
-impl Trivector {
-    pub fn regressive(self, b: Trivector) -> Trivector {
-        // The exterior product of two scalars is a simple multiplication
-        // The dual of scalar is the trivector
-        -Trivector::new(self.dual() * b.dual())
     }
 }
 

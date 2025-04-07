@@ -15,11 +15,16 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with ga_lib. If not, see <https://www.gnu.org/licenses/>.
-
-#![allow(unused_imports)]
-#![allow(dead_code)]
 #![warn(missing_docs)]
 // #![warn(rustdoc::missing_doc_code_examples)]
+
+#[cfg(feature = "std")]
+extern crate std;
+#[cfg(feature = "std")]
+use std::fmt;
+
+#[cfg(feature = "defmt")]
+use defmt::Format;
 
 use crate::forward_ref_binop;
 use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Index, IndexMut, Mul, Neg, Not, Sub};
@@ -40,6 +45,32 @@ use super::{
 pub struct Rotor {
     pub(super) scalar: f32,
     pub(super) bivector: Bivector,
+}
+
+#[cfg(feature = "std")]
+impl fmt::Display for Rotor {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // write!(f, "{}e12, {}e31, {}e23", self.e12, self.e31, self.e23)
+
+        write!(f, "Rotor {{\n")?;
+        write!(f, "\tscalar: {}\n", self.scalar)?;
+        write!(f, "\tbivector: {}\n", self.bivector)?;
+        write!(f, "}}")?;
+
+        Ok(())
+    }
+}
+
+#[cfg(feature = "defmt")]
+impl defmt::Format for Rotor {
+    fn format(&self, f: defmt::Formatter) {
+        // write!(f, "{}e12, {}e31, {}e23", self.e12, self.e31, self.e23)
+
+        defmt::write!(f, "Rotor {{\n");
+        defmt::write!(f, "\tscalar: {}\n", self.scalar);
+        defmt::write!(f, "\tbivector: {}\n", self.bivector);
+        defmt::write!(f, "}}");
+    }
 }
 
 impl Rotor {

@@ -2,14 +2,14 @@
 
 This is a geometric algebra library written in Rust.
 
-It is made for 3 dimensions.
+I will later have more algebras.
 
-It will later be used in a Rotor Extended Kalman Filter.
+* vga3d
 
-* 3D VGA
 It has implemented a full 3D Vector Geometric Algebra.
-** Features
-- addition, subtraction, inner product, exterior product, geometric product: interaction between all grades
+
+** Properties of the Algebra
+- addition, subtraction, inner product, exterior product, geometric product, regressive product: interaction between all grades
 - Rotations for all grades through Rotors
 - Projection between all grades
 - Rejections between all grades
@@ -17,13 +17,47 @@ It has implemented a full 3D Vector Geometric Algebra.
 
 
 
+
+* Extra Features
+Features that can be enabled to compile in extra features.
+
+#+begin_src Rust :export code
+
+[dependencies]
+ga_lib = {version = "*" ,features = ["std"]}
+
+#+end_src
+
+** default
+Implements no extra features.
+
+** full
+Implements all extra features.
+
+** quaternion
+When the quaternion flag is enabled, then quaternion and unit quaternion are available as struct.
+Unit quaternions can only rotate vectors and quaternions.
+
+** TODO nalgebra
+
+** std
+When the std flag is enabled, then all Stucts will have an implementation of src_rust[:exports code]{fmt::Display}
+#+begin_src Rust :exports code
+let vector = Vector::new(2.0,4.0,3.2);
+println!("{}",vector);
+#+end_src
+
+** defmt
+When the defmt flag is enabled, then all Stucts will have an implementation of src_rust[:exports code]{defmt::Format}
+
+#+begin_src Rust :exports code
+let vector = Vector::new(2.0,4.0,3.2);
+println!("{}",vector);
+#+end_src
+
+
 * TODO
 - I need to make a test for everything
 - Do scalars need their own type?
-- Regressive product needs to be implemented
 - Generic float for all. (One is f64, all is)
-
-* Extra Features
-** Quaternion
-When the quaternion flag is enabled, then quaternion and unit quaternion are available as struct.
-Unit quaternions can only rotate vectors and quaternions.
+- regressive product, lowest implementation

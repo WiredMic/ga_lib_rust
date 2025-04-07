@@ -15,8 +15,17 @@
 //
 // You should have received a copy of the GNU Lesser General Public License
 // along with ga_lib. If not, see <https://www.gnu.org/licenses/>.
+#![warn(missing_docs)]
+// #![warn(rustdoc::missing_doc_code_examples)]
+
+#[cfg(feature = "std")]
+extern crate std;
+#[cfg(feature = "std")]
+use std::fmt;
 
 use crate::forward_ref_binop;
+#[cfg(feature = "defmt")]
+use defmt::Format;
 
 use super::UnitQuaternion;
 use crate::vga3d::{
@@ -62,7 +71,61 @@ pub struct Quaternion {
     vector: Vector,
 }
 
+#[cfg(feature = "std")]
+impl fmt::Display for Quaternion {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // write!(f, "{}e12, {}e31, {}e23", self.e12, self.e31, self.e23)
+
+        write!(f, "Quaternion {{\n")?;
+        write!(f, "\treal: {}\n", self.scalar)?;
+        write!(f, "\timaginary: {}i", self.e1())?;
+
+        // For j component, add appropriate sign
+        if self.e2() >= 0.0 {
+            write!(f, " + {}j", self.e2())?;
+        } else {
+            write!(f, " - {}j", self.e2().abs())?;
+        }
+
+        // For k component, add appropriate sign
+        if self.e3() >= 0.0 {
+            write!(f, " + {}k", self.e3())?;
+        } else {
+            write!(f, " - {}k\n", self.e3().abs())?;
+        }
+        write!(f, "}}")?;
+
+        Ok(())
+    }
+}
+
+#[cfg(feature = "defmt")]
+impl defmt::Format for Quaternion {
+    fn format(&self, fmt: defmt::Formatter) {
+        // the defmt version - similar structure but using defmt macros
+        defmt::write!(fmt, "Quaternion {{\n");
+        defmt::write!(fmt, "\treal: {}\n", self.scalar);
+        defmt::write!(fmt, "\timaginary: {}i", self.e1());
+
+        // for j component, add appropriate sign
+        if self.e2() >= 0.0 {
+            defmt::write!(fmt, " + {}j", self.e2());
+        } else {
+            defmt::write!(fmt, " - {}j", self.e2().abs());
+        }
+
+        // for k component, add appropriate sign
+        if self.e3() >= 0.0 {
+            defmt::write!(fmt, " + {}k", self.e3());
+        } else {
+            defmt::write!(fmt, " - {}k", self.e3().abs());
+        }
+        defmt::write!(fmt, "\n}}");
+    }
+}
+
 impl Quaternion {
+    /// New Quaternion with scalar and imaginary vector parts
     pub fn new(scalar: f32, vector: Vector) -> Self {
         Self { scalar, vector }
     }
