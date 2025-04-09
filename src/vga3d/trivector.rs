@@ -17,6 +17,8 @@
 // along with ga_lib. If not, see <https://www.gnu.org/licenses/>.
 #![warn(missing_docs)]
 
+use crate::forward_ref_binop;
+
 #[cfg(feature = "std")]
 extern crate std;
 #[cfg(feature = "std")]
@@ -27,18 +29,20 @@ use defmt::Format;
 
 use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Index, IndexMut, Mul, Neg, Not, Sub};
 
-use libm::{fabsf, sqrtf};
+use num_traits::Float;
 
-use super::{bivector::Bivector, vector::Vector, VGA3DOps, VGA3DOpsRef};
+// use libm::{fabsf, sqrtf};
+
+use super::{bivector::Bivector, scalar::Scalar, vector::Vector, VGA3DOps, VGA3DOpsRef};
 
 /// 3D Vector Geometric Algebra Bivector
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
-pub struct Trivector {
-    e123: f32,
+pub struct Trivector<F: Float> {
+    e123: F,
 }
 
 #[cfg(feature = "std")]
-impl fmt::Display for Trivector {
+impl<F: Float + fmt::Display> fmt::Display for Trivector<F> {
     // This trait requires `fmt` with this exact signature.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // write!(f, "{}e123", self.e123)
@@ -51,7 +55,7 @@ impl fmt::Display for Trivector {
 }
 
 #[cfg(feature = "defmt")]
-impl defmt::Format for Trivector {
+impl<F: Float + defmt::Format> defmt::Format for Trivector<F> {
     fn format(&self, f: defmt::Formatter) {
         // defmt::write!(f, "{}e123", self.e123)
         defmt::write!(f, "Trivector {{");
@@ -59,14 +63,14 @@ impl defmt::Format for Trivector {
         defmt::write!(f, " }}");
     }
 }
-impl Trivector {
+impl<F: Float> Trivector<F> {
     /// The zero trivector
     pub fn zero() -> Self {
-        Self { e123: 0.0 }
+        Self { e123: F::zero() }
     }
 
     ///  New trivector
-    pub fn new(e123: f32) -> Self {
+    pub fn new(e123: F) -> Self {
         Self { e123 }
     }
 
@@ -76,7 +80,7 @@ impl Trivector {
     }
 
     /// Get e123 part of trivector
-    pub fn e123(&self) -> f32 {
+    pub fn e123(&self) -> F {
         self.e123
     }
 }
@@ -92,20 +96,33 @@ mod new {
     }
 }
 
-impl Neg for Trivector {
-    type Output = Trivector;
-    fn neg(self) -> Trivector {
+impl<F: Float> Neg for Trivector<F> {
+    type Output = Trivector<F>;
+    fn neg(self) -> Trivector<F> {
         Trivector::new(-self.e123)
     }
 }
 
-impl Trivector {
+impl<F: Float> Div<F> for Trivector<F> {
+    // The division of rational numbers is a closed operation.
+    type Output = Trivector<F>;
+    fn div(self, b: F) -> Trivector<F> {
+        if b == F::zero() {
+            panic!("Cannot divide by zero-valued `Rational`!");
+        }
+
+        Trivector::new(self.e123() / b)
+    }
+}
+forward_ref_binop!(impl<F: Float> Div, div for Trivector<F>, F);
+
+impl<F: Float> Trivector<F> {
     /// Cross Product
     /// $$ \overset\Rightarrow{a} \times \overset\Rightarrow{b} = \left <\overset\Rightarrow{a} \overset\Rightarrow{b} \right>_2 $$
     /// The cross product for two trivectors gives the bivector orthogonal to both.
     /// This does not exist in 3D
-    pub fn cross(self, _b: Trivector) -> f32 {
-        0.0
+    pub fn cross(self, _b: Trivector<F>) -> F {
+        F::zero()
     }
 }
 
@@ -122,29 +139,29 @@ mod trivector_cross {
     }
 }
 
-impl Trivector {
+impl<F: Float> Trivector<F> {
     /// Dual
     /// In VGA 3D, the dual is the pseudoscalar
     /// $$ \overset\Rightarrow{b} \overset\Rrightarrow{i} = -\vec{v} $$
     /// vector and bivectors in 3D VGA follows this pattern. Going up, going down
     /// $$ \mathrm{e}_1,\,\mathrm{e}_2,\,\mathrm{e}_3,\,\mathrm{e}_3\star,\,\mathrm{e}_2\star,\,\mathrm{e}_1\star $$
-    pub fn dual(self) -> f32 {
+    pub fn dual(self) -> F {
         -self.e123
     }
 }
 
-impl VGA3DOps for Trivector {
+impl<F: Float> VGA3DOps<F> for Trivector<F> {
     // There is only one element.
     // The norm is the absolute value of e1e2e3
-    fn norm(self) -> f32 {
-        fabsf(self.e123())
+    fn norm(self) -> F {
+        self.e123().abs()
         // sqrtf((self.reverse() * self).scalar())
     }
 
     // Inverse
     // \[A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>}\]
     fn inverse(self) -> Self {
-        self.reverse() * (1.0 / (self * self.reverse()))
+        self.reverse() / (self * self.reverse())
     }
 
     // Reverse
@@ -169,16 +186,16 @@ impl VGA3DOps for Trivector {
     }
 }
 
-impl VGA3DOpsRef for Trivector {
-    fn norm(&self) -> f32 {
+impl<F: Float> VGA3DOpsRef<F> for Trivector<F> {
+    fn norm(&self) -> F {
         // sqrtf((self.reverse() * self).scalar())
-        fabsf(self.e123())
+        self.e123().abs()
     }
 
     // Inverse
     // \[A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>}\]
     fn inverse(&self) -> Self {
-        self.reverse() * (1.0 / (self * self.reverse()))
+        self.reverse() / (self * self.reverse())
     }
 
     // Reverse
@@ -200,5 +217,22 @@ impl VGA3DOpsRef for Trivector {
 
     fn involute(&self) -> Self {
         *self
+    }
+}
+
+mod trivector {
+    use super::*;
+    use approx::assert_relative_eq;
+    #[test]
+    fn trivector_norm() {
+        // 3e12+5e31+4e23
+        let trivector = Trivector::new(3.0);
+        let trivector_reverse = trivector.reverse();
+        assert_relative_eq!(trivector_reverse.e123(), -3.0, max_relative = 0.000001);
+
+        assert_relative_eq!(trivector.norm(), 3.0, max_relative = 0.000001);
+        assert_relative_eq!((&trivector).norm(), 3.0, max_relative = 0.000001);
+        assert_relative_eq!(trivector_reverse.norm(), 3.0, max_relative = 0.000001);
+        assert_relative_eq!((&trivector_reverse).norm(), 3.0, max_relative = 0.000001);
     }
 }

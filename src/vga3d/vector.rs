@@ -28,9 +28,11 @@ use defmt::Format;
 
 use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Index, IndexMut, Mul, Neg, Not, Sub};
 
-use libm::sqrtf;
+use num_traits::Float;
+// use libm::sqrtf;
 
-//
+use crate::forward_ref_binop;
+
 use super::{
     bivector::Bivector, multivector::Multivector, trivector::Trivector, VGA3DOps, VGA3DOpsRef,
 };
@@ -39,14 +41,14 @@ use super::{
 /// This is the same vector as in $\mathbb{R}^3$
 /// $$\vec{v}=v_1 \mathrm{e}_1 + v_2 \mathrm{e}_2 + v_3 \mathrm{e}_3$$
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
-pub struct Vector {
-    e1: f32,
-    e2: f32,
-    e3: f32,
+pub struct Vector<F: Float> {
+    e1: F,
+    e2: F,
+    e3: F,
 }
 
 #[cfg(feature = "std")]
-impl fmt::Display for Vector {
+impl<F: Float + fmt::Display> fmt::Display for Vector<F> {
     // This trait requires `fmt` with this exact signature.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // write!(f, "{}e1, {}e2, {}e3", self.e1, self.e2, self.e3)
@@ -54,14 +56,14 @@ impl fmt::Display for Vector {
         write!(f, " {}e1", self.e1)?;
 
         // For e2 component, add appropriate sign
-        if self.e2 >= 0.0 {
+        if self.e2 >= F::zero() {
             write!(f, " + {}e2", self.e2)?;
         } else {
             write!(f, " - {}e2", self.e2.abs())?;
         }
 
         // For e3 component, add appropriate sign
-        if self.e3 >= 0.0 {
+        if self.e3 >= F::zero() {
             write!(f, " + {}e3", self.e3)?;
         } else {
             write!(f, " - {}e3", self.e3.abs())?;
@@ -73,22 +75,22 @@ impl fmt::Display for Vector {
 }
 
 #[cfg(feature = "defmt")]
-impl defmt::Format for Vector {
+impl<F: Float + defmt::Format> defmt::Format for Vector<F> {
     fn format(&self, f: defmt::Formatter) {
         // write!(f, "{}e1, {}e2, {}e3", self.e1, self.e2, self.e3)
         defmt::write!(f, "Vector {{");
         defmt::write!(f, " {}e1", self.e1);
 
         // For e2 component, add appropriate sign
-        if self.e2 >= 0.0 {
+        if self.e2 >= F::zero() {
             defmt::write!(f, " + {}e2", self.e2);
         } else {
             defmt::write!(f, " - {}e2", self.e2.abs());
         }
 
         // For e3 component, add appropriate sign
-        if self.e3 >= 0.0 {
-            defmt::write!(f, " + {}e3", self.e3)?;
+        if self.e3 >= F::zero() {
+            defmt::write!(f, " + {}e3", self.e3);
         } else {
             defmt::write!(f, " - {}e3", self.e3.abs());
         }
@@ -96,18 +98,18 @@ impl defmt::Format for Vector {
     }
 }
 
-impl Vector {
+impl<F: Float> Vector<F> {
     /// The zero vector
     pub fn zero() -> Self {
         Self {
-            e1: 0.0,
-            e2: 0.0,
-            e3: 0.0,
+            e1: F::zero(),
+            e2: F::zero(),
+            e3: F::zero(),
         }
     }
 
     /// Create new vector from linear combination of unit vectors
-    pub fn new(e1: f32, e2: f32, e3: f32) -> Self {
+    pub fn new(e1: F, e2: F, e3: F) -> Self {
         Self { e1, e2, e3 }
     }
 
@@ -118,17 +120,17 @@ impl Vector {
 
     // Vector components
     /// Get unit scaling factor for $\mathrm{e}_1$
-    pub fn e1(&self) -> f32 {
+    pub fn e1(&self) -> F {
         self.e1
     }
 
     /// Get unit scaling factor for $\mathrm{e}_2$
-    pub fn e2(&self) -> f32 {
+    pub fn e2(&self) -> F {
         self.e2
     }
 
     /// Get unit scaling factor for $\mathrm{e}_3$
-    pub fn e3(&self) -> f32 {
+    pub fn e3(&self) -> F {
         self.e3
     }
 }
@@ -147,18 +149,36 @@ mod vector_new {
 }
 
 // Negation
-impl Neg for Vector {
-    type Output = Vector;
-    fn neg(self) -> Vector {
+impl<F: Float> Neg for Vector<F> {
+    type Output = Vector<F>;
+    fn neg(self) -> Vector<F> {
         Vector::new(-self.e1, -self.e2, -self.e3)
     }
 }
 
-impl Vector {
+impl<F: Float> Div<F> for Vector<F> {
+    // The division of rational numbers is a closed operation.
+    type Output = Vector<F>;
+
+    fn div(self, b: F) -> Vector<F> {
+        if b == F::zero() {
+            panic!("Cannot divide by zero-valued `Rational`!");
+        }
+
+        Vector::new(
+            self.vector().e1() / b,
+            self.vector().e2() / b,
+            self.vector().e3() / b,
+        )
+    }
+}
+forward_ref_binop!(impl<F: Float> Div, div for Vector<F>, F);
+
+impl<F: Float> Vector<F> {
     /// # Cross Product
     /// The cross product is the dual of the exterior product
     /// $$ \vec{v}\times\vec{u} = (\vec{v}\wedge\vec{u})\star $$
-    pub fn cross(self, b: Vector) -> Vector {
+    pub fn cross(self, b: Vector<F>) -> Vector<F> {
         // -(self ^ b).dual()
         let e1 = self.e2() * b.e3() - self.e3() * b.e2();
         let e2 = self.e3() * b.e1() - self.e1() * b.e3();
@@ -184,13 +204,13 @@ mod vector_cross {
     }
 }
 
-impl Vector {
+impl<F: Float> Vector<F> {
     /// # Dual
     /// In VGA 3D, the dual is the pseudoscalar
     /// $$ \vec{v} \overset\Rrightarrow{i} = \overset\Rightarrow{b} $$
     /// vector and bivectors in 3D VGA follows this pattern. Going up, going down
     /// $$\text{scalar}, \mathrm{e}_1,\mathrm{e}_2,\mathrm{e}_3,\mathrm{e}_3\star,\mathrm{e}_2\star,\mathrm{e}_1\star, \text{scalar}\star $$
-    pub fn dual(self) -> Bivector {
+    pub fn dual(self) -> Bivector<F> {
         Bivector::new(self.e3, self.e2, self.e1)
     }
 }
@@ -200,36 +220,36 @@ mod vector_dual {
     use super::*;
     #[test]
     fn vector_to_bivector() {
-        let vector: Vector = Vector::new(1.0, 2.0, 3.0);
-        let bivector: Bivector = vector.dual();
+        let vector = Vector::new(1.0, 2.0, 3.0);
+        let bivector = vector.dual();
         assert_eq!(vector.e1(), bivector.e23());
         assert_eq!(vector.e2(), bivector.e31());
         assert_eq!(vector.e3(), bivector.e12());
     }
 }
 
-impl VGA3DOps for Vector {
-    fn norm(self) -> f32 {
-        sqrtf((self.e1() * self.e1()) + (self.e2() * self.e2()) + (self.e3() * self.e3()))
+impl<F: Float> VGA3DOps<F> for Vector<F> {
+    fn norm(self) -> F {
+        ((self.e1() * self.e1()) + (self.e2() * self.e2()) + (self.e3() * self.e3())).sqrt()
     }
 
     // Inverse
     // \[A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>}\]
-    fn inverse(self) -> Vector {
-        self.reverse() * (1.0 / (self * self.reverse()).scalar())
+    fn inverse(self) -> Self {
+        self.reverse() / (self * self.reverse()).scalar()
     }
 
     // Reverse
     // It follows the patten (Each is a grade)
     // \[+ + - - + + - - \dots (-1)^{k(k-1)/2}\]
-    fn reverse(self) -> Vector {
+    fn reverse(self) -> Self {
         self
     }
     // Clifford Conjugation
     // It follows the patten (Each is a grade)
     // \[+--+--+\dots(-1)^{k(k+1)/2}\]
 
-    fn conjugate(self) -> Vector {
+    fn conjugate(self) -> Self {
         -self
     }
     // Grade Involution
@@ -241,29 +261,29 @@ impl VGA3DOps for Vector {
     }
 }
 
-impl VGA3DOpsRef for Vector {
-    fn norm(&self) -> f32 {
+impl<F: Float> VGA3DOpsRef<F> for Vector<F> {
+    fn norm(&self) -> F {
         // sqrtf((self.reverse() * self).scalar())
-        sqrtf((self.e1() * self.e1()) + (self.e2() * self.e2()) + (self.e3() * self.e3()))
+        ((self.e1() * self.e1()) + (self.e2() * self.e2()) + (self.e3() * self.e3())).sqrt()
     }
 
     // Inverse
     // \[A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>}\]
-    fn inverse(&self) -> Vector {
-        self.reverse() * (1.0 / (self * self.reverse()).scalar())
+    fn inverse(&self) -> Self {
+        self.reverse() / (self * self.reverse()).scalar()
     }
 
     // Reverse
     // It follows the patten (Each is a grade)
     // \[+ + - - + + - - \dots (-1)^{k(k-1)/2}\]
-    fn reverse(&self) -> Vector {
+    fn reverse(&self) -> Self {
         *self
     }
     // Clifford Conjugation
     // It follows the patten (Each is a grade)
     // \[+--+--+\dots(-1)^{k(k+1)/2}\]
 
-    fn conjugate(&self) -> Vector {
+    fn conjugate(&self) -> Self {
         -(*self)
     }
     // Grade Involution
@@ -272,5 +292,37 @@ impl VGA3DOpsRef for Vector {
 
     fn involute(&self) -> Self {
         -(*self)
+    }
+}
+
+#[cfg(test)]
+mod vector {
+    use super::*;
+    use approx::assert_relative_eq;
+    #[test]
+    fn vector_norm() {
+        // 3e12+5e31+4e23
+        let vector = Vector::new(3.0, 5.0, 4.0);
+        let vector_reverse = vector.reverse();
+        assert_relative_eq!(vector_reverse.e1(), 3.0, max_relative = 0.000001);
+        assert_relative_eq!(vector_reverse.e2(), 5.0, max_relative = 0.000001);
+        assert_relative_eq!(vector_reverse.e3(), 4.0, max_relative = 0.000001);
+
+        assert_relative_eq!(vector.norm(), 7.0710678118654755, max_relative = 0.000001);
+        assert_relative_eq!(
+            (&vector).norm(),
+            7.0710678118654755,
+            max_relative = 0.000001
+        );
+        assert_relative_eq!(
+            vector_reverse.norm(),
+            7.0710678118654755,
+            max_relative = 0.000001
+        );
+        assert_relative_eq!(
+            (&vector_reverse).norm(),
+            7.0710678118654755,
+            max_relative = 0.000001
+        );
     }
 }

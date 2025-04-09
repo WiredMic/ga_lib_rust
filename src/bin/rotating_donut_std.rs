@@ -30,7 +30,7 @@ use core::f32::consts::TAU;
 
 // Geometric Algebra
 use ga_lib::vga3d::{
-    Bivector, Multivector, Projectable, Rejectable, Rotatable, Rotor, Trivector, VGA3DOps,
+    Bivector, Multivector, Projectable, Rejectable, Rotatable, Rotor, Scalar, Trivector, VGA3DOps,
     VGA3DOpsRef, Vector,
 };
 
@@ -92,15 +92,15 @@ fn main() {
     }
 }
 
-fn make_torus() -> [Multivector; NUM_POINT_IN_TORUS] {
-    let mut point_array: [Multivector; NUM_POINT_IN_TORUS] =
+fn make_torus() -> [Multivector<f32>; NUM_POINT_IN_TORUS] {
+    let mut point_array: [Multivector<f32>; NUM_POINT_IN_TORUS] =
         [Multivector::zero(); NUM_POINT_IN_TORUS];
 
     // First point with tangent plane
     // These are rotated togther
     let first_vec = Vector::new(1.0, 0.0, 0.0);
     let first_bivec = first_vec.dual();
-    let first = (first_vec * minorRadius) + first_bivec;
+    let first = (first_vec * Scalar::new(minorRadius)) + first_bivec;
 
     // Translate vector to translate the circle from origin to the correct place in torus
     let translate_vec = Vector::new(majorRadius, 0.0, 0.0);
@@ -149,7 +149,11 @@ fn make_torus() -> [Multivector; NUM_POINT_IN_TORUS] {
     point_array
 }
 
-fn rotate_torus(point_array: &mut [Multivector; NUM_POINT_IN_TORUS], angle3: f32, angle4: f32) {
+fn rotate_torus(
+    point_array: &mut [Multivector<f32>; NUM_POINT_IN_TORUS],
+    angle3: f32,
+    angle4: f32,
+) {
     let rotation_plane3 = Bivector::new(5.0, 3.5, -4.0);
     let rotor3 = Rotor::new(angle3 / 2.0, rotation_plane3);
 
@@ -192,7 +196,7 @@ impl Screen {
     }
 }
 
-fn project_torus(point_array: &[Multivector; NUM_POINT_IN_TORUS]) -> Screen {
+fn project_torus(point_array: &[Multivector<f32>; NUM_POINT_IN_TORUS]) -> Screen {
     let mut screen = Screen::new();
 
     // \[\vec{v}_\parallel=(\vec{v}\cdot\vec{B})\vec{B}^{-1} \]
@@ -201,7 +205,7 @@ fn project_torus(point_array: &[Multivector; NUM_POINT_IN_TORUS]) -> Screen {
 
     // light vector
     let light_ray_direction = Vector::new(1.0, 0.2, 1.0);
-    let light_ray_direction = light_ray_direction * (1.0 / light_ray_direction.norm());
+    let light_ray_direction = light_ray_direction / light_ray_direction.norm();
 
     for point in point_array.iter() {
         // Project point vector onto the screen plane

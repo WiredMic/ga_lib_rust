@@ -65,5 +65,8 @@
 /// Vector Geometric Algebra $\text{Cl}(3,0,0)$
 pub mod vga3d;
 
+/// Vector Geometric Algebra $\text{Cl}(2,0,0)$
+pub mod vga2d;
+
 #[macro_use]
 pub(crate) mod macros;

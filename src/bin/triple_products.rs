@@ -35,7 +35,7 @@ mod triple_product {
     use super::*;
     use approx::assert_relative_eq;
     #[test]
-    fn bivector() {
+    fn bivector_triple_left() {
         // \[ \overset\Rightarrow{a}\times (\overset\Rightarrow{b}\times\overset\Rightarrow{c})=-(\overset\Rightarrow{a}\cdot \overset\Rightarrow{c})\overset\Rightarrow{b}+(\overset\Rightarrow{a}\cdot \overset\Rightarrow{b})\overset\Rightarrow{c} \]
         // 3e12+5e31+4e23
         let a = Bivector::new(3.0, 5.0, 4.0);
@@ -46,6 +46,23 @@ mod triple_product {
 
         let prod = a.cross(b.cross(c));
         let res = -((a | c) * b - (a | b) * c);
+        assert_relative_eq!(prod.e12(), res.e12(), max_relative = 0.000001);
+        assert_relative_eq!(prod.e31(), res.e31(), max_relative = 0.000001);
+        assert_relative_eq!(prod.e23(), res.e23(), max_relative = 0.000001);
+    }
+
+    #[test]
+    fn bivector_triple_right() {
+        // \[ \overset\Rightarrow{a}\times (\overset\Rightarrow{b}\times\overset\Rightarrow{c})=-(\overset\Rightarrow{a}\cdot \overset\Rightarrow{c})\overset\Rightarrow{b}+(\overset\Rightarrow{a}\cdot \overset\Rightarrow{b})\overset\Rightarrow{c} \]
+        // 3e12+5e31+4e23
+        let a = Bivector::new(3.0, 5.0, 4.0);
+        // 2e12+e31+6e23
+        let b = Bivector::new(2.0, 1.0, 6.0);
+        // 4e12-e31-3e23
+        let c = Bivector::new(4.0, -1.0, -3.0);
+
+        let prod = (a.cross(b)).cross(c);
+        let res = (c | b) * a - (c | a) * b;
         assert_relative_eq!(prod.e12(), res.e12(), max_relative = 0.000001);
         assert_relative_eq!(prod.e31(), res.e31(), max_relative = 0.000001);
         assert_relative_eq!(prod.e23(), res.e23(), max_relative = 0.000001);

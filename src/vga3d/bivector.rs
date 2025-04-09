@@ -18,6 +18,8 @@
 #![warn(missing_docs)]
 // #![warn(rustdoc::missing_doc_code_examples)]
 
+use crate::forward_ref_binop;
+
 #[cfg(feature = "std")]
 extern crate std;
 #[cfg(feature = "std")]
@@ -30,11 +32,10 @@ use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Index, IndexMut, Mul, Neg, Not,
 
 use libm::sqrtf;
 
+use num_traits::Float;
+
 use super::{
-    multivector::Multivector,
-    trivector::{self, Trivector},
-    vector::Vector,
-    VGA3DOps, VGA3DOpsRef,
+    multivector::Multivector, trivector::Trivector, vector::Vector, VGA3DOps, VGA3DOpsRef,
 };
 
 /// # 3D Vector Geometric Algebra Bivector
@@ -44,29 +45,29 @@ use super::{
 /// This is the correct way to represent an axial vector.
 /// The two are confused because the bivector is the dual of the vector.
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
-pub struct Bivector {
-    e12: f32,
-    e31: f32,
-    e23: f32,
+pub struct Bivector<F: Float> {
+    e12: F,
+    e31: F,
+    e23: F,
 }
 
 #[cfg(feature = "std")]
-impl fmt::Display for Bivector {
+impl<F: Float + fmt::Display> fmt::Display for Bivector<F> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // write!(f, "{}e12, {}e31, {}e23", self.e12, self.e31, self.e23)
 
         write!(f, "Bivector {{")?;
-        write!(f, " {}e1e2", self.e12)?;
+        write!(f, " {}e12", self.e12)?;
 
         // For e2 component, add appropriate sign
-        if self.e31 >= 0.0 {
+        if self.e31 >= F::zero() {
             write!(f, " + {}e31", self.e31)?;
         } else {
             write!(f, " - {}e31", self.e31.abs())?;
         }
 
         // For e3 component, add appropriate sign
-        if self.e23 >= 0.0 {
+        if self.e23 >= F::zero() {
             write!(f, " + {}e23", self.e23)?;
         } else {
             write!(f, " - {}e23", self.e23.abs())?;
@@ -78,7 +79,7 @@ impl fmt::Display for Bivector {
 }
 
 #[cfg(feature = "defmt")]
-impl defmt::Format for Bivector {
+impl<F: Float + defmt::Format> defmt::Format for Bivector<F> {
     fn format(&self, f: defmt::Formatter) {
         // defmt::write!(f, "{}e12, {}e31, {}e23", self.e12, self.e31, self.e23)
 
@@ -86,34 +87,34 @@ impl defmt::Format for Bivector {
         defmt::write!(f, " {}e1e2", self.e12);
 
         // For e2 component, add appropriate sign
-        if self.e31 >= 0.0 {
+        if self.e31 >= F::zero() {
             defmt::write!(f, " + {}e31", self.e31);
         } else {
             defmt::write!(f, " - {}e31", self.e31.abs());
         }
 
         // For e3 component, add appropriate sign
-        if self.e23 >= 0.0 {
+        if self.e23 >= F::zero() {
             defmt::write!(f, " + {}e23", self.e23);
         } else {
             defmt::write!(f, " - {}e23", self.e23.abs());
         }
-        defmt::write!(f, " }}")?;
+        defmt::write!(f, " }}");
     }
 }
 
-impl Bivector {
+impl<F: Float> Bivector<F> {
     /// The zero bivector
     pub fn zero() -> Self {
         Self {
-            e12: 0.0,
-            e31: 0.0,
-            e23: 0.0,
+            e12: F::zero(),
+            e31: F::zero(),
+            e23: F::zero(),
         }
     }
 
     /// Create new bivector from linear combination of unit bivector
-    pub fn new(e12: f32, e31: f32, e23: f32) -> Self {
+    pub fn new(e12: F, e31: F, e23: F) -> Self {
         Self { e12, e31, e23 }
     }
 
@@ -123,17 +124,17 @@ impl Bivector {
     }
 
     /// The scaling factor for unit bivector $\mathrm{e}_1\mathrm{e}_2$
-    pub fn e12(&self) -> f32 {
+    pub fn e12(&self) -> F {
         self.e12
     }
 
     /// The scaling factor for unit bivector $\mathrm{e}_3\mathrm{e}_1$
-    pub fn e23(&self) -> f32 {
+    pub fn e23(&self) -> F {
         self.e23
     }
 
     /// The scaling factor for unit bivector $\mathrm{e}_2\mathrm{e}_3$
-    pub fn e31(&self) -> f32 {
+    pub fn e31(&self) -> F {
         self.e31
     }
 }
@@ -152,18 +153,32 @@ mod new {
 }
 
 // Negation
-impl Neg for Bivector {
-    type Output = Bivector;
-    fn neg(self) -> Bivector {
+impl<F: Float> Neg for Bivector<F> {
+    type Output = Bivector<F>;
+    fn neg(self) -> Bivector<F> {
         Bivector::new(-self.e12, -self.e31, -self.e23)
     }
 }
 
-impl Bivector {
+impl<F: Float> Div<F> for Bivector<F> {
+    // The division of rational numbers is a closed operation.
+    type Output = Bivector<F>;
+
+    fn div(self, b: F) -> Bivector<F> {
+        if b == F::zero() {
+            panic!("Cannot divide by zero-valued `Rational`!");
+        }
+
+        Bivector::new(self.e12() / b, self.e31() / b, self.e23() / b)
+    }
+}
+forward_ref_binop!(impl<F: Float> Div, div for Bivector<F>, F);
+
+impl<F: Float> Bivector<F> {
     /// # Cross Product
     /// The cross product for two bivectors gives the bivector orthogonal to both
     /// $$ \overset\Rightarrow{a} \times \overset\Rightarrow{b} = \left <\overset\Rightarrow{a} \overset\Rightarrow{b} \right>_2 $$
-    pub fn cross(self, b: Bivector) -> Bivector {
+    pub fn cross(self, b: Bivector<F>) -> Bivector<F> {
         let e12 = self.e31 * b.e23 - self.e23 * b.e31;
         let e31 = self.e23 * b.e12 - self.e12 * b.e23;
         let e23 = self.e12 * b.e31 - self.e31 * b.e12;
@@ -201,7 +216,7 @@ mod bivector_cross {
     }
 }
 
-impl Bivector {
+impl<F: Float> Bivector<F> {
     /// # Dual
     /// In VGA 3D, the dual is the unit pseudoscalar $\overset\Rrightarrow{i}$
     ///
@@ -210,7 +225,7 @@ impl Bivector {
     /// Vector and bivectors in 3D VGA follows this pattern. Going up, going down
     ///
     /// $$ \text{scalar}, \mathrm{e}_1,\mathrm{e}_2,\mathrm{e}_3,\mathrm{e}_3\star, \mathrm{e}_2\star, \mathrm{e}_1\star, \text{scalar}\star $$
-    pub fn dual(self) -> Vector {
+    pub fn dual(self) -> Vector<F> {
         Vector::new(-self.e23, -self.e31, -self.e12)
     }
 }
@@ -223,34 +238,24 @@ impl Bivector {
 //     fn vector_vector_cross() {
 //     }}
 
-impl Bivector {
+impl<F: Float> Bivector<F> {
     /// # Inverse
     /// $$ A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>} $$
-    pub fn inverse(self) -> Bivector {
-        self.reverse() * (1.0 / (self * self.reverse()).scalar())
+    pub fn inverse(self) -> Bivector<F> {
+        self.reverse() / (self * self.reverse()).scalar()
     }
 }
 
-impl Bivector {
-    /// Regressive Product
-    /// $$ (A \vee B)\star = ( A\star  \wedge B\star ) $$
-    /// NOT IMPEMENTED
-    pub fn regressive(self) -> Bivector {
-        // TODO
-        self
-    }
-}
-
-impl VGA3DOps for Bivector {
-    fn norm(self) -> f32 {
-        sqrtf((self.e12() * self.e12()) + (self.e31() * self.e31()) + (self.e23() * self.e23()))
-        // sqrtf((self.reverse() * self).scalar())
+impl<F: Float> VGA3DOps<F> for Bivector<F> {
+    fn norm(self) -> F {
+        // ((self.e12() * self.e12()) + (self.e31() * self.e31()) + (self.e23() * self.e23())).sqrt()
+        (self.reverse() * self).scalar().sqrt()
     }
 
     // Inverse
     // \[A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>}\]
     fn inverse(self) -> Self {
-        self.reverse() * (1.0 / (self * self.reverse()).scalar())
+        self.reverse() / (self * self.reverse()).scalar()
     }
 
     // Reverse
@@ -275,16 +280,16 @@ impl VGA3DOps for Bivector {
     }
 }
 
-impl VGA3DOpsRef for Bivector {
-    fn norm(&self) -> f32 {
+impl<F: Float> VGA3DOpsRef<F> for Bivector<F> {
+    fn norm(&self) -> F {
         // sqrtf((self.reverse() * self).scalar())
-        sqrtf((self.e12() * self.e12()) + (self.e31() * self.e31()) + (self.e23() * self.e23()))
+        ((self.e12() * self.e12()) + (self.e31() * self.e31()) + (self.e23() * self.e23())).sqrt()
     }
 
     // Inverse
     // \[A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>}\]
     fn inverse(&self) -> Self {
-        self.reverse() * (1.0 / (self * self.reverse()).scalar())
+        self.reverse() / (self * self.reverse()).scalar()
     }
 
     // Reverse
@@ -306,5 +311,48 @@ impl VGA3DOpsRef for Bivector {
 
     fn involute(&self) -> Self {
         *self
+    }
+}
+
+#[cfg(test)]
+mod bivector {
+    use super::*;
+    use approx::assert_relative_eq;
+    #[test]
+    fn bivector_reverse() {
+        // 3e1+5e2+4e3
+        let bivector = Bivector::new(3.0, 5.0, 4.0);
+
+        let res = bivector.reverse();
+        assert_relative_eq!(res.e12(), -3.0, max_relative = 0.000001);
+        assert_relative_eq!(res.e31(), -5.0, max_relative = 0.000001);
+        assert_relative_eq!(res.e23(), -4.0, max_relative = 0.000001);
+    }
+
+    #[test]
+    fn bivector_norm() {
+        // 3e12+5e31+4e23
+        let bivector = Bivector::new(3.0, 5.0, 4.0);
+        let bivector_reverse = bivector.reverse();
+        assert_relative_eq!(bivector_reverse.e12(), -3.0, max_relative = 0.000001);
+        assert_relative_eq!(bivector_reverse.e31(), -5.0, max_relative = 0.000001);
+        assert_relative_eq!(bivector_reverse.e23(), -4.0, max_relative = 0.000001);
+
+        assert_relative_eq!(bivector.norm(), 7.0710678118654755, max_relative = 0.000001);
+        assert_relative_eq!(
+            (&bivector).norm(),
+            7.0710678118654755,
+            max_relative = 0.000001
+        );
+        assert_relative_eq!(
+            bivector_reverse.norm(),
+            7.0710678118654755,
+            max_relative = 0.000001
+        );
+        assert_relative_eq!(
+            (&bivector_reverse).norm(),
+            7.0710678118654755,
+            max_relative = 0.000001
+        );
     }
 }

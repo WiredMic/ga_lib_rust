@@ -27,13 +27,12 @@ use crate::forward_ref_binop;
 #[cfg(feature = "defmt")]
 use defmt::Format;
 
+use num_traits::{Float, Zero};
+
 use super::UnitQuaternion;
 use crate::vga3d::{
-    bivector::Bivector,
-    multivector::Multivector,
-    trivector::Trivector,
-    vector::{self, Vector},
-    Rotor, VGA3DOps, VGA3DOpsRef,
+    bivector::Bivector, multivector::Multivector, scalar::Scalar, trivector::Trivector,
+    vector::Vector, Rotor, VGA3DOps, VGA3DOpsRef,
 };
 
 use core::ops::{Add, Div, Mul, Sub};
@@ -66,29 +65,29 @@ use libm::{acosf, cosf, sinf, sqrtf};
 ///
 /// This is and implementation of the normal Quaterions
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
-pub struct Quaternion {
-    scalar: f32,
-    vector: Vector,
+pub struct Quaternion<F: Float> {
+    scalar: Scalar<F>,
+    vector: Vector<F>,
 }
 
 #[cfg(feature = "std")]
-impl fmt::Display for Quaternion {
+impl<F: Float + fmt::Display> fmt::Display for Quaternion<F> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // write!(f, "{}e12, {}e31, {}e23", self.e12, self.e31, self.e23)
 
         write!(f, "Quaternion {{\n")?;
-        write!(f, "\treal: {}\n", self.scalar)?;
+        write!(f, "\treal: {}\n", self.scalar.0)?;
         write!(f, "\timaginary: {}i", self.e1())?;
 
         // For j component, add appropriate sign
-        if self.e2() >= 0.0 {
+        if self.e2() >= F::zero() {
             write!(f, " + {}j", self.e2())?;
         } else {
             write!(f, " - {}j", self.e2().abs())?;
         }
 
         // For k component, add appropriate sign
-        if self.e3() >= 0.0 {
+        if self.e3() >= F::zero() {
             write!(f, " + {}k", self.e3())?;
         } else {
             write!(f, " - {}k\n", self.e3().abs())?;
@@ -100,22 +99,22 @@ impl fmt::Display for Quaternion {
 }
 
 #[cfg(feature = "defmt")]
-impl defmt::Format for Quaternion {
+impl<F: Float + defmt::Format> defmt::Format for Quaternion<F> {
     fn format(&self, fmt: defmt::Formatter) {
         // the defmt version - similar structure but using defmt macros
         defmt::write!(fmt, "Quaternion {{\n");
-        defmt::write!(fmt, "\treal: {}\n", self.scalar);
+        defmt::write!(fmt, "\treal: {}\n", self.scalar.0);
         defmt::write!(fmt, "\timaginary: {}i", self.e1());
 
         // for j component, add appropriate sign
-        if self.e2() >= 0.0 {
+        if self.e2() >= F::zero() {
             defmt::write!(fmt, " + {}j", self.e2());
         } else {
             defmt::write!(fmt, " - {}j", self.e2().abs());
         }
 
         // for k component, add appropriate sign
-        if self.e3() >= 0.0 {
+        if self.e3() >= F::zero() {
             defmt::write!(fmt, " + {}k", self.e3());
         } else {
             defmt::write!(fmt, " - {}k", self.e3().abs());
@@ -124,49 +123,60 @@ impl defmt::Format for Quaternion {
     }
 }
 
-impl Quaternion {
+impl<F: Float> Quaternion<F> {
     /// New Quaternion with scalar and imaginary vector parts
-    pub fn new(scalar: f32, vector: Vector) -> Self {
-        Self { scalar, vector }
+    pub fn new(scalar: F, vector: Vector<F>) -> Self {
+        Self {
+            scalar: Scalar(scalar),
+            vector,
+        }
+    }
+
+    /// The zero quaternion
+    pub fn zero() -> Self {
+        Self {
+            scalar: Scalar(F::zero()),
+            vector: Vector::zero(),
+        }
     }
 
     /// "Biquaternion" in GA with bivectors are defined going in the oppisite direction
     /// $$ \mathrm{i} \to \mathrm{e}_3\mathrm{e}_2 = -\mathrm{e}_2\mathrm{e}_3$$
     /// $$ \mathrm{j} \to \mathrm{e}_1\mathrm{e}_3 = -\mathrm{e}_3\mathrm{e}_1$$
     /// $$ \mathrm{k} \to \mathrm{e}_2\mathrm{e}_1 = -\mathrm{e}_1\mathrm{e}_2$$
-    pub fn new_from_scalar_bivector(scalar: f32, bivector: Bivector) -> Self {
+    pub fn new_from_scalar_bivector(scalar: F, bivector: Bivector<F>) -> Self {
         Self {
-            scalar,
+            scalar: Scalar(scalar),
             vector: Vector::new(-bivector.e23(), -bivector.e31(), -bivector.e12()),
         }
     }
 
     /// Return scalar part of Quaternion
-    pub fn scalar(&self) -> f32 {
-        self.scalar
+    pub fn scalar(&self) -> F {
+        self.scalar.0
     }
 
     /// Return vector part of Quaternion
-    pub fn vector(&self) -> Vector {
+    pub fn vector(&self) -> Vector<F> {
         self.vector
     }
 
     /// Return $\mathrm{e}_1$ vector part of Quaternion
-    pub fn e1(&self) -> f32 {
+    pub fn e1(&self) -> F {
         self.vector.e1()
     }
     /// Return $\mathrm{e}_2$ vector part of Quaternion
-    pub fn e2(&self) -> f32 {
+    pub fn e2(&self) -> F {
         self.vector.e2()
     }
 
     /// Return $\mathrm{e}_3$ vector part of Quaternion
-    pub fn e3(&self) -> f32 {
+    pub fn e3(&self) -> F {
         self.vector.e3()
     }
 
     /// Return bivector representation of vector part of Quaternion
-    pub fn bivector(&self) -> Bivector {
+    pub fn bivector(&self) -> Bivector<F> {
         Bivector::new(-self.vector.e3(), -self.vector.e2(), -self.vector.e1())
     }
 
@@ -183,16 +193,15 @@ impl Quaternion {
     /// It treats the scalar part as $\cos(\theta/2)$.
     /// And the vector part as $\sin(\theta/2)\hat{n}$.
     /// Where $\hat{n}$ is the axes of rotation
-    pub fn to_rotor(&self) -> Rotor {
-        let norm = sqrtf(
-            self.scalar * self.scalar
-                + self.vector.e1() * self.vector.e1()
-                + self.vector.e2() * self.vector.e2()
-                + self.vector.e3() * self.vector.e3(),
-        );
+    pub fn to_rotor(&self) -> Rotor<F> {
+        let norm = (self.scalar * self.scalar
+            + self.vector.e1() * self.vector.e1()
+            + self.vector.e2() * self.vector.e2()
+            + self.vector.e3() * self.vector.e3())
+        .sqrt();
 
         Rotor {
-            scalar: self.scalar / norm,
+            scalar: Scalar(self.scalar.0 / norm),
             bivector: Bivector::new(
                 self.vector.e3() / norm,
                 self.vector.e2() / norm,
@@ -205,16 +214,15 @@ impl Quaternion {
     /// It treats the scalar part as $\cos(\theta/2)$.
     /// And the vector part as $\sin(\theta/2)\hat{n}$.
     /// Where $\hat{n}$ is the axes of rotation
-    pub fn to_unit_quaternion(self) -> UnitQuaternion {
-        let norm = sqrtf(
-            self.scalar * self.scalar
-                + self.vector.e1() * self.vector.e1()
-                + self.vector.e2() * self.vector.e2()
-                + self.vector.e3() * self.vector.e3(),
-        );
+    pub fn to_unit_quaternion(self) -> UnitQuaternion<F> {
+        let norm = (self.scalar * self.scalar
+            + self.vector.e1() * self.vector.e1()
+            + self.vector.e2() * self.vector.e2()
+            + self.vector.e3() * self.vector.e3())
+        .sqrt();
 
         UnitQuaternion {
-            scalar: self.scalar / norm,
+            scalar: Scalar(self.scalar.0 / norm),
             vector: Vector::new(
                 self.vector.e1() / norm,
                 self.vector.e2() / norm,
@@ -224,22 +232,21 @@ impl Quaternion {
     }
 
     /// The complex conjugate of a quaternion is another quaterion with the vector part negated.
-    pub fn conjugate(self) -> Quaternion {
+    pub fn conjugate(self) -> Quaternion<F> {
         Quaternion::new(
-            self.scalar,
+            self.scalar.0,
             Vector::new(-self.vector.e1(), -self.vector.e2(), -self.vector.e3()),
         )
     }
 
     /// The norm of a quaternion is the square root of the product between the quaternion and its conjugate.
     /// $$\sqrt{q q*}$$
-    pub fn norm(self) -> f32 {
-        sqrtf(
-            self.scalar * self.scalar
-                + self.vector.e1() * self.vector.e1()
-                + self.vector.e2() * self.vector.e2()
-                + self.vector.e3() * self.vector.e3(),
-        )
+    pub fn norm(self) -> F {
+        (self.scalar * self.scalar
+            + self.vector.e1() * self.vector.e1()
+            + self.vector.e2() * self.vector.e2()
+            + self.vector.e3() * self.vector.e3())
+        .sqrt()
 
         // sqrtf((self * self.conjugate()).scalar)
     }
@@ -251,91 +258,90 @@ impl Quaternion {
     /// The norm of the quaternion can be 0.
     ///
     /// This will give an error.
-    pub fn inverse(self) -> Result<Quaternion, &'static str> {
+    pub fn inverse(self) -> Result<Quaternion<F>, &'static str> {
         let norm = self.norm();
 
         match norm {
-            0.0 => Err("The length of the quaternion is 0"),
-            _ => return Ok(self.conjugate() * (1.0 / (self * self.conjugate()).scalar())),
+            norm if norm.is_zero() => Err("The length of the quaternion is 0"),
+            _ => return Ok(self.conjugate() * (F::one() / (self * self.conjugate()).scalar())),
         }
     }
 }
 
-impl Mul for Quaternion {
-    type Output = Quaternion;
+impl<F: Float> Mul for Quaternion<F> {
+    type Output = Quaternion<F>;
     /// Quaternion multiplication
     /// $$ pq = p_0 \cdot q_0 - \vec{p}\cdot \vec{q} +p_0\vec{q} + q_0\vec{p} + \vec{p}\cross\vec{q} $$
-    fn mul(self, b: Quaternion) -> Quaternion {
+    fn mul(self, b: Quaternion<F>) -> Quaternion<F> {
         Quaternion::new(
             (self.scalar * b.scalar)
                 - (self.vector.e1() * b.vector.e1())
                 - (self.vector.e2() * b.vector.e2())
                 - (self.vector.e3() * b.vector.e3()),
             Vector::new(
-                (self.scalar * b.vector.e1())
-                    + (self.vector.e1() * b.scalar)
+                (self.scalar.0 * b.vector.e1())
+                    + (self.vector.e1() * b.scalar.0)
                     + self.vector.e2() * b.vector.e3()
                     - self.vector.e3() * b.vector.e2(),
-                (self.scalar * b.vector.e2())
-                    + (self.vector.e2() * b.scalar)
+                (self.scalar.0 * b.vector.e2())
+                    + (self.vector.e2() * b.scalar.0)
                     + self.vector.e3() * b.vector.e1()
                     - self.vector.e1() * b.vector.e3(),
-                (self.scalar * b.vector.e3())
-                    + (self.vector.e3() * b.scalar)
+                (self.scalar.0 * b.vector.e3())
+                    + (self.vector.e3() * b.scalar.0)
                     + self.vector.e1() * b.vector.e2()
                     - self.vector.e2() * b.vector.e1(),
             ),
         )
     }
 }
-forward_ref_binop!(impl Mul, mul for Quaternion, Quaternion);
+forward_ref_binop!(impl<F:Float> Mul, mul for Quaternion<F>, Quaternion<F>);
 
-impl Mul<f32> for Quaternion {
-    type Output = Quaternion;
+impl<F: Float> Mul<F> for Quaternion<F> {
+    type Output = Quaternion<F>;
     /// Quaternion multiplication
     /// $$ pq = p_0 \cdot q_0 - \vec{p}\cdot \vec{q} +p_0\vec{q} + q_0\vec{p} + \vec{p}\cross\vec{q} $$
-    fn mul(self, b: f32) -> Quaternion {
-        Quaternion::new(self.scalar() * b, self.vector() * b)
+    fn mul(self, b: F) -> Quaternion<F> {
+        Quaternion::new(self.scalar() * b, self.vector() * Scalar(b))
     }
 }
-forward_ref_binop!(impl Mul, mul for Quaternion, f32);
+forward_ref_binop!(impl<F:Float> Mul, mul for Quaternion<F>, F);
 
-impl Mul<Quaternion> for f32 {
-    type Output = Quaternion;
+impl<F: Float> Mul<Quaternion<F>> for Scalar<F> {
+    type Output = Quaternion<F>;
     /// Quaternion multiplication
     /// $$ pq = p_0 \cdot q_0 - \vec{p}\cdot \vec{q} +p_0\vec{q} + q_0\vec{p} + \vec{p}\cross\vec{q} $$
-    fn mul(self, b: Quaternion) -> Quaternion {
-        Quaternion::new(self * b.scalar(), self * b.vector())
+    fn mul(self, b: Quaternion<F>) -> Quaternion<F> {
+        Quaternion::new(self * Scalar(b.scalar()), self * b.vector())
     }
 }
-forward_ref_binop!(impl Mul, mul for f32, Quaternion);
+forward_ref_binop!(impl<F:Float> Mul, mul for Scalar<F>, Quaternion<F>);
 
-impl Div<f32> for Quaternion {
+impl<F: Float> Div<Scalar<F>> for Quaternion<F> {
     // The division of rational numbers is a closed operation.
-    type Output = Quaternion;
-
-    fn div(self, b: f32) -> Quaternion {
-        if b == 0.0 {
+    type Output = Quaternion<F>;
+    fn div(self, b: Scalar<F>) -> Quaternion<F> {
+        if b.0 == F::zero() {
             panic!("Cannot divide by zero-valued `Rational`!");
         }
 
         Quaternion::new(
-            self.scalar,
+            self.scalar.0,
             Vector::new(
-                self.vector().e1() / b,
-                self.vector().e2() / b,
-                self.vector().e3() / b,
+                self.vector().e1() / b.0,
+                self.vector().e2() / b.0,
+                self.vector().e3() / b.0,
             ),
         )
     }
 }
-forward_ref_binop!(impl Div, div for Quaternion, f32);
+forward_ref_binop!(impl<F:Float> Div, div for Quaternion<F>, Scalar<F>);
 
-impl Add for Quaternion {
-    type Output = Quaternion;
+impl<F: Float> Add for Quaternion<F> {
+    type Output = Quaternion<F>;
     /// Quaternion multiplication
     /// $$ pq = p_0 \cdot q_0 - \vec{p}\cdot \vec{q} +p_0\vec{q} + q_0\vec{p} + \vec{p}\cross\vec{q} $$
-    fn add(self, b: Quaternion) -> Quaternion {
+    fn add(self, b: Quaternion<F>) -> Quaternion<F> {
         Quaternion::new(
             self.scalar + b.scalar,
             Vector::new(
@@ -346,15 +352,15 @@ impl Add for Quaternion {
         )
     }
 }
-forward_ref_binop!(impl Add, add for Quaternion, Quaternion);
+forward_ref_binop!(impl<F:Float> Add, add for Quaternion<F>, Quaternion<F>);
 
-impl Sub for Quaternion {
-    type Output = Quaternion;
+impl<F: Float> Sub for Quaternion<F> {
+    type Output = Quaternion<F>;
     /// Quaternion multiplication
     /// $$ pq = p_0 \cdot q_0 - \vec{p}\cdot \vec{q} +p_0\vec{q} + q_0\vec{p} + \vec{p}\cross\vec{q} $$
-    fn sub(self, b: Quaternion) -> Quaternion {
+    fn sub(self, b: Quaternion<F>) -> Quaternion<F> {
         Quaternion::new(
-            self.scalar - b.scalar,
+            self.scalar.0 - b.scalar.0,
             Vector::new(
                 self.vector.e1() - b.vector.e1(),
                 self.vector.e2() - b.vector.e2(),
@@ -363,7 +369,7 @@ impl Sub for Quaternion {
         )
     }
 }
-forward_ref_binop!(impl Sub, sub for Quaternion, Quaternion);
+forward_ref_binop!(impl<F:Float> Sub, sub for Quaternion<F>, Quaternion<F>);
 
 #[cfg(test)]
 mod quaternion {
@@ -380,8 +386,8 @@ mod quaternion {
         let q1 = super::Quaternion::new(2.0, Vector::new(4.0, -3.0, 7.0));
         let q2: Quaternion<f32> = nalgebra::Quaternion::new(2.0, 4.0, -3.0, 7.0);
 
-        let norm1 = sqrtf((q1.conjugate() * q1).scalar);
-        let norm2 = sqrtf((q1 * q1.conjugate()).scalar);
+        let norm1 = (q1.conjugate() * q1).scalar().sqrt();
+        let norm2 = (q1 * q1.conjugate()).scalar().sqrt();
 
         assert_relative_eq!(q1.norm(), q2.norm(), max_relative = 0.000001);
 
@@ -395,8 +401,8 @@ mod quaternion {
         let rotation_axis = Vector::new(4.0, -3.0, 7.0);
 
         let q = super::Quaternion::new(
-            cosf(angle / 2.0),
-            sinf(angle / 2.0) * rotation_axis * (1.0 / rotation_axis.norm()),
+            (angle / 2.0).cos(),
+            rotation_axis * Scalar((angle / 2.0).sin() / rotation_axis.norm()),
         );
         let res = q.to_rotor();
 
@@ -496,8 +502,8 @@ mod quaternion {
     fn quaternion_rotation_mul() {
         let angle = 3.0 / 4.0 * TAU;
         let rotation_axis = super::Vector::new(3.0, 4.0, 5.0);
-        let scalar = cosf(angle / 2.0);
-        let vector = rotation_axis * (sinf(angle / 2.0) / rotation_axis.norm());
+        let scalar = (angle / 2.0).cos();
+        let vector = rotation_axis * Scalar((angle / 2.0).sin() / rotation_axis.norm());
 
         let unit1 = super::Quaternion::new(scalar, vector);
         let unit2 = super::UnitQuaternion::new(angle / 2.0, rotation_axis);

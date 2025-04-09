@@ -19,6 +19,10 @@
 #![allow(dead_code)]
 #![allow(unused_imports)]
 
+use num_traits::Float;
+
+mod scalar;
+pub use scalar::Scalar;
 //
 mod vector;
 pub use vector::Vector;
@@ -55,20 +59,20 @@ mod subtraction;
 mod functions;
 pub use functions::{Projectable, Reflectable, Rejectable, Rotatable};
 
-pub trait VGA3DOps {
+pub trait VGA3DOps<F: Float> {
     fn reverse(self) -> Self;
     // fn dual(self) -> Self;
     fn conjugate(self) -> Self;
     fn involute(self) -> Self;
-    fn norm(self) -> f32;
+    fn norm(self) -> F;
     fn inverse(self) -> Self;
 }
 
-pub trait VGA3DOpsRef {
+pub trait VGA3DOpsRef<F: Float> {
     fn reverse(&self) -> Self;
     // fn dual(&&self) -> Self;
     fn conjugate(&self) -> Self;
     fn involute(&self) -> Self;
-    fn norm(&self) -> f32;
+    fn norm(&self) -> F;
     fn inverse(&self) -> Self;
 }

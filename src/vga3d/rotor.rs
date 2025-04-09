@@ -29,11 +29,13 @@ use defmt::Format;
 use crate::forward_ref_binop;
 use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Index, IndexMut, Mul, Neg, Not, Sub};
 
-use libm::{acosf, cosf, sinf, sqrtf};
+use num_traits::Float;
+
+// use libm::{acosf, cosf, sinf, sqrtf};
 
 use super::{
-    bivector::Bivector, multivector::Multivector, trivector::Trivector, vector::Vector, VGA3DOps,
-    VGA3DOpsRef,
+    bivector::Bivector, multivector::Multivector, scalar::Scalar, trivector::Trivector,
+    vector::Vector, VGA3DOps, VGA3DOpsRef,
 };
 
 /// # 3D Vector Geometric Algebra Rotor
@@ -42,18 +44,18 @@ use super::{
 /// $$ R\left (\frac{\theta}{2},\overset\Rightarrow{b} \right ) = \mathrm{e}^{ \overset\Rightarrow{b} \frac{\theta}{2}} = \cos \left( \frac{\theta}{2}  \right) + \sin \left( \frac{\theta}{2} \right)(b_1 \mathrm{e}_1\mathrm{e}_2 + b_2 \mathrm{e}_3\mathrm{e}_1 + b_3 \mathrm{e}_2\mathrm{e}_3) $$
 /// The norm of a rotor is always 1
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
-pub struct Rotor {
-    pub(super) scalar: f32,
-    pub(super) bivector: Bivector,
+pub struct Rotor<F: Float> {
+    pub(super) scalar: Scalar<F>,
+    pub(super) bivector: Bivector<F>,
 }
 
 #[cfg(feature = "std")]
-impl fmt::Display for Rotor {
+impl<F: Float + fmt::Display> fmt::Display for Rotor<F> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // write!(f, "{}e12, {}e31, {}e23", self.e12, self.e31, self.e23)
 
         write!(f, "Rotor {{\n")?;
-        write!(f, "\tscalar: {}\n", self.scalar)?;
+        write!(f, "\tscalar: {}\n", self.scalar())?;
         write!(f, "\tbivector: {}\n", self.bivector)?;
         write!(f, "}}")?;
 
@@ -62,74 +64,77 @@ impl fmt::Display for Rotor {
 }
 
 #[cfg(feature = "defmt")]
-impl defmt::Format for Rotor {
+impl<F: Float + defmt::Format> defmt::Format for Rotor<F> {
     fn format(&self, f: defmt::Formatter) {
         // write!(f, "{}e12, {}e31, {}e23", self.e12, self.e31, self.e23)
 
         defmt::write!(f, "Rotor {{\n");
-        defmt::write!(f, "\tscalar: {}\n", self.scalar);
+        defmt::write!(f, "\tscalar: {}\n", self.scalar());
         defmt::write!(f, "\tbivector: {}\n", self.bivector);
         defmt::write!(f, "}}");
     }
 }
 
-impl Rotor {
+impl<F: Float> Rotor<F> {
     /// Creates new rotor from plane of rotation and angle of rotationen
     /// The plane of rotation is a bivector
     /// The direction of rotation is given by the orientation of the bivector
     /// The angle is half of the rotation angle
-    pub fn new(half_angle: f32, rotation_plane: Bivector) -> Self {
-        let scalar = cosf(half_angle);
-        let sin = sinf(half_angle);
+    pub fn new(half_angle: F, rotation_plane: Bivector<F>) -> Self {
+        let scalar = half_angle.cos();
+        let sin = half_angle.sin();
         let norm = rotation_plane.norm();
         let bi_pre = sin / norm;
 
-        let bivector = bi_pre * rotation_plane;
-        Self { scalar, bivector }
+        let bivector = Scalar(bi_pre) * rotation_plane;
+        Self {
+            scalar: Scalar(scalar),
+            bivector,
+        }
     }
 
     /// Creates new rotor from an angle bivector $\overset\Rightarrow{\theta}$.
     /// The angle must be in radians and must be half the rotational angle.
-    pub fn new_angle_bivector(angle_bivector: Bivector) -> Self {
+    pub fn new_angle_bivector(angle_bivector: Bivector<F>) -> Self {
         let angle = angle_bivector.norm();
-        let rotation_plane = angle_bivector * (1.0 / angle);
+        let rotation_plane = angle_bivector / angle;
         Rotor::new(angle, rotation_plane)
     }
 
     /// Get the scalar grade of the rotor
-    pub fn scalar(&self) -> f32 {
-        self.scalar
+    pub fn scalar(&self) -> F {
+        self.scalar.0
     }
 
     /// Get the bivector grade of the rotor
-    pub fn bivector(&self) -> Bivector {
+    pub fn bivector(&self) -> Bivector<F> {
         self.bivector
     }
 
     /// Get the $\mathrm{e}_1\mathrm{e}_2$ part of the bivector grade of the rotor
-    pub fn e12(&self) -> f32 {
+    pub fn e12(&self) -> F {
         self.bivector.e12()
     }
 
     /// Get the $\mathrm{e}_3\mathrm{e}_1$ part of the bivector grade of the rotor
-    pub fn e31(&self) -> f32 {
+    pub fn e31(&self) -> F {
         self.bivector.e31()
     }
 
     /// Get the $\mathrm{e}_2\mathrm{e}_3$ part of the bivector grade of the rotor
-    pub fn e23(&self) -> f32 {
+    pub fn e23(&self) -> F {
         self.bivector.e23()
     }
 
     /// Get the angle of the rotor
-    pub fn half_angle(&self) -> f32 {
-        acosf(self.scalar())
+    pub fn half_angle(&self) -> F {
+        self.scalar().acos()
     }
 
     /// Get the plane of rotation of the rotor
-    pub fn rotatino_plane(&self) -> Bivector {
-        let sin = sinf(self.half_angle());
-        self.bivector * (1.0 / sin)
+    pub fn rotatino_plane(&self) -> Bivector<F> {
+        let sin = self.half_angle().sin();
+        self.bivector / sin
     }
 }
 
@@ -190,23 +195,23 @@ mod rotor {
 /// # Geometric Product
 /// The geometric product of two rotors is another rotor
 /// $$ R_1 R_2 = R_3$$
-impl Mul for Rotor {
-    type Output = Rotor;
+impl<F: Float> Mul for Rotor<F> {
+    type Output = Rotor<F>;
 
-    fn mul(self: Rotor, b: Rotor) -> Rotor {
+    fn mul(self: Rotor<F>, b: Rotor<F>) -> Rotor<F> {
         let a = self.bivector * b.bivector;
         let scalar = self.scalar * b.scalar + a.scalar();
         let bivector = self.scalar * b.bivector + self.bivector * b.scalar + a.bivector();
 
         // Normelize
-        let norm = sqrtf(scalar * scalar + (bivector * bivector.reverse()).scalar());
+        let norm = (scalar * scalar + (bivector * bivector.reverse()).scalar()).sqrt();
         Rotor {
-            scalar: scalar * norm,
-            bivector: bivector * norm,
+            scalar: Scalar(scalar * norm),
+            bivector: bivector * Scalar(norm),
         }
     }
 }
-forward_ref_binop!(impl Mul, mul for Rotor, Rotor);
+forward_ref_binop!(impl<F:Float> Mul, mul for Rotor<F>, Rotor<F>);
 
 #[cfg(test)]
 mod rotor_geo {
@@ -233,29 +238,27 @@ mod rotor_geo {
     }
 }
 
-impl VGA3DOps for Rotor {
+impl<F: Float> VGA3DOps<F> for Rotor<F> {
     // \[ |R|^2=\left< R^\dag A \right>_0 \]
-    fn norm(self) -> f32 {
-        sqrtf(
-            (self.scalar() * self.scalar())
-                + (self.bivector() * self.bivector().reverse()).scalar(),
-        )
+    fn norm(self) -> F {
+        ((self.scalar() * self.scalar()) + (self.bivector() * self.bivector().reverse()).scalar())
+            .sqrt()
     }
 
     // Inverse
     // \[A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>}\]
-    fn inverse(self) -> Rotor {
-        let a = 1.0 / (self * self.reverse()).scalar();
+    fn inverse(self) -> Rotor<F> {
+        let a = F::one() / (self * self.reverse()).scalar();
         Rotor {
-            scalar: self.reverse().scalar * a,
-            bivector: self.reverse().bivector * a,
+            scalar: Scalar(self.reverse().scalar.0 * a),
+            bivector: self.reverse().bivector * Scalar(a),
         }
     }
 
     // Reverse
     // It follows the patten (Each is a grade)
     // \[+ + - - + + - - \dots (-1)^{k(k-1)/2}\]
-    fn reverse(self) -> Rotor {
+    fn reverse(self) -> Self {
         Rotor {
             scalar: self.scalar,
             bivector: -self.bivector,
@@ -265,7 +268,7 @@ impl VGA3DOps for Rotor {
     // It follows the patten (Each is a grade)
     // \[+--+--+\dots(-1)^{k(k+1)/2}\]
 
-    fn conjugate(self) -> Rotor {
+    fn conjugate(self) -> Self {
         Rotor {
             scalar: self.scalar,
             bivector: -self.bivector,
@@ -280,28 +283,26 @@ impl VGA3DOps for Rotor {
     }
 }
 
-impl VGA3DOpsRef for Rotor {
-    fn norm(&self) -> f32 {
-        sqrtf(
-            (self.scalar() * self.scalar())
-                + (self.bivector() * self.bivector().reverse()).scalar(),
-        )
+impl<F: Float> VGA3DOpsRef<F> for Rotor<F> {
+    fn norm(&self) -> F {
+        ((self.scalar() * self.scalar()) + (self.bivector() * self.bivector().reverse()).scalar())
+            .sqrt()
     }
 
     // Inverse
     // \[A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>}\]
-    fn inverse(&self) -> Rotor {
-        let a = 1.0 / (self * self.reverse()).scalar();
+    fn inverse(&self) -> Self {
+        let a = F::one() / (self * self.reverse()).scalar();
         Rotor {
-            scalar: self.reverse().scalar * a,
-            bivector: self.reverse().bivector * a,
+            scalar: Scalar(self.reverse().scalar.0 * a),
+            bivector: self.reverse().bivector * Scalar(a),
         }
     }
 
     // Reverse
     // It follows the patten (Each is a grade)
     // \[+ + - - + + - - \dots (-1)^{k(k-1)/2}\]
-    fn reverse(&self) -> Rotor {
+    fn reverse(&self) -> Self {
         Rotor {
             scalar: self.scalar,
             bivector: -self.bivector,
@@ -311,7 +312,7 @@ impl VGA3DOpsRef for Rotor {
     // It follows the patten (Each is a grade)
     // \[+--+--+\dots(-1)^{k(k+1)/2}\]
 
-    fn conjugate(&self) -> Rotor {
+    fn conjugate(&self) -> Self {
         Rotor {
             scalar: self.scalar,
             bivector: -self.bivector,
@@ -337,6 +338,15 @@ mod rotor_reverse {
     // The reverse of the geometric product of to rotors is the geometric product of the reverse rotors flipped
     // \[ (R_1R_2)^\dag = R_2^\dag R_1^\dag\]
     #[test]
+    fn rotor_norm() {
+        let angle = TAU / 4.0;
+        let rotation_plane = Bivector::new(4.0, 2.0, -3.0);
+        let rotor = Rotor::new(angle / 2.0, rotation_plane);
+        // 0.70710677+0.52522576e12+0.26261288e31-0.3939193e23
+        assert_relative_eq!(rotor.norm(), 1.0, max_relative = 0.000001);
+        assert_relative_eq!((&rotor).norm(), 1.0, max_relative = 0.000001);
+    }
+
     fn rotor_rotor_reverse() {
         let angle1 = TAU / 4.0;
         let rotation_plane1 = Bivector::new(3.0, 2.0, 10.0);

@@ -20,275 +20,273 @@
 #![allow(dead_code)]
 
 use super::{
-    bivector::{self, Bivector},
-    multivector::Multivector,
-    rotor::Rotor,
-    trivector::{self, Trivector},
-    vector::Vector,
+    bivector::Bivector, multivector::Multivector, rotor::Rotor, scalar::Scalar,
+    trivector::Trivector, vector::Vector,
 };
+
+use num_traits::Float;
 
 use crate::forward_ref_binop;
 use core::ops::Sub;
 
 // Scalar-Vector
 // \[ a-\vec{b}\]
-impl Sub<Vector> for f32 {
-    type Output = Multivector;
-    fn sub(self: f32, b: Vector) -> Multivector {
-        Multivector::new(self, -b, Bivector::zero(), Trivector::zero())
+impl<F: Float> Sub<Vector<F>> for Scalar<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Scalar<F>, b: Vector<F>) -> Multivector<F> {
+        Multivector::new(self.0, -b, Bivector::zero(), Trivector::zero())
     }
 }
-forward_ref_binop!(impl Sub, sub for f32, Vector);
+forward_ref_binop!(impl<F:Float> Sub, sub for Scalar<F>, Vector<F>);
 
 // Vector-Scalar
 // \[ \vec{a}-b\]
-impl Sub<f32> for Vector {
-    type Output = Multivector;
-    fn sub(self: Vector, b: f32) -> Multivector {
-        Multivector::new(-b, self, Bivector::zero(), Trivector::zero())
+impl<F: Float> Sub<Scalar<F>> for Vector<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Vector<F>, b: Scalar<F>) -> Multivector<F> {
+        Multivector::new(-b.0, self, Bivector::zero(), Trivector::zero())
     }
 }
-forward_ref_binop!(impl Sub, sub for Vector,f32);
+forward_ref_binop!(impl<F:Float> Sub, sub for Vector<F>,Scalar<F>);
 
 // Scalar-Bivector
 // \[ s-\overset\Rightarrow{b}\]
-impl Sub<Bivector> for f32 {
-    type Output = Multivector;
-    fn sub(self: f32, b: Bivector) -> Multivector {
-        Multivector::new(self, Vector::zero(), -b, Trivector::zero())
+impl<F: Float> Sub<Bivector<F>> for Scalar<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Scalar<F>, b: Bivector<F>) -> Multivector<F> {
+        Multivector::new(self.0, Vector::zero(), -b, Trivector::zero())
     }
 }
-forward_ref_binop!(impl Sub, sub for f32, Bivector);
+forward_ref_binop!(impl<F:Float> Sub, sub for Scalar<F>, Bivector<F>);
 
 // Bivector-Scalar
 // \[ \overset\Rightarrow{a}-b\]
-impl Sub<f32> for Bivector {
-    type Output = Multivector;
-    fn sub(self: Bivector, b: f32) -> Multivector {
-        Multivector::new(-b, Vector::zero(), self, Trivector::zero())
+impl<F: Float> Sub<Scalar<F>> for Bivector<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Bivector<F>, b: Scalar<F>) -> Multivector<F> {
+        Multivector::new(-b.0, Vector::zero(), self, Trivector::zero())
     }
 }
-forward_ref_binop!(impl Sub, sub for  Bivector, f32);
+forward_ref_binop!(impl<F:Float> Sub, sub for  Bivector<F>, Scalar<F>);
 
 // Scalar-Trivector
 // \[ s-\overset\Rrightarrow{b}\]
-impl Sub<Trivector> for f32 {
-    type Output = Multivector;
-    fn sub(self: f32, b: Trivector) -> Multivector {
-        Multivector::new(self, Vector::zero(), Bivector::zero(), -b)
+impl<F: Float> Sub<Trivector<F>> for Scalar<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Scalar<F>, b: Trivector<F>) -> Multivector<F> {
+        Multivector::new(self.0, Vector::zero(), Bivector::zero(), -b)
     }
 }
-forward_ref_binop!(impl Sub, sub for f32, Trivector);
+forward_ref_binop!(impl<F:Float> Sub, sub for Scalar<F>, Trivector<F>);
 
 // Trivector-Scalar
 // \[ \overset\Rrightarrow{a}-b\]
-impl Sub<f32> for Trivector {
-    type Output = Multivector;
-    fn sub(self: Trivector, b: f32) -> Multivector {
-        Multivector::new(-b, Vector::zero(), Bivector::zero(), self)
+impl<F: Float> Sub<Scalar<F>> for Trivector<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Trivector<F>, b: Scalar<F>) -> Multivector<F> {
+        Multivector::new(-b.0, Vector::zero(), Bivector::zero(), self)
     }
 }
-forward_ref_binop!(impl Sub, sub for Trivector, f32);
+forward_ref_binop!(impl<F:Float> Sub, sub for Trivector<F>, Scalar<F>);
 
 // Scalar-Multivector
 // \[ s-B\]
-impl Sub<Multivector> for f32 {
-    type Output = Multivector;
-    fn sub(self: f32, b: Multivector) -> Multivector {
-        Multivector::new(self, Vector::zero(), Bivector::zero(), Trivector::zero()) - b
+impl<F: Float> Sub<Multivector<F>> for Scalar<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Scalar<F>, b: Multivector<F>) -> Multivector<F> {
+        Multivector::new(self.0, Vector::zero(), Bivector::zero(), Trivector::zero()) - b
     }
 }
-forward_ref_binop!(impl Sub, sub for f32, Multivector);
+forward_ref_binop!(impl<F:Float> Sub, sub for Scalar<F>, Multivector<F>);
 
 // Multivector-Scalar
 // \[ B-b\]
-impl Sub<f32> for Multivector {
-    type Output = Multivector;
-    fn sub(self: Multivector, b: f32) -> Multivector {
-        Multivector::new(-b, Vector::zero(), Bivector::zero(), Trivector::zero()) + self
+impl<F: Float> Sub<Scalar<F>> for Multivector<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Multivector<F>, b: Scalar<F>) -> Multivector<F> {
+        Multivector::new(-b.0, Vector::zero(), Bivector::zero(), Trivector::zero()) + self
     }
 }
-forward_ref_binop!(impl Sub, sub for Multivector, f32);
+forward_ref_binop!(impl<F:Float> Sub, sub for Multivector<F>, Scalar<F>);
 
 // Scalar-Rotor
 // \[ s-R\]
-impl Sub<Rotor> for f32 {
-    type Output = Multivector;
-    fn sub(self: f32, b: Rotor) -> Multivector {
+impl<F: Float> Sub<Rotor<F>> for Scalar<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Scalar<F>, b: Rotor<F>) -> Multivector<F> {
         Multivector::new(
-            self - b.scalar(),
+            self.0 - b.scalar(),
             Vector::zero(),
             -b.bivector(),
             Trivector::zero(),
         )
     }
 }
-forward_ref_binop!(impl Sub, sub for f32, Rotor);
+forward_ref_binop!(impl<F:Float> Sub, sub for Scalar<F>, Rotor<F>);
 
 //Rotor-Scalar
 // \[ R-b\]
-impl Sub<f32> for Rotor {
-    type Output = Multivector;
-    fn sub(self: Rotor, b: f32) -> Multivector {
+impl<F: Float> Sub<Scalar<F>> for Rotor<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Rotor<F>, b: Scalar<F>) -> Multivector<F> {
         Multivector::new(
-            -b + self.scalar(),
+            -b.0 + self.scalar(),
             Vector::zero(),
             self.bivector(),
             Trivector::zero(),
         )
     }
 }
-forward_ref_binop!(impl Sub, sub for Rotor, f32);
+forward_ref_binop!(impl<F:Float> Sub, sub for Rotor<F>, Scalar<F>);
 
-impl Sub for Vector {
-    type Output = Vector;
-
-    fn sub(self: Vector, b: Vector) -> Vector {
+impl<F: Float> Sub for Vector<F> {
+    type Output = Vector<F>;
+    fn sub(self: Vector<F>, b: Vector<F>) -> Vector<F> {
         let e1 = self.e1() - b.e1();
         let e2 = self.e2() - b.e2();
         let e3 = self.e3() - b.e3();
         Vector::new(e1, e2, e3)
     }
 }
-forward_ref_binop!(impl Sub, sub for Vector, Vector);
+forward_ref_binop!(impl<F:Float> Sub, sub for Vector<F>, Vector<F>);
 
 // Vector-Bivector
 // \[ \vec{a}-\overset\Rightarrow{b}\]
-impl Sub<Bivector> for Vector {
-    type Output = Multivector;
-    fn sub(self: Vector, b: Bivector) -> Multivector {
-        Multivector::new(0.0, self, -b, Trivector::zero())
+impl<F: Float> Sub<Bivector<F>> for Vector<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Vector<F>, b: Bivector<F>) -> Multivector<F> {
+        Multivector::new(F::zero(), self, -b, Trivector::zero())
     }
 }
-forward_ref_binop!(impl Sub, sub for Vector, Bivector);
+forward_ref_binop!(impl<F:Float> Sub, sub for Vector<F>, Bivector<F>);
 
 // Bivector-Vector
 // \[ \overset\Rightarrow{b}-\vec{b}\]
-impl Sub<Vector> for Bivector {
-    type Output = Multivector;
-    fn sub(self: Bivector, b: Vector) -> Multivector {
-        Multivector::new(0.0, -b, self, Trivector::zero())
+impl<F: Float> Sub<Vector<F>> for Bivector<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Bivector<F>, b: Vector<F>) -> Multivector<F> {
+        Multivector::new(F::zero(), -b, self, Trivector::zero())
     }
 }
-forward_ref_binop!(impl Sub, sub for Bivector, Vector);
+forward_ref_binop!(impl<F:Float> Sub, sub for Bivector<F>, Vector<F>);
 
 // Vector-Trivector
 // \[ \vec{a}-\overset\Rrightarrow{b}\]
-impl Sub<Trivector> for Vector {
-    type Output = Multivector;
-    fn sub(self: Vector, b: Trivector) -> Multivector {
-        Multivector::new(0.0, self, Bivector::zero(), -b)
+impl<F: Float> Sub<Trivector<F>> for Vector<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Vector<F>, b: Trivector<F>) -> Multivector<F> {
+        Multivector::new(F::zero(), self, Bivector::zero(), -b)
     }
 }
-forward_ref_binop!(impl Sub, sub for Vector, Trivector);
+forward_ref_binop!(impl<F:Float> Sub, sub for Vector<F>, Trivector<F>);
 
 // Trivector-Vector
 // \[ \overset\Rrightarrow{a}-\vec{b}\]
-impl Sub<Vector> for Trivector {
-    type Output = Multivector;
-    fn sub(self: Trivector, b: Vector) -> Multivector {
-        Multivector::new(0.0, -b, Bivector::zero(), self)
+impl<F: Float> Sub<Vector<F>> for Trivector<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Trivector<F>, b: Vector<F>) -> Multivector<F> {
+        Multivector::new(F::zero(), -b, Bivector::zero(), self)
     }
 }
-forward_ref_binop!(impl Sub, sub for Trivector, Vector);
+forward_ref_binop!(impl<F:Float> Sub, sub for Trivector<F>, Vector<F>);
 
 // Vector-Multivector
 // \[ \vec{a}-B\]
-impl Sub<Multivector> for Vector {
-    type Output = Multivector;
-    fn sub(self: Vector, b: Multivector) -> Multivector {
-        Multivector::new(0.0, self, Bivector::zero(), Trivector::zero()) - b
+impl<F: Float> Sub<Multivector<F>> for Vector<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Vector<F>, b: Multivector<F>) -> Multivector<F> {
+        Multivector::new(F::zero(), self, Bivector::zero(), Trivector::zero()) - b
     }
 }
-forward_ref_binop!(impl Sub, sub for Vector, Multivector);
+forward_ref_binop!(impl<F:Float> Sub, sub for Vector<F>, Multivector<F>);
 
 // Multivector-Vector
 // \[ A-\vec{b}\]
-impl Sub<Vector> for Multivector {
-    type Output = Multivector;
-    fn sub(self: Multivector, b: Vector) -> Multivector {
-        Multivector::new(0.0, -b, Bivector::zero(), Trivector::zero()) + self
+impl<F: Float> Sub<Vector<F>> for Multivector<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Multivector<F>, b: Vector<F>) -> Multivector<F> {
+        Multivector::new(F::zero(), -b, Bivector::zero(), Trivector::zero()) + self
     }
 }
-forward_ref_binop!(impl Sub, sub for Multivector, Vector);
+forward_ref_binop!(impl<F:Float> Sub, sub for Multivector<F>, Vector<F>);
 
 // Vector-Rotor
 // \[ \vec{a}-R\]
-impl Sub<Rotor> for Vector {
-    type Output = Multivector;
-    fn sub(self: Vector, b: Rotor) -> Multivector {
+impl<F: Float> Sub<Rotor<F>> for Vector<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Vector<F>, b: Rotor<F>) -> Multivector<F> {
         Multivector::new(-b.scalar(), self, -b.bivector(), Trivector::zero())
     }
 }
-forward_ref_binop!(impl Sub, sub for Vector, Rotor);
+forward_ref_binop!(impl<F:Float> Sub, sub for Vector<F>, Rotor<F>);
 
 // Multivector-Vector
 // \[ R-\vec{b}\]
-impl Sub<Vector> for Rotor {
-    type Output = Multivector;
-    fn sub(self: Rotor, b: Vector) -> Multivector {
+impl<F: Float> Sub<Vector<F>> for Rotor<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Rotor<F>, b: Vector<F>) -> Multivector<F> {
         Multivector::new(self.scalar(), -b, self.bivector(), Trivector::zero())
     }
 }
-forward_ref_binop!(impl Sub, sub for Rotor, Vector);
+forward_ref_binop!(impl<F:Float> Sub, sub for Rotor<F>, Vector<F>);
 
 // Bivector-Bivector
-impl Sub for Bivector {
-    type Output = Bivector;
-    fn sub(self: Bivector, b: Bivector) -> Bivector {
+impl<F: Float> Sub for Bivector<F> {
+    type Output = Bivector<F>;
+    fn sub(self: Bivector<F>, b: Bivector<F>) -> Bivector<F> {
         let e12 = self.e12() - b.e12();
         let e31 = self.e31() - b.e31();
         let e23 = self.e23() - b.e23();
         Bivector::new(e12, e31, e23)
     }
 }
-forward_ref_binop!(impl Sub, sub for Bivector, Bivector);
+forward_ref_binop!(impl<F:Float> Sub, sub for Bivector<F>, Bivector<F>);
 
 // Bivector-Trivector
 // \[ \overset\Rightarrow{a}-\overset\Rrightarrow{b}\]
-impl Sub<Trivector> for Bivector {
-    type Output = Multivector;
-    fn sub(self: Bivector, b: Trivector) -> Multivector {
-        Multivector::new(0.0, Vector::zero(), self, -b)
+impl<F: Float> Sub<Trivector<F>> for Bivector<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Bivector<F>, b: Trivector<F>) -> Multivector<F> {
+        Multivector::new(F::zero(), Vector::zero(), self, -b)
     }
 }
-forward_ref_binop!(impl Sub, sub for Bivector, Trivector);
+forward_ref_binop!(impl<F:Float> Sub, sub for Bivector<F>, Trivector<F>);
 
 // Trivector-Bivector
 // \[ \overset\Rrightarrow{a}-\overset\Rightarrow{b}\]
-impl Sub<Bivector> for Trivector {
-    type Output = Multivector;
-    fn sub(self: Trivector, b: Bivector) -> Multivector {
-        Multivector::new(0.0, Vector::zero(), -b, self)
+impl<F: Float> Sub<Bivector<F>> for Trivector<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Trivector<F>, b: Bivector<F>) -> Multivector<F> {
+        Multivector::new(F::zero(), Vector::zero(), -b, self)
     }
 }
-forward_ref_binop!(impl Sub, sub for Trivector, Bivector);
+forward_ref_binop!(impl<F:Float> Sub, sub for Trivector<F>, Bivector<F>);
 
 // Bivector-Multivector
 // \[ \overset\Rightarrow{a}-B\]
-impl Sub<Multivector> for Bivector {
-    type Output = Multivector;
-    fn sub(self: Bivector, b: Multivector) -> Multivector {
-        Multivector::new(0.0, Vector::zero(), self, Trivector::zero()) - b
+impl<F: Float> Sub<Multivector<F>> for Bivector<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Bivector<F>, b: Multivector<F>) -> Multivector<F> {
+        Multivector::new(F::zero(), Vector::zero(), self, Trivector::zero()) - b
     }
 }
-forward_ref_binop!(impl Sub, sub for Bivector, Multivector);
+forward_ref_binop!(impl<F:Float> Sub, sub for Bivector<F>, Multivector<F>);
 
 // Multivector-Bivector
 // \[ A-\overset\Rightarrow{b}\]
-impl Sub<Bivector> for Multivector {
-    type Output = Multivector;
-    fn sub(self: Multivector, b: Bivector) -> Multivector {
-        Multivector::new(0.0, Vector::zero(), -b, Trivector::zero()) + self
+impl<F: Float> Sub<Bivector<F>> for Multivector<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Multivector<F>, b: Bivector<F>) -> Multivector<F> {
+        Multivector::new(F::zero(), Vector::zero(), -b, Trivector::zero()) + self
     }
 }
-forward_ref_binop!(impl Sub, sub for Multivector, Bivector);
+forward_ref_binop!(impl<F:Float> Sub, sub for Multivector<F>, Bivector<F>);
 
 // Bivector-Rotor
 // \[ \overset\Rightarrow{a}-R\]
-impl Sub<Rotor> for Bivector {
-    type Output = Multivector;
-    fn sub(self: Bivector, b: Rotor) -> Multivector {
+impl<F: Float> Sub<Rotor<F>> for Bivector<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Bivector<F>, b: Rotor<F>) -> Multivector<F> {
         Multivector::new(
             -b.scalar(),
             Vector::zero(),
@@ -297,13 +295,13 @@ impl Sub<Rotor> for Bivector {
         )
     }
 }
-forward_ref_binop!(impl Sub, sub for Bivector, Rotor);
+forward_ref_binop!(impl<F:Float> Sub, sub for Bivector<F>, Rotor<F>);
 
 // Rotor-Bivector
 // \[ R-\overset\Rightarrow{b}\]
-impl Sub<Bivector> for Rotor {
-    type Output = Multivector;
-    fn sub(self: Rotor, b: Bivector) -> Multivector {
+impl<F: Float> Sub<Bivector<F>> for Rotor<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Rotor<F>, b: Bivector<F>) -> Multivector<F> {
         Multivector::new(
             self.scalar(),
             Vector::zero(),
@@ -312,62 +310,62 @@ impl Sub<Bivector> for Rotor {
         )
     }
 }
-forward_ref_binop!(impl Sub, sub for Rotor, Bivector);
+forward_ref_binop!(impl<F:Float> Sub, sub for Rotor<F>, Bivector<F>);
 
 // Trivector-Trivector
-impl Sub for Trivector {
-    type Output = Trivector;
-    fn sub(self: Trivector, b: Trivector) -> Trivector {
+impl<F: Float> Sub for Trivector<F> {
+    type Output = Trivector<F>;
+    fn sub(self: Trivector<F>, b: Trivector<F>) -> Trivector<F> {
         let e123 = self.e123() - b.e123();
         Trivector::new(e123)
     }
 }
-forward_ref_binop!(impl Sub, sub for Trivector, Trivector);
+forward_ref_binop!(impl<F:Float> Sub, sub for Trivector<F>, Trivector<F>);
 
 // Trivector-Multivector
 // \[ \overset\Rrightarrow{a}-B\]
-impl Sub<Multivector> for Trivector {
-    type Output = Multivector;
-    fn sub(self: Trivector, b: Multivector) -> Multivector {
-        Multivector::new(0.0, Vector::zero(), Bivector::zero(), self) - b
+impl<F: Float> Sub<Multivector<F>> for Trivector<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Trivector<F>, b: Multivector<F>) -> Multivector<F> {
+        Multivector::new(F::zero(), Vector::zero(), Bivector::zero(), self) - b
     }
 }
-forward_ref_binop!(impl Sub, sub for Trivector, Multivector);
+forward_ref_binop!(impl<F:Float> Sub, sub for Trivector<F>, Multivector<F>);
 
 // Multivector-Trivector
 // \[ A-\overset\Rrightarrow{b}\]
-impl Sub<Trivector> for Multivector {
-    type Output = Multivector;
-    fn sub(self: Multivector, b: Trivector) -> Multivector {
-        Multivector::new(0.0, Vector::zero(), Bivector::zero(), -b) + self
+impl<F: Float> Sub<Trivector<F>> for Multivector<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Multivector<F>, b: Trivector<F>) -> Multivector<F> {
+        Multivector::new(F::zero(), Vector::zero(), Bivector::zero(), -b) + self
     }
 }
-forward_ref_binop!(impl Sub, sub for Multivector, Trivector);
+forward_ref_binop!(impl<F:Float> Sub, sub for Multivector<F>, Trivector<F>);
 
 // Trivector-Rotor
 // \[ \overset\Rrightarrow{a}-R\]
-impl Sub<Rotor> for Trivector {
-    type Output = Multivector;
-    fn sub(self: Trivector, b: Rotor) -> Multivector {
+impl<F: Float> Sub<Rotor<F>> for Trivector<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Trivector<F>, b: Rotor<F>) -> Multivector<F> {
         Multivector::new(-b.scalar(), Vector::zero(), -b.bivector(), self)
     }
 }
-forward_ref_binop!(impl Sub, sub for Trivector, Rotor);
+forward_ref_binop!(impl<F:Float> Sub, sub for Trivector<F>, Rotor<F>);
 
 // Rotor-Trivector
 // \[ R-\overset\Rrightarrow{b}\]
-impl Sub<Trivector> for Rotor {
-    type Output = Multivector;
-    fn sub(self: Rotor, b: Trivector) -> Multivector {
+impl<F: Float> Sub<Trivector<F>> for Rotor<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Rotor<F>, b: Trivector<F>) -> Multivector<F> {
         Multivector::new(self.scalar(), Vector::zero(), self.bivector(), -b)
     }
 }
-forward_ref_binop!(impl Sub, sub for Rotor, Trivector);
+forward_ref_binop!(impl<F:Float> Sub, sub for Rotor<F>, Trivector<F>);
 
 // Multivector-Multivector
-impl Sub for Multivector {
-    type Output = Multivector;
-    fn sub(self: Multivector, b: Multivector) -> Multivector {
+impl<F: Float> Sub for Multivector<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Multivector<F>, b: Multivector<F>) -> Multivector<F> {
         let scalar = self.scalar() - b.scalar();
         let vector = self.vector() - b.vector();
         let bivector = self.bivector() - b.bivector();
@@ -375,13 +373,13 @@ impl Sub for Multivector {
         Multivector::new(scalar, vector, bivector, trivector)
     }
 }
-forward_ref_binop!(impl Sub, sub for Multivector, Multivector);
+forward_ref_binop!(impl<F:Float> Sub, sub for Multivector<F>, Multivector<F>);
 
 // Multivector-Rotor
 // \[ A-R\]
-impl Sub<Rotor> for Multivector {
-    type Output = Multivector;
-    fn sub(self: Multivector, b: Rotor) -> Multivector {
+impl<F: Float> Sub<Rotor<F>> for Multivector<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Multivector<F>, b: Rotor<F>) -> Multivector<F> {
         Multivector::new(
             -b.scalar(),
             Vector::zero(),
@@ -390,13 +388,13 @@ impl Sub<Rotor> for Multivector {
         ) + self
     }
 }
-forward_ref_binop!(impl Sub, sub for Rotor, Multivector);
+forward_ref_binop!(impl<F:Float> Sub, sub for Rotor<F>, Multivector<F>);
 
 // Rotor-Multivector
 // \[ R-B\]
-impl Sub<Multivector> for Rotor {
-    type Output = Multivector;
-    fn sub(self: Rotor, b: Multivector) -> Multivector {
+impl<F: Float> Sub<Multivector<F>> for Rotor<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Rotor<F>, b: Multivector<F>) -> Multivector<F> {
         Multivector::new(
             self.scalar(),
             Vector::zero(),
@@ -405,14 +403,14 @@ impl Sub<Multivector> for Rotor {
         ) - b
     }
 }
-forward_ref_binop!(impl Sub, sub for Multivector, Rotor);
+forward_ref_binop!(impl<F:Float> Sub, sub for Multivector<F>, Rotor<F>);
 
-impl Sub for Rotor {
-    type Output = Multivector;
-    fn sub(self: Rotor, b: Rotor) -> Multivector {
+impl<F: Float> Sub for Rotor<F> {
+    type Output = Multivector<F>;
+    fn sub(self: Rotor<F>, b: Rotor<F>) -> Multivector<F> {
         let scalar = self.scalar() - b.scalar();
         let bivector = self.bivector() - b.bivector();
         Multivector::new(scalar, Vector::zero(), bivector, Trivector::zero())
     }
 }
-forward_ref_binop!(impl Sub, sub for Rotor, Rotor);
+forward_ref_binop!(impl<F:Float> Sub, sub for Rotor<F>, Rotor<F>);

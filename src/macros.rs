@@ -19,6 +19,37 @@
 #[doc(hidden)]
 #[macro_export]
 macro_rules! forward_ref_binop {
+    // Version for when both types share the same generic parameter
+    (impl<$param:ident : $bound:path> $imp:ident, $method:ident for $t:ty, $t2:ty) => {
+        impl<'a, $param: $bound> $imp<$t2> for &'a $t {
+            type Output = <$t as $imp<$t2>>::Output;
+
+            #[inline]
+            fn $method(self, other: $t2) -> <$t as $imp<$t2>>::Output {
+                $imp::$method(*self, other)
+            }
+        }
+
+        impl<$param: $bound> $imp<&$t2> for $t {
+            type Output = <$t as $imp<$t2>>::Output;
+
+            #[inline]
+            fn $method(self, other: &$t2) -> <$t as $imp<$t2>>::Output {
+                $imp::$method(self, *other)
+            }
+        }
+
+        impl<'a, 'b, $param: $bound> $imp<&'b $t2> for &'a $t {
+            type Output = <$t as $imp<$t2>>::Output;
+
+            #[inline]
+            fn $method(self, other: &'b $t2) -> <$t as $imp<$t2>>::Output {
+                $imp::$method(*self, *other)
+            }
+        }
+    };
+
+    // Original version without generics
     (impl $imp:ident, $method:ident for $t:ty, $u:ty) => {
         impl<'a> $imp<$u> for &'a $t {
             type Output = <$t as $imp<$u>>::Output;
@@ -38,11 +69,11 @@ macro_rules! forward_ref_binop {
             }
         }
 
-        impl $imp<&$u> for &$t {
+        impl<'a, 'b> $imp<&'b $u> for &'a $t {
             type Output = <$t as $imp<$u>>::Output;
 
             #[inline]
-            fn $method(self, other: &$u) -> <$t as $imp<$u>>::Output {
+            fn $method(self, other: &'b $u) -> <$t as $imp<$u>>::Output {
                 $imp::$method(*self, *other)
             }
         }

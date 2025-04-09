@@ -20,129 +20,129 @@
 #![allow(dead_code)]
 
 use super::{
-    bivector::{self, Bivector},
-    multivector::Multivector,
-    rotor::Rotor,
-    trivector::{self, Trivector},
-    vector::Vector,
+    bivector::Bivector, multivector::Multivector, rotor::Rotor, scalar::Scalar,
+    trivector::Trivector, vector::Vector,
 };
 
+use num_traits::Float;
+
 use crate::forward_ref_binop;
+
 use core::ops::BitXor;
 
 // // Scalar-Scalar
 // // \[ a\wedge b\]
-// impl BitXor for f32 {
-//     type Output = f32;
-//     fn bitxor(self: f32, b: Vector) -> f32 {
+// impl<F:Float> BitXor for F {
+//     type Output = F;
+//     fn bitxor(self: F, b: Vector<F>) -> F {
 //         self * b
 //     }
 // }
 
 // // Scalar-Vector
 // // \[ a\wedge \vec{b}\]
-// impl BitXor<Vector> for f32 {
-//     type Output = Vector;
-//     fn bitxor(self: f32, b: Vector) -> Vector {
+// impl<F:Float> BitXor<Vector<F>> for F {
+//     type Output = Vector<F>;
+//     fn bitxor(self: F, b: Vector<F>) -> Vector<F> {
 //         self * b
 //     }
 // }
-// forward_ref_binop!(impl BitXor, bitxor for f32, Vector);
+// forward_ref_binop!(impl<F:Float> BitXor, bitxor for F, Vector<F>);
 
 // // Vector-Scalar
 // // \[ \vec{a}\wedge b\]
-// impl BitXor<f32> for Vector {
-//     type Output = Vector;
-//     fn bitxor(self: Vector, b: f32) -> Vector {
+// impl<F:Float> BitXor<F> for Vector<F> {
+//     type Output = Vector<F>;
+//     fn bitxor(self: Vector<F>, b: F) -> Vector<F> {
 //         self * b
 //     }
 // }
-// forward_ref_binop!(impl BitXor, bitxor for Vector, f32);
+// forward_ref_binop!(impl<F:Float> BitXor, bitxor for Vector<F>, F);
 
 // // Scalar-Bivector
 // // \[ s\wedge \overset\Rightarrow{b}\]
-// impl BitXor<Bivector> for f32 {
-//     type Output = Bivector;
-//     fn bitxor(self: f32, b: Bivector) -> Bivector {
+// impl<F:Float> BitXor<Bivector<F>> for F {
+//     type Output = Bivector<F>;
+//     fn bitxor(self: F, b: Bivector<F>) -> Bivector<F> {
 //         self * b
 //     }
 // }
-// forward_ref_binop!(impl BitXor, bitxor for f32, Bivector);
+// forward_ref_binop!(impl<F:Float> BitXor, bitxor for F, Bivector<F>);
 
 // // Bivector-Scalar
 // // \[ \overset\Rightarrow{a}\wedge b\]
-// impl BitXor<f32> for Bivector {
-//     type Output = Bivector;
-//     fn bitxor(self: Bivector, b: f32) -> Bivector {
+// impl<F:Float> BitXor<F> for Bivector<F> {
+//     type Output = Bivector<F>;
+//     fn bitxor(self: Bivector<F>, b: F) -> Bivector<F> {
 //         self * b
 //     }
 // }
-// forward_ref_binop!(impl BitXor, bitxor for Bivector, f32);
+// forward_ref_binop!(impl<F:Float> BitXor, bitxor for Bivector<F>, F);
 
 // // Scalar-Trivector
 // // \[ s\wedge \overset\Rrightarrow{b}\]
-// impl BitXor<Trivector> for f32 {
-//     type Output = Trivector;
-//     fn bitxor(self: f32, b: Trivector) -> Trivector {
+// impl<F:Float> BitXor<Trivector<F>> for F {
+//     type Output = Trivector<F>;
+//     fn bitxor(self: F, b: Trivector<F>) -> Trivector<F> {
 //         self * b
 //     }
 // }
-// forward_ref_binop!(impl BitXor, bitxor for f32, Trivector);
+// forward_ref_binop!(impl<F:Float> BitXor, bitxor for F, Trivector<F>);
 
 // // Trivector-Scalar
 // // \[ \overset\Rrightarrow{a}\wedge b\]
-// impl BitXor<f32> for Trivector {
-//     type Output = Trivector;
-//     fn bitxor(self: Trivector, b: f32) -> Trivector {
+// impl<F:Float> BitXor<F> for Trivector<F> {
+//     type Output = Trivector<F>;
+//     fn bitxor(self: Trivector<F>, b: F) -> Trivector<F> {
 //         self * b
 //     }
 // }
-// forward_ref_binop!(impl BitXor, bitxor for Trivector, f32);
+// forward_ref_binop!(impl<F:Float> BitXor, bitxor for Trivector<F>, F);
 
 // // Scalar-Multivector
 // // \[ s\wedge B\]
-// impl BitXor<Multivector> for f32 {
-//     type Output = Multivector;
-//     fn bitxor(self: f32, b: Multivector) -> Multivector {
+// impl<F:Float> BitXor<Multivector<F>> for F {
+//     type Output = Multivector<F>;
+//     fn bitxor(self: F, b: Multivector<F>) -> Multivector<F> {
 //         self * b
 //     }
 // }
-// forward_ref_binop!(impl BitXor, bitxor for f32, Multivector);
+// forward_ref_binop!(impl<F:Float> BitXor, bitxor for F, Multivector<F>);
 
 // // Multivector-Scalar
 // // \[ B\wedge b\]
-// impl BitXor<f32> for Multivector {
-//     type Output = Multivector;
-//     fn bitxor(self: Multivector, b: f32) -> Multivector {
+// impl<F:Float> BitXor<F> for Multivector<F> {
+//     type Output = Multivector<F>;
+//     fn bitxor(self: Multivector<F>, b: F) -> Multivector<F> {
 //         self * b
 //     }
 // }
-// forward_ref_binop!(impl BitXor, bitxor for Multivector, f32);
+// forward_ref_binop!(impl<F:Float> BitXor, bitxor for Multivector<F>, F);
 
 // // Scalar-Rotor
 // // \[ s\wedge R\]
-// impl BitXor<Rotor> for f32 {
-//     type Output = Multivector;
-//     fn bitxor(self: f32, b: Rotor) -> Multivector {
+// impl<F:Float> BitXor<Rotor<F>> for F {
+//     type Output = Multivector<F>;
+//     fn bitxor(self: F, b: Rotor<F>) -> Multivector<F> {
 //         self * b
 //     }
 // }
-// forward_ref_binop!(impl BitXor, bitxor for f32, Rotor);
+// forward_ref_binop!(impl<F:Float> BitXor, bitxor for F, Rotor<F>);
 
 // //Rotor-Scalar
 // // \[ R\wedge b\]
-// impl BitXor<f32> for Rotor {
-//     type Output = Multivector;
-//     fn bitxor(self: Rotor, b: f32) -> Multivector {
+// impl<F:Float> BitXor<F> for Rotor<F> {
+//     type Output = Multivector<F>;
+//     fn bitxor(self: Rotor<F>, b: F) -> Multivector<F> {
 //         self * b
 //     }
 // }
-// forward_ref_binop!(impl BitXor, bitxor for Rotor, f32);
+// forward_ref_binop!(impl<F:Float> BitXor, bitxor for Rotor<F>, F);
 
 // Vector-Vector
-impl BitXor for Vector {
-    type Output = Bivector;
-    fn bitxor(self: Vector, b: Vector) -> Bivector {
+impl<F: Float> BitXor for Vector<F> {
+    type Output = Bivector<F>;
+    fn bitxor(self: Vector<F>, b: Vector<F>) -> Bivector<F> {
         Bivector::new(
             self.e1() * b.e2() - self.e2() * b.e1(),
             self.e3() * b.e1() - self.e1() * b.e3(),
@@ -150,174 +150,173 @@ impl BitXor for Vector {
         )
     }
 }
-forward_ref_binop!(impl BitXor, bitxor for Vector, Vector);
+forward_ref_binop!(impl<F:Float> BitXor, bitxor for Vector<F>, Vector<F>);
 
 // Vector-Bivector
 // \[ \vec{a}\wedge \overset\Rightarrow{b}\]
-impl BitXor<Bivector> for Vector {
-    type Output = Trivector;
-    fn bitxor(self: Vector, b: Bivector) -> Trivector {
+impl<F: Float> BitXor<Bivector<F>> for Vector<F> {
+    type Output = Trivector<F>;
+    fn bitxor(self: Vector<F>, b: Bivector<F>) -> Trivector<F> {
         Trivector::new(self.e1() * b.e23() + self.e2() * b.e31() + self.e3() * b.e12())
     }
 }
-forward_ref_binop!(impl BitXor, bitxor for Vector, Bivector);
+forward_ref_binop!(impl<F:Float> BitXor, bitxor for Vector<F>, Bivector<F>);
 
 // Bivector-Vector
 // \[ \overset\Rightarrow{b}\wedge \vec{b}\]
-impl BitXor<Vector> for Bivector {
-    type Output = Trivector;
-    fn bitxor(self: Bivector, b: Vector) -> Trivector {
+impl<F: Float> BitXor<Vector<F>> for Bivector<F> {
+    type Output = Trivector<F>;
+    fn bitxor(self: Bivector<F>, b: Vector<F>) -> Trivector<F> {
         Trivector::new(self.e23() * b.e1() + self.e31() * b.e2() + self.e12() * b.e3())
     }
 }
-forward_ref_binop!(impl BitXor, bitxor for Bivector, Vector);
+forward_ref_binop!(impl<F:Float> BitXor, bitxor for Bivector<F>, Vector<F>);
 
 // Vector-Trivector
 // \[ \vec{a}\wedge \overset\Rrightarrow{b}\]
-impl BitXor<Trivector> for Vector {
-    type Output = f32;
-    fn bitxor(self: Vector, _b: Trivector) -> f32 {
-        0.0
+impl<F: Float> BitXor<Trivector<F>> for Vector<F> {
+    type Output = Scalar<F>;
+    fn bitxor(self: Vector<F>, _b: Trivector<F>) -> Scalar<F> {
+        Scalar::zero()
     }
 }
-forward_ref_binop!(impl BitXor, bitxor for Vector, Trivector);
+forward_ref_binop!(impl<F:Float> BitXor, bitxor for Vector<F>, Trivector<F>);
 
 // Trivector-Vector
 // \[ \overset\Rrightarrow{a}\wedge \vec{b}\]
-impl BitXor<Vector> for Trivector {
-    type Output = f32;
-    fn bitxor(self: Trivector, _b: Vector) -> f32 {
-        0.0
+impl<F: Float> BitXor<Vector<F>> for Trivector<F> {
+    type Output = Scalar<F>;
+    fn bitxor(self: Trivector<F>, _b: Vector<F>) -> Scalar<F> {
+        Scalar::zero()
     }
 }
-forward_ref_binop!(impl BitXor, bitxor for Trivector, Vector);
+forward_ref_binop!(impl<F:Float> BitXor, bitxor for Trivector<F>, Vector<F>);
 
 // Vector-Multivector
 // \[ \vec{a}\wedge B\]
-impl BitXor<Multivector> for Vector {
-    type Output = Multivector;
-    fn bitxor(self: Vector, b: Multivector) -> Multivector {
-        Multivector::new(
-            self ^ b.trivector(),
-            self * b.scalar(),
-            self ^ b.vector(),
-            self ^ b.bivector(),
-        )
+impl<F: Float> BitXor<Multivector<F>> for Vector<F> {
+    type Output = Multivector<F>;
+    fn bitxor(self: Vector<F>, b: Multivector<F>) -> Multivector<F> {
+        Multivector {
+            scalar: self ^ b.trivector(),
+            vector: self * b.scalar,
+            bivector: self ^ b.vector,
+            trivector: self ^ b.bivector,
+        }
     }
 }
-forward_ref_binop!(impl BitXor, bitxor for Vector, Multivector);
+forward_ref_binop!(impl<F:Float> BitXor, bitxor for Vector<F>, Multivector<F>);
 
 // Multivector-Vector
 // \[ A\wedge \vec{b}\]
-impl BitXor<Vector> for Multivector {
-    type Output = Multivector;
-    fn bitxor(self: Multivector, b: Vector) -> Multivector {
-        Multivector::new(
-            self.trivector() ^ b,
-            self.scalar() * b,
-            self.vector() ^ b,
-            self.bivector() ^ b,
-        )
+impl<F: Float> BitXor<Vector<F>> for Multivector<F> {
+    type Output = Multivector<F>;
+    fn bitxor(self: Multivector<F>, b: Vector<F>) -> Multivector<F> {
+        Multivector {
+            scalar: self.trivector() ^ b,
+            vector: self.scalar * b,
+            bivector: self.vector() ^ b,
+            trivector: self.bivector() ^ b,
+        }
     }
 }
-forward_ref_binop!(impl BitXor, bitxor for Multivector, Vector);
+forward_ref_binop!(impl<F:Float> BitXor, bitxor for Multivector<F>, Vector<F>);
 
 // // Vector-Rotor
 // // \[ \vec{a} \wedge R\]
-// impl BitXor<Rotor> for Vector {
-//     type Output = Multivector;
-//     fn bitxor(self: Vector, b: Rotor) -> Multivector {
+// impl<F:Float> BitXor<Rotor<F>> for Vector<F> {
+//     type Output = Multivector<F>;
+//     fn bitxor(self: Vector<F>, b: Rotor<F>) -> Multivector<F> {
 //         Multivector::new(
-//             0.0,
+//             F::zero(),
 //             self ^ b.scalar(),
 //             Bivector::zero(),
 //             self ^ b.bivector(),
 //         )
 //     }
 // }
-// forward_ref_binop!(impl BitXor, bitxor for Vector, Rotor);
+// forward_ref_binop!(impl<F:Float> BitXor, bitxor for Vector<F>, Rotor<F>);
 
 // // Rotor-Vector
 // // \[ R\wedge \vec{b}\]
-// impl BitXor<Vector> for Rotor {
-//     type Output = Multivector;
-//     fn bitxor(self: Rotor, b: Vector) -> Multivector {
+// impl<F:Float> BitXor<Vector<F>> for Rotor<F> {
+//     type Output = Multivector<F>;
+//     fn bitxor(self: Rotor<F>, b: Vector<F>) -> Multivector<F> {
 //         Multivector::new(
-//             0.0,
+//             F::zero(),
 //             self.scalar() ^ b,
 //             Bivector::zero(),
 //             self.bivector() ^ b,
 //         )
 //     }
 // }
-// forward_ref_binop!(impl BitXor, bitxor for Rotor, Vector);
+// forward_ref_binop!(impl<F:Float> BitXor, bitxor for Rotor<F>, Vector<F>);
 
 // Bivector-Bivector
 // \[ \overset\Rightarrow{a} \wedge \overset\Rightarrow{b} = \left <\overset\Rightarrow{a} \overset\Rightarrow{b} \right>_4 \]
 // There is no object of grade 4 in 3D VGA
-impl BitXor for Bivector {
-    type Output = f32;
-
-    fn bitxor(self: Bivector, _b: Bivector) -> f32 {
-        0.0
+impl<F: Float> BitXor for Bivector<F> {
+    type Output = Scalar<F>;
+    fn bitxor(self: Bivector<F>, _b: Bivector<F>) -> Scalar<F> {
+        Scalar::zero()
     }
 }
 
 // Bivector-Trivector
 // \[ \overset\Rightarrow{a}\wedge \overset\Rrightarrow{b}\]
-impl BitXor<Trivector> for Bivector {
-    type Output = f32;
-    fn bitxor(self: Bivector, _b: Trivector) -> f32 {
-        0.0
+impl<F: Float> BitXor<Trivector<F>> for Bivector<F> {
+    type Output = Scalar<F>;
+    fn bitxor(self: Bivector<F>, _b: Trivector<F>) -> Scalar<F> {
+        Scalar::zero()
     }
 }
-forward_ref_binop!(impl BitXor, bitxor for Bivector, Trivector);
+forward_ref_binop!(impl<F:Float> BitXor, bitxor for Bivector<F>, Trivector<F>);
 
 // Trivector-Bivector
 // \[ \overset\Rrightarrow{a}\wedge \overset\Rightarrow{b}\]
-impl BitXor<Bivector> for Trivector {
-    type Output = f32;
-    fn bitxor(self: Trivector, _b: Bivector) -> f32 {
-        0.0
+impl<F: Float> BitXor<Bivector<F>> for Trivector<F> {
+    type Output = Scalar<F>;
+    fn bitxor(self: Trivector<F>, _b: Bivector<F>) -> Scalar<F> {
+        Scalar::zero()
     }
 }
-forward_ref_binop!(impl BitXor, bitxor for Trivector, Bivector);
+forward_ref_binop!(impl<F:Float> BitXor, bitxor for Trivector<F>, Bivector<F>);
 
 // Bivector-Multivector
 // \[ \overset\Rightarrow{a}\wedge B\]
-impl BitXor<Multivector> for Bivector {
-    type Output = Multivector;
-    fn bitxor(self: Bivector, b: Multivector) -> Multivector {
+impl<F: Float> BitXor<Multivector<F>> for Bivector<F> {
+    type Output = Multivector<F>;
+    fn bitxor(self: Bivector<F>, b: Multivector<F>) -> Multivector<F> {
         Multivector::new(
             (self ^ b.bivector()) + (self ^ b.trivector()),
             Vector::zero(),
-            self * b.scalar(),
+            self * Scalar(b.scalar()),
             self ^ b.vector(),
         )
     }
 }
-forward_ref_binop!(impl BitXor, bitxor for Bivector, Multivector);
+forward_ref_binop!(impl<F:Float> BitXor, bitxor for Bivector<F>, Multivector<F>);
 
 // Multivector-Bivector
 // \[ A\wedge \overset\Rightarrow{b}\]
-impl BitXor<Bivector> for Multivector {
-    type Output = Multivector;
-    fn bitxor(self: Multivector, b: Bivector) -> Multivector {
+impl<F: Float> BitXor<Bivector<F>> for Multivector<F> {
+    type Output = Multivector<F>;
+    fn bitxor(self: Multivector<F>, b: Bivector<F>) -> Multivector<F> {
         Multivector::new(
             (self.bivector() ^ b) + (self.trivector() ^ b),
             Vector::zero(),
-            self.scalar() * b,
+            Scalar(self.scalar()) * b,
             self.vector() ^ b,
         )
     }
 }
-forward_ref_binop!(impl BitXor, bitxor for Multivector, Bivector);
+forward_ref_binop!(impl<F:Float> BitXor, bitxor for Multivector<F>, Bivector<F>);
 
 // // Bivector-Rotor
 // // \[ \overset\Rightarrow{a}\wedge R\]
-// impl BitXor<Rotor> for Bivector {
-//     type Output = Multivector;
-//     fn bitxor(self: Bivector, b: Rotor) -> Multivector {
+// impl<F:Float> BitXor<Rotor<F>> for Bivector<F> {
+//     type Output = Multivector<F>;
+//     fn bitxor(self: Bivector<F>, b: Rotor<F>) -> Multivector<F> {
 //         Multivector::new(
 //             self ^ b.bivector(),
 //             Vector::zero(),
@@ -326,13 +325,13 @@ forward_ref_binop!(impl BitXor, bitxor for Multivector, Bivector);
 //         )
 //     }
 // }
-// forward_ref_binop!(impl BitXor, bitxor for Bivector, Rotor);
+// forward_ref_binop!(impl<F:Float> BitXor, bitxor for Bivector<F>, Rotor<F>);
 
 // // Rotor-Bivector
 // // \[ R\wedge \overset\Rightarrow{b}\]
-// impl BitXor<Bivector> for Rotor {
-//     type Output = Multivector;
-//     fn bitxor(self: Rotor, b: Bivector) -> Multivector {
+// impl<F:Float> BitXor<Bivector<F>> for Rotor<F> {
+//     type Output = Multivector<F>;
+//     fn bitxor(self: Rotor<F>, b: Bivector<F>) -> Multivector<F> {
 //         Multivector::new(
 //             self.bivector() ^ b,
 //             Vector::zero(),
@@ -341,54 +340,54 @@ forward_ref_binop!(impl BitXor, bitxor for Multivector, Bivector);
 //         )
 //     }
 // }
-// forward_ref_binop!(impl BitXor, bitxor for Rotor, Bivector);
+// forward_ref_binop!(impl<F:Float> BitXor, bitxor for Rotor<F>, Bivector<F>);
 
 // Trivector-Trivector
 // \[ \overset\Rrightarrow{a} \wedge \overset\Rrightarrow{b} = \left <\overset\Rrightarrow{a} \overset\Rrightarrow{b} \right>_4 \]
 // There is no object of grade 6 in 3D VGA
-impl BitXor for Trivector {
-    type Output = f32;
-    fn bitxor(self: Trivector, _b: Trivector) -> f32 {
-        0.0
+impl<F: Float> BitXor for Trivector<F> {
+    type Output = Scalar<F>;
+    fn bitxor(self: Trivector<F>, _b: Trivector<F>) -> Scalar<F> {
+        Scalar::zero()
     }
 }
-forward_ref_binop!(impl BitXor, bitxor for Trivector, Trivector);
+forward_ref_binop!(impl<F:Float> BitXor, bitxor for Trivector<F>, Trivector<F>);
 
 // Trivector-Multivector
 // \[ \overset\Rrightarrow{a}\wedge B\]
-impl BitXor<Multivector> for Trivector {
-    type Output = Multivector;
-    fn bitxor(self: Trivector, b: Multivector) -> Multivector {
+impl<F: Float> BitXor<Multivector<F>> for Trivector<F> {
+    type Output = Multivector<F>;
+    fn bitxor(self: Trivector<F>, b: Multivector<F>) -> Multivector<F> {
         Multivector::new(
-            (self ^ b.vector()) + (self ^ b.bivector()) + (self ^ b.trivector()),
+            (self ^ b.vector()) + (self ^ b.bivector()) + (self ^ b.trivector).0,
             Vector::zero(),
             Bivector::zero(),
-            self * b.scalar(),
+            self * Scalar(b.scalar()),
         )
     }
 }
-forward_ref_binop!(impl BitXor, bitxor for Trivector, Multivector);
+forward_ref_binop!(impl<F:Float> BitXor, bitxor for Trivector<F>, Multivector<F>);
 
 // Multivector-Trivector
 // \[ A\wedge \overset\Rrightarrow{b}\]
-impl BitXor<Trivector> for Multivector {
-    type Output = Multivector;
-    fn bitxor(self: Multivector, b: Trivector) -> Multivector {
+impl<F: Float> BitXor<Trivector<F>> for Multivector<F> {
+    type Output = Multivector<F>;
+    fn bitxor(self: Multivector<F>, b: Trivector<F>) -> Multivector<F> {
         Multivector::new(
-            (self.vector() ^ b) + (self.bivector() ^ b) + (self.trivector() ^ b),
+            (self.vector() ^ b) + (self.bivector() ^ b) + (self.trivector ^ b).0,
             Vector::zero(),
             Bivector::zero(),
-            self.scalar() * b,
+            Scalar(self.scalar()) * b,
         )
     }
 }
-forward_ref_binop!(impl BitXor, bitxor for Multivector, Trivector);
+forward_ref_binop!(impl<F:Float> BitXor, bitxor for Multivector<F>, Trivector<F>);
 
 // // Trivector-Rotor
 // // \[ \overset\Rrightarrow{a}\wedge R\]
-// impl BitXor<Rotor> for Trivector {
-//     type Output = Multivector;
-//     fn bitxor(self: Trivector, b: Rotor) -> Multivector {
+// impl<F:Float> BitXor<Rotor<F>> for Trivector<F> {
+//     type Output = Multivector<F>;
+//     fn bitxor(self: Trivector<F>, b: Rotor<F>) -> Multivector<F> {
 //         let scalar = self ^ b.bivector();
 //         let vector = Vector::zero();
 //         let bivector = Bivector::zero();
@@ -396,13 +395,13 @@ forward_ref_binop!(impl BitXor, bitxor for Multivector, Trivector);
 //         Multivector::new(scalar, vector, bivector, trivector)
 //     }
 // }
-// forward_ref_binop!(impl BitXor, bitxor for Trivector, Rotor);
+// forward_ref_binop!(impl<F:Float> BitXor, bitxor for Trivector<F>, Rotor<F>);
 
 // // Rotor-Trivector
 // // \[ R\wedge \overset\Rrightarrow{b}\]
-// impl BitXor<Trivector> for Rotor {
-//     type Output = Multivector;
-//     fn bitxor(self: Rotor, b: Trivector) -> Multivector {
+// impl<F:Float> BitXor<Trivector<F>> for Rotor<F> {
+//     type Output = Multivector<F>;
+//     fn bitxor(self: Rotor<F>, b: Trivector<F>) -> Multivector<F> {
 //         Multivector::new(
 //             self.bivector() ^ b,
 //             Vector::zero(),
@@ -411,22 +410,25 @@ forward_ref_binop!(impl BitXor, bitxor for Multivector, Trivector);
 //         )
 //     }
 // }
-// forward_ref_binop!(impl BitXor, bitxor for Rotor, Trivector);
+// forward_ref_binop!(impl<F:Float> BitXor, bitxor for Rotor<F>, Trivector<F>);
 
 // Multivector-Multivector
 // \[ A \wedge B = \left <A B \right>_{a+b} \]
-impl BitXor for Multivector {
-    type Output = Multivector;
-    fn bitxor(self: Multivector, b: Multivector) -> Multivector {
-        (self * b.scalar()) + (self ^ b.vector()) + (self ^ b.bivector()) + (self ^ b.trivector())
+impl<F: Float> BitXor for Multivector<F> {
+    type Output = Multivector<F>;
+    fn bitxor(self: Multivector<F>, b: Multivector<F>) -> Multivector<F> {
+        (self * Scalar(b.scalar()))
+            + (self ^ b.vector())
+            + (self ^ b.bivector())
+            + (self ^ b.trivector())
     }
 }
 
 // // Multivector-Rotor
 // // \[ A\wedge R\]
-// impl BitXor<Rotor> for Multivector {
-//     type Output = Multivector;
-//     fn bitxor(self: Multivector, b: Rotor) -> Multivector {
+// impl<F:Float> BitXor<Rotor<F>> for Multivector<F> {
+//     type Output = Multivector<F>;
+//     fn bitxor(self: Multivector<F>, b: Rotor<F>) -> Multivector<F> {
 //         let scalar = (self.scalar() * b.scalar())
 //             + (self.bivector() ^ b.bivector())
 //             + (self.trivector() ^ b.bivector());
@@ -436,13 +438,13 @@ impl BitXor for Multivector {
 //         Multivector::new(scalar, vector, bivector, trivector)
 //     }
 // }
-// forward_ref_binop!(impl BitXor, bitxor for Multivector, Rotor);
+// forward_ref_binop!(impl<F:Float> BitXor, bitxor for Multivector<F>, Rotor<F>);
 
 // // Rotor-Multivector
 // // \[ R\wedge B\]
-// impl BitXor<Multivector> for Rotor {
-//     type Output = Multivector;
-//     fn bitxor(self: Rotor, b: Multivector) -> Multivector {
+// impl<F:Float> BitXor<Multivector<F>> for Rotor<F> {
+//     type Output = Multivector<F>;
+//     fn bitxor(self: Rotor<F>, b: Multivector<F>) -> Multivector<F> {
 //         let scalar = (self.scalar() * b.scalar())
 //             + (self.bivector() ^ b.bivector())
 //             + (self.bivector() ^ b.trivector());
@@ -452,13 +454,13 @@ impl BitXor for Multivector {
 //         Multivector::new(scalar, vector, bivector, trivector)
 //     }
 // }
-// forward_ref_binop!(impl BitXor, bitxor for Rotor, Multivector);
+// forward_ref_binop!(impl<F:Float> BitXor, bitxor for Rotor<F>, Multivector<F>);
 
 // // Rotor-Rotor
 // // \[ R_1 \wedge R_2\]
-// impl BitXor for Rotor {
-//     type Output = Multivector;
-//     fn bitxor(self: Rotor, b: Rotor) -> Multivector {
+// impl<F:Float> BitXor for Rotor<F> {
+//     type Output = Multivector<F>;
+//     fn bitxor(self: Rotor<F>, b: Rotor<F>) -> Multivector<F> {
 //         let scalar = (self.scalar() * b.scalar()) + (self.bivector() ^ b.bivector());
 //         let vector = Vector::zero();
 //         let bivector = (self.scalar() ^ b.bivector()) + (self.bivector() ^ b.scalar());
@@ -466,7 +468,7 @@ impl BitXor for Multivector {
 //         Multivector::new(scalar, vector, bivector, trivector)
 //     }
 // }
-// forward_ref_binop!(impl BitXor, bitxor for Rotor, Rotor);
+// forward_ref_binop!(impl<F:Float> BitXor, bitxor for Rotor<F>, Rotor<F>);
 
 #[cfg(test)]
 mod exterior_product {
@@ -529,7 +531,7 @@ mod exterior_product {
         let vector = Vector::new(2.0, 1.0, 6.0);
         // 3e123
         let trivector = Trivector::new(3.0);
-        let res = vector ^ trivector;
+        let res = (vector ^ trivector).scalar();
         // 0.0
         assert_relative_eq!(res, 0.0, max_relative = 0.000001);
     }
@@ -540,7 +542,7 @@ mod exterior_product {
         let trivector = Trivector::new(3.0);
         // 2e1+e2+6e3
         let vector = Vector::new(2.0, 1.0, 6.0);
-        let res = trivector ^ vector;
+        let res = (trivector ^ vector).scalar();
         // 0.0
         assert_relative_eq!(res, 0.0, max_relative = 0.000001);
     }
@@ -588,7 +590,11 @@ mod exterior_product {
         // 2e12+e31+6e23
         let bivector2 = Bivector::new(2.0, 1.0, 6.0);
         // 31e123​
-        assert_relative_eq!(bivector1 ^ bivector2, 0.0, max_relative = 0.000001);
+        assert_relative_eq!(
+            (bivector1 ^ bivector2).scalar(),
+            0.0,
+            max_relative = 0.000001
+        );
     }
 
     #[test]
@@ -597,7 +603,7 @@ mod exterior_product {
         let bivector = Bivector::new(2.0, 1.0, 6.0);
         // 3e123
         let trivector = Trivector::new(3.0);
-        let res = bivector ^ trivector;
+        let res = (bivector ^ trivector).scalar();
         // 0
         assert_relative_eq!(res, 0.0, max_relative = 0.000001);
     }
@@ -608,7 +614,7 @@ mod exterior_product {
         let trivector = Trivector::new(3.0);
         // 2e12+e31+6e23
         let bivector = Bivector::new(2.0, 1.0, 6.0);
-        let res = trivector ^ bivector;
+        let res = (trivector ^ bivector).scalar();
         // 0
         assert_relative_eq!(res, 0.0, max_relative = 0.000001);
     }
@@ -653,7 +659,7 @@ mod exterior_product {
     fn trivec_trivec() {
         let trivector1 = Trivector::new(3.0);
         let trivector2 = Trivector::new(6.0);
-        let res = trivector1 ^ trivector2;
+        let res = (trivector1 ^ trivector2).scalar();
         assert_relative_eq!(res, 0.0, max_relative = 0.000001);
     }
 

@@ -20,13 +20,15 @@
 #![allow(dead_code)]
 
 use super::{
-    bivector::Bivector, multivector::Multivector, rotor::Rotor, trivector::Trivector,
-    vector::Vector, VGA3DOps, VGA3DOpsRef,
+    bivector::Bivector, multivector::Multivector, rotor::Rotor, scalar::Scalar,
+    trivector::Trivector, vector::Vector, VGA3DOps, VGA3DOpsRef,
 };
+
+use num_traits::Float;
 
 // Functions
 // Rotation
-pub trait Rotatable<R = Rotor> {
+pub trait Rotatable<R> {
     type Output;
     fn rotate(self, rotor: R) -> Self::Output;
 }
@@ -34,33 +36,33 @@ pub trait Rotatable<R = Rotor> {
 macro_rules! impl_rotatable {
     ($vec:ty, $output:ty, $extract:ident) => {
         // Owned vector, owned rotor
-        impl Rotatable for $vec {
+        impl<F: Float> Rotatable<Rotor<F>> for $vec {
             type Output = $output;
-            fn rotate(self, rotor: Rotor) -> Self::Output {
+            fn rotate(self, rotor: Rotor<F>) -> Self::Output {
                 (rotor.reverse() * self * rotor).$extract()
             }
         }
 
         // Owned vector, reference rotor
-        impl Rotatable<&Rotor> for $vec {
+        impl<'r, F: Float> Rotatable<&'r Rotor<F>> for $vec {
             type Output = $output;
-            fn rotate(self, rotor: &Rotor) -> Self::Output {
+            fn rotate(self, rotor: &'r Rotor<F>) -> Self::Output {
                 (rotor.reverse() * self * *rotor).$extract()
             }
         }
 
         // Reference vector, owned rotor
-        impl<'a> Rotatable for &'a $vec {
+        impl<'v, F: Float> Rotatable<Rotor<F>> for &'v $vec {
             type Output = $output;
-            fn rotate(self, rotor: Rotor) -> Self::Output {
+            fn rotate(self, rotor: Rotor<F>) -> Self::Output {
                 (rotor.reverse() * *self * rotor).$extract()
             }
         }
 
         // Reference vector, reference rotor
-        impl<'a, 'b> Rotatable<&'b Rotor> for &'a $vec {
+        impl<'v, 'r, F: Float> Rotatable<&'r Rotor<F>> for &'v $vec {
             type Output = $output;
-            fn rotate(self, rotor: &Rotor) -> Self::Output {
+            fn rotate(self, rotor: &'r Rotor<F>) -> Self::Output {
                 (rotor.reverse() * *self * *rotor).$extract()
             }
         }
@@ -68,10 +70,10 @@ macro_rules! impl_rotatable {
 }
 
 // Usage:
-impl_rotatable!(Vector, Vector, vector);
-impl_rotatable!(Bivector, Bivector, bivector);
-impl_rotatable!(Trivector, Trivector, trivector);
-impl_rotatable!(Multivector, Multivector, multivector);
+impl_rotatable!(Vector<F>, Vector<F>, vector);
+impl_rotatable!(Bivector<F>, Bivector<F>, bivector);
+impl_rotatable!(Trivector<F>, Trivector<F>, trivector);
+impl_rotatable!(Multivector<F>, Multivector<F>, multivector);
 
 #[cfg(test)]
 mod rotation {
@@ -159,122 +161,123 @@ mod rotation {
 
 // Projection
 // \[A_\parallel = (A\cdot B)B^{-1}\]
-pub trait HasVector {
-    fn vector(&self) -> Vector;
+pub trait HasVector<F: Float> {
+    fn vector(&self) -> Vector<F>;
 }
 
-impl HasVector for Vector {
-    fn vector(&self) -> Vector {
+impl<F: Float> HasVector<F> for Vector<F> {
+    fn vector(&self) -> Vector<F> {
         *self
     }
 }
 
-impl HasVector for Multivector {
-    fn vector(&self) -> Vector {
-        self.vector() // Or however you currently implement vector()
+impl<F: Float> HasVector<F> for Multivector<F> {
+    fn vector(&self) -> Vector<F> {
+        self.vector()
     }
 }
 
-pub trait HasBivector {
-    fn bivector(&self) -> Bivector;
+pub trait HasBivector<F: Float> {
+    fn bivector(&self) -> Bivector<F>;
 }
 
-impl HasBivector for Bivector {
-    fn bivector(&self) -> Bivector {
+impl<F: Float> HasBivector<F> for Bivector<F> {
+    fn bivector(&self) -> Bivector<F> {
         *self
     }
 }
 
-impl HasBivector for Multivector {
-    fn bivector(&self) -> Bivector {
+impl<F: Float> HasBivector<F> for Multivector<F> {
+    fn bivector(&self) -> Bivector<F> {
         self.bivector() // Or however you currently implement vector()
     }
 }
 
-pub trait HasTrivector {
-    fn trivector(&self) -> Trivector;
+pub trait HasTrivector<F: Float> {
+    fn trivector(&self) -> Trivector<F>;
 }
 
-impl HasTrivector for Trivector {
-    fn trivector(&self) -> Trivector {
+impl<F: Float> HasTrivector<F> for Trivector<F> {
+    fn trivector(&self) -> Trivector<F> {
         *self
     }
 }
 
-impl HasTrivector for Multivector {
-    fn trivector(&self) -> Trivector {
+impl<F: Float> HasTrivector<F> for Multivector<F> {
+    fn trivector(&self) -> Trivector<F> {
         self.trivector() // Or however you currently implement vector()
     }
 }
 
-pub trait HasMultivector {
-    fn multivector(&self) -> Multivector;
+pub trait HasMultivector<F: Float> {
+    fn multivector(&self) -> Multivector<F>;
 }
 
-impl HasMultivector for Multivector {
-    fn multivector(&self) -> Multivector {
+impl<F: Float> HasMultivector<F> for Multivector<F> {
+    fn multivector(&self) -> Multivector<F> {
         *self
     }
 }
 
-pub trait Projectable<T> {
+pub trait Projectable<T, F: Float> {
     type Output;
 
     fn project(self, target: T) -> Self::Output
     where
-        T: VGA3DOps + Copy;
+        T: VGA3DOps<F> + Copy;
 }
 
 // For vectors
-impl<T> Projectable<T> for Vector
+impl<T, F: Float> Projectable<T, F> for Vector<F>
 where
-    T: VGA3DOps + Copy,
-    Vector: core::ops::BitOr<T>,
-    <Vector as core::ops::BitOr<T>>::Output: core::ops::Mul<T>,
-    <<Vector as core::ops::BitOr<T>>::Output as core::ops::Mul<T>>::Output: HasVector,
+    T: VGA3DOps<F> + Copy,
+    Vector<F>: core::ops::BitOr<T>,
+    <Vector<F> as core::ops::BitOr<T>>::Output: core::ops::Mul<T>,
+    <<Vector<F> as core::ops::BitOr<T>>::Output as core::ops::Mul<T>>::Output: HasVector<F>,
 {
-    type Output = Vector;
+    type Output = Vector<F>;
     fn project(self, b: T) -> Self::Output {
         ((self | b) * (b.inverse())).vector()
     }
 }
 
-impl<T> Projectable<T> for Bivector
+impl<T, F: Float> Projectable<T, F> for Bivector<F>
 where
-    T: VGA3DOps + Copy,
-    Bivector: core::ops::BitOr<T>,
-    <Bivector as core::ops::BitOr<T>>::Output: core::ops::Mul<T>,
-    <<Bivector as core::ops::BitOr<T>>::Output as core::ops::Mul<T>>::Output: HasBivector,
+    T: VGA3DOps<F> + Copy,
+    Bivector<F>: core::ops::BitOr<T>,
+    <Bivector<F> as core::ops::BitOr<T>>::Output: core::ops::Mul<T>,
+    <<Bivector<F> as core::ops::BitOr<T>>::Output as core::ops::Mul<T>>::Output: HasBivector<F>,
 {
-    type Output = Bivector;
+    type Output = Bivector<F>;
 
     fn project(self, b: T) -> Self::Output {
         ((self | b) * (b.inverse())).bivector()
     }
 }
 
-impl<T> Projectable<T> for Trivector
+impl<T, F: Float> Projectable<T, F> for Trivector<F>
 where
-    T: VGA3DOps + Copy,
-    Trivector: core::ops::BitOr<T>,
-    <Trivector as core::ops::BitOr<T>>::Output: core::ops::Mul<T>,
-    <<Trivector as core::ops::BitOr<T>>::Output as core::ops::Mul<T>>::Output: HasTrivector,
+    T: VGA3DOps<F> + Copy,
+    Trivector<F>: core::ops::BitOr<T>,
+    <Trivector<F> as core::ops::BitOr<T>>::Output: core::ops::Mul<T>,
+    <<Trivector<F> as core::ops::BitOr<T>>::Output as core::ops::Mul<T>>::Output: HasTrivector<F>,
 {
-    type Output = Trivector;
+    type Output = Trivector<F>;
 
     fn project(self, b: T) -> Self::Output {
         ((self | b) * (b.inverse())).trivector()
     }
 }
 
-impl<T> Projectable<T> for Multivector
+impl<T, F: Float> Projectable<T, F> for Multivector<F>
 where
-    T: VGA3DOps + Copy,
-    Multivector: core::ops::BitOr<T>,
-    <Multivector as core::ops::BitOr<T>>::Output: core::ops::Mul<T>,
-    <<Multivector as core::ops::BitOr<T>>::Output as core::ops::Mul<T>>::Output: HasMultivector,
+    T: VGA3DOps<F> + Copy,
+    Multivector<F>: core::ops::BitOr<T>,
+    <Multivector<F> as core::ops::BitOr<T>>::Output: core::ops::Mul<T>,
+    <<Multivector<F> as core::ops::BitOr<T>>::Output as core::ops::Mul<T>>::Output:
+        HasMultivector<F>,
 {
-    type Output = Multivector;
+    type Output = Multivector<F>;
 
     fn project(self, b: T) -> Self::Output {
         ((self | b) * (b.inverse())).multivector()
@@ -332,7 +335,7 @@ mod projection {
         let res = bivector.project(vector);
         let dual = vector.dual();
         let inner = dual | res;
-        assert_relative_eq!(inner, 0.0, max_relative = 0.0001);
+        assert_relative_eq!(inner.0, 0.0, max_relative = 0.0001);
     }
 
     // #[test]
@@ -361,64 +364,65 @@ mod projection {
 }
 
 // Rejection
-pub trait Rejectable<T> {
+pub trait Rejectable<T, F: Float> {
     type Output;
 
     fn reject(self, target: T) -> Self::Output
     where
-        T: VGA3DOps + Copy;
+        T: VGA3DOps<F> + Copy;
 }
 
 // For vectors
-impl<T> Rejectable<T> for Vector
+impl<T, F: Float> Rejectable<T, F> for Vector<F>
 where
-    T: VGA3DOps + Copy,
-    Vector: core::ops::BitXor<T>,
-    <Vector as core::ops::BitXor<T>>::Output: core::ops::Mul<T>,
-    <<Vector as core::ops::BitXor<T>>::Output as core::ops::Mul<T>>::Output: HasVector,
+    T: VGA3DOps<F> + Copy,
+    Vector<F>: core::ops::BitXor<T>,
+    <Vector<F> as core::ops::BitXor<T>>::Output: core::ops::Mul<T>,
+    <<Vector<F> as core::ops::BitXor<T>>::Output as core::ops::Mul<T>>::Output: HasVector<F>,
 {
-    type Output = Vector;
+    type Output = Vector<F>;
     fn reject(self, b: T) -> Self::Output {
         ((self ^ b) * (b.inverse())).vector()
     }
 }
 
-impl<T> Rejectable<T> for Bivector
+impl<T, F: Float> Rejectable<T, F> for Bivector<F>
 where
-    T: VGA3DOps + Copy,
-    Bivector: core::ops::BitXor<T>,
-    <Bivector as core::ops::BitXor<T>>::Output: core::ops::Mul<T>,
-    <<Bivector as core::ops::BitXor<T>>::Output as core::ops::Mul<T>>::Output: HasBivector,
+    T: VGA3DOps<F> + Copy,
+    Bivector<F>: core::ops::BitXor<T>,
+    <Bivector<F> as core::ops::BitXor<T>>::Output: core::ops::Mul<T>,
+    <<Bivector<F> as core::ops::BitXor<T>>::Output as core::ops::Mul<T>>::Output: HasBivector<F>,
 {
-    type Output = Bivector;
+    type Output = Bivector<F>;
 
     fn reject(self, b: T) -> Self::Output {
         ((self ^ b) * (b.inverse())).bivector()
     }
 }
 
-impl<T> Rejectable<T> for Trivector
+impl<T, F: Float> Rejectable<T, F> for Trivector<F>
 where
-    T: VGA3DOps + Copy,
-    Trivector: core::ops::BitXor<T>,
-    <Trivector as core::ops::BitXor<T>>::Output: core::ops::Mul<T>,
-    <<Trivector as core::ops::BitXor<T>>::Output as core::ops::Mul<T>>::Output: HasTrivector,
+    T: VGA3DOps<F> + Copy,
+    Trivector<F>: core::ops::BitXor<T>,
+    <Trivector<F> as core::ops::BitXor<T>>::Output: core::ops::Mul<T>,
+    <<Trivector<F> as core::ops::BitXor<T>>::Output as core::ops::Mul<T>>::Output: HasTrivector<F>,
 {
-    type Output = Trivector;
+    type Output = Trivector<F>;
 
     fn reject(self, b: T) -> Self::Output {
         ((self ^ b) * (b.inverse())).trivector()
     }
 }
 
-impl<T> Rejectable<T> for Multivector
+impl<T, F: Float> Rejectable<T, F> for Multivector<F>
 where
-    T: VGA3DOps + Copy,
-    Multivector: core::ops::BitXor<T>,
-    <Multivector as core::ops::BitXor<T>>::Output: core::ops::Mul<T>,
-    <<Multivector as core::ops::BitXor<T>>::Output as core::ops::Mul<T>>::Output: HasMultivector,
+    T: VGA3DOps<F> + Copy,
+    Multivector<F>: core::ops::BitXor<T>,
+    <Multivector<F> as core::ops::BitXor<T>>::Output: core::ops::Mul<T>,
+    <<Multivector<F> as core::ops::BitXor<T>>::Output as core::ops::Mul<T>>::Output:
+        HasMultivector<F>,
 {
-    type Output = Multivector;
+    type Output = Multivector<F>;
 
     fn reject(self, b: T) -> Self::Output {
         ((self ^ b) * (b.inverse())).multivector()
@@ -506,61 +510,61 @@ mod rejection {
 
 // Reflection
 // \[A' = B^{-1 }A B\]
-pub trait Reflectable<T> {
+pub trait Reflectable<T, F: Float> {
     type Output;
 
     fn reflect(self, target: T) -> Self::Output
     where
-        T: VGA3DOps + Copy;
+        T: VGA3DOps<F> + Copy;
 }
 
-impl<T> Reflectable<T> for Vector
+impl<T, F: Float> Reflectable<T, F> for Vector<F>
 where
-    T: VGA3DOps + Copy,
-    T: core::ops::Mul<Vector>, // T can multiply a vector
-    <T as core::ops::Mul<Vector>>::Output: core::ops::Mul<T>, // Result can multiply T
-    <<T as core::ops::Mul<Vector>>::Output as core::ops::Mul<T>>::Output: HasVector, // Result has vector method
+    T: VGA3DOps<F> + Copy,
+    T: core::ops::Mul<Vector<F>>, // T can multiply a vector
+    <T as core::ops::Mul<Vector<F>>>::Output: core::ops::Mul<T>, // Result can multiply T
+    <<T as core::ops::Mul<Vector<F>>>::Output as core::ops::Mul<T>>::Output: HasVector<F>, // Result has vector method
 {
-    type Output = Vector;
+    type Output = Vector<F>;
     fn reflect(self, b: T) -> Self::Output {
         ((b.inverse() * self) * b).vector()
     }
 }
 
-impl<T> Reflectable<T> for Bivector
+impl<T, F: Float> Reflectable<T, F> for Bivector<F>
 where
-    T: VGA3DOps + Copy,
-    T: core::ops::Mul<Bivector>, // T can multiply a vector
-    <T as core::ops::Mul<Bivector>>::Output: core::ops::Mul<T>, // Result can multiply T
-    <<T as core::ops::Mul<Bivector>>::Output as core::ops::Mul<T>>::Output: HasBivector, // Result has vector method
+    T: VGA3DOps<F> + Copy,
+    T: core::ops::Mul<Bivector<F>>, // T can multiply a vector
+    <T as core::ops::Mul<Bivector<F>>>::Output: core::ops::Mul<T>, // Result can multiply T
+    <<T as core::ops::Mul<Bivector<F>>>::Output as core::ops::Mul<T>>::Output: HasBivector<F>, // Result has vector method
 {
-    type Output = Bivector;
+    type Output = Bivector<F>;
     fn reflect(self, b: T) -> Self::Output {
         ((b.inverse() * self) * b).bivector()
     }
 }
 
-impl<T> Reflectable<T> for Trivector
+impl<T, F: Float> Reflectable<T, F> for Trivector<F>
 where
-    T: VGA3DOps + Copy,
-    T: core::ops::Mul<Trivector>, // T can multiply a vector
-    <T as core::ops::Mul<Trivector>>::Output: core::ops::Mul<T>, // Result can multiply T
-    <<T as core::ops::Mul<Trivector>>::Output as core::ops::Mul<T>>::Output: HasTrivector, // Result has vector method
+    T: VGA3DOps<F> + Copy,
+    T: core::ops::Mul<Trivector<F>>, // T can multiply a vector
+    <T as core::ops::Mul<Trivector<F>>>::Output: core::ops::Mul<T>, // Result can multiply T
+    <<T as core::ops::Mul<Trivector<F>>>::Output as core::ops::Mul<T>>::Output: HasTrivector<F>, // Result has vector method
 {
-    type Output = Trivector;
+    type Output = Trivector<F>;
     fn reflect(self, b: T) -> Self::Output {
         ((b.inverse() * self) * b).trivector()
     }
 }
 
-impl<T> Reflectable<T> for Multivector
+impl<T, F: Float> Reflectable<T, F> for Multivector<F>
 where
-    T: VGA3DOps + Copy,
-    T: core::ops::Mul<Multivector>, // T can multiply a vector
-    <T as core::ops::Mul<Multivector>>::Output: core::ops::Mul<T>, // Result can multiply T
-    <<T as core::ops::Mul<Multivector>>::Output as core::ops::Mul<T>>::Output: HasMultivector, // Result has vector method
+    T: VGA3DOps<F> + Copy,
+    T: core::ops::Mul<Multivector<F>>, // T can multiply a vector
+    <T as core::ops::Mul<Multivector<F>>>::Output: core::ops::Mul<T>, // Result can multiply T
+    <<T as core::ops::Mul<Multivector<F>>>::Output as core::ops::Mul<T>>::Output: HasMultivector<F>, // Result has vector method
 {
-    type Output = Multivector;
+    type Output = Multivector<F>;
     fn reflect(self, b: T) -> Self::Output {
         ((b.inverse() * self) * b).multivector()
     }

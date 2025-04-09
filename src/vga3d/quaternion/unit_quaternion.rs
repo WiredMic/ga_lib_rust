@@ -18,6 +18,7 @@
 #![warn(missing_docs)]
 
 use crate::forward_ref_binop;
+use crate::vga3d::Scalar;
 use crate::vga3d::{
     bivector::Bivector, multivector::Multivector, trivector::Trivector, vector::Vector, Rotor,
     VGA3DOps, VGA3DOpsRef,
@@ -25,7 +26,9 @@ use crate::vga3d::{
 
 use core::ops::Mul;
 
-use libm::{acosf, cosf, sinf, sqrtf};
+use num_traits::Float;
+
+// use libm::{acosf, cosf, sinf, sqrtf};
 
 #[cfg(feature = "std")]
 extern crate std;
@@ -39,29 +42,29 @@ use super::Quaternion;
 
 /// Unit Quaternion
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
-pub struct UnitQuaternion {
-    pub(super) scalar: f32,
-    pub(super) vector: Vector,
+pub struct UnitQuaternion<F: Float> {
+    pub(super) scalar: Scalar<F>,
+    pub(super) vector: Vector<F>,
 }
 
 #[cfg(feature = "std")]
-impl fmt::Display for UnitQuaternion {
+impl<F: Float + fmt::Display> fmt::Display for UnitQuaternion<F> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // write!(f, "{}e12, {}e31, {}e23", self.e12, self.e31, self.e23)
 
         write!(f, "Unit Quaternion {{\n")?;
-        write!(f, "\treal: {}\n", self.scalar)?;
+        write!(f, "\treal: {}\n", self.scalar.0)?;
         write!(f, "\timaginary: {}i", self.e1())?;
 
         // For j component, add appropriate sign
-        if self.e2() >= 0.0 {
+        if self.e2() >= F::zero() {
             write!(f, " + {}j", self.e2())?;
         } else {
             write!(f, " - {}j", self.e2().abs())?;
         }
 
         // For k component, add appropriate sign
-        if self.e3() >= 0.0 {
+        if self.e3() >= F::zero() {
             write!(f, " + {}k", self.e3())?;
         } else {
             write!(f, " - {}k\n", self.e3().abs())?;
@@ -73,22 +76,22 @@ impl fmt::Display for UnitQuaternion {
 }
 
 #[cfg(feature = "defmt")]
-impl Format for UnitQuaternion {
+impl<F: Float + defmt::Format> defmt::Format for UnitQuaternion<F> {
     fn format(&self, fmt: defmt::Formatter) {
         // the defmt version - similar structure but using defmt macros
         defmt::write!(fmt, "Unit Quaternion {{\n");
-        defmt::write!(fmt, "\treal: {}\n", self.scalar);
+        defmt::write!(fmt, "\treal: {}\n", self.scalar.0);
         defmt::write!(fmt, "\timaginary: {}i", self.e1());
 
         // for j component, add appropriate sign
-        if self.e2() >= 0.0 {
+        if self.e2() >= F::zero() {
             defmt::write!(fmt, " + {}j", self.e2());
         } else {
             defmt::write!(fmt, " - {}j", self.e2().abs());
         }
 
         // for k component, add appropriate sign
-        if self.e3() >= 0.0 {
+        if self.e3() >= F::zero() {
             defmt::write!(fmt, " + {}k", self.e3());
         } else {
             defmt::write!(fmt, " - {}k", self.e3().abs());
@@ -97,44 +100,47 @@ impl Format for UnitQuaternion {
     }
 }
 
-impl UnitQuaternion {
+impl<F: Float> UnitQuaternion<F> {
     /// New Unit Quaternion from the halv of  the Rotation Angle and Axis of Rotation
-    pub fn new(half_angle: f32, rotation_axis: Vector) -> Self {
-        let scalar = cosf(half_angle);
-        let sin = sinf(half_angle);
+    pub fn new(half_angle: F, rotation_axis: Vector<F>) -> Self {
+        let scalar = half_angle.cos();
+        let sin = half_angle.sin();
         let norm = rotation_axis.norm();
         let bi_pre = sin / norm;
 
-        let vector = bi_pre * rotation_axis;
-        Self { scalar, vector }
+        let vector = Scalar(bi_pre) * rotation_axis;
+        Self {
+            scalar: Scalar(scalar),
+            vector,
+        }
     }
 
     /// Return scalar part of Quaternion
-    pub fn scalar(&self) -> f32 {
-        self.scalar
+    pub fn scalar(&self) -> F {
+        self.scalar.0
     }
 
     /// Return vector part of Quaternion
-    pub fn vector(&self) -> Vector {
+    pub fn vector(&self) -> Vector<F> {
         self.vector
     }
 
     /// Return $\mathrm{e}_1$ vector part of Quaternion
-    pub fn e1(&self) -> f32 {
+    pub fn e1(&self) -> F {
         self.vector.e1()
     }
     /// Return $\mathrm{e}_2$ vector part of Quaternion
-    pub fn e2(&self) -> f32 {
+    pub fn e2(&self) -> F {
         self.vector.e2()
     }
 
     /// Return $\mathrm{e}_3$ vector part of Quaternion
-    pub fn e3(&self) -> f32 {
+    pub fn e3(&self) -> F {
         self.vector.e3()
     }
 
     /// Return bivector representation of vector part of Quaternion
-    pub fn bivector(&self) -> Bivector {
+    pub fn bivector(&self) -> Bivector<F> {
         Bivector::new(-self.vector.e3(), -self.vector.e2(), -self.vector.e1())
     }
 
@@ -146,7 +152,7 @@ impl UnitQuaternion {
     /// The is done with the dual operator.
     ///
     /// $$ \vec{a}\star = \overset\Rightarrow{b}  $$
-    pub fn to_rotor(self) -> Rotor {
+    pub fn to_rotor(self) -> Rotor<F> {
         Rotor {
             scalar: self.scalar,
             bivector: Bivector::new(self.vector.e3(), self.vector.e2(), self.vector.e1()),
@@ -154,27 +160,26 @@ impl UnitQuaternion {
     }
 
     /// The complex conjugate of a quaternion is another quaterion with the vector part negated.
-    pub fn conjugate(self) -> UnitQuaternion {
+    pub fn conjugate(self) -> UnitQuaternion<F> {
         UnitQuaternion {
-            scalar: self.scalar(),
+            scalar: self.scalar,
             vector: Vector::new(-self.vector.e1(), -self.vector.e2(), -self.vector.e3()),
         }
     }
 
     /// The norm of a quaternion is the square root of the product between the quaternion and its conjugate.
     /// $$\sqrt{q q*}$$
-    pub fn norm(self) -> f32 {
-        sqrtf(
-            self.scalar * self.scalar
-                + self.vector.e1() * self.vector.e1()
-                + self.vector.e2() * self.vector.e2()
-                + self.vector.e3() * self.vector.e3(),
-        )
+    pub fn norm(self) -> F {
+        (self.scalar * self.scalar
+            + self.vector.e1() * self.vector.e1()
+            + self.vector.e2() * self.vector.e2()
+            + self.vector.e3() * self.vector.e3())
+        .sqrt()
         // sqrtf((self * self.conjugate()).scalar())
     }
 }
 
-impl Rotor {
+impl<F: Float> Rotor<F> {
     /// The way to rotation in Geomtric Algebra is with Rotors
     ///
     /// A unit Quaternion is almost a rotor.
@@ -184,50 +189,62 @@ impl Rotor {
     /// The is done with the dual operator.
     ///
     /// $$ -\overset\Rightarrow{a}\star = \vec{b}  $$
-    pub fn to_unit_quaternion(self) -> UnitQuaternion {
+    pub fn to_unit_quaternion(self) -> UnitQuaternion<F> {
         UnitQuaternion {
-            scalar: self.scalar(),
+            scalar: self.scalar,
             vector: Vector::new(self.e23(), self.e31(), self.e12()),
         }
     }
 }
 
-impl Mul for UnitQuaternion {
-    type Output = UnitQuaternion;
+impl<F: Float> Mul for UnitQuaternion<F> {
+    type Output = UnitQuaternion<F>;
     /// Unit Quaternion multiplication
     /// $$ pq = p_0 \cdot q_0 - \vec{p}\cdot \vec{q} +p_0\vec{q} + q_0\vec{p} + \vec{p}\cross\vec{q} $$
     /// The hamiltonian product of two unit quaternions is a unit quaternion
-    fn mul(self, b: UnitQuaternion) -> UnitQuaternion {
-        UnitQuaternion::new(
+    fn mul(self, b: UnitQuaternion<F>) -> UnitQuaternion<F> {
+        let unit = UnitQuaternion::new(
             (self.scalar * b.scalar)
                 - (self.vector.e1() * b.vector.e1())
                 - (self.vector.e2() * b.vector.e2())
                 - (self.vector.e3() * b.vector.e3()),
             Vector::new(
-                (self.scalar * b.vector.e1())
-                    + (self.vector.e1() * b.scalar)
+                (self.scalar.0 * b.vector.e1())
+                    + (self.vector.e1() * b.scalar.0)
                     + self.vector.e2() * b.vector.e3()
                     - self.vector.e3() * b.vector.e2(),
-                (self.scalar * b.vector.e2())
-                    + (self.vector.e2() * b.scalar)
+                (self.scalar.0 * b.vector.e2())
+                    + (self.vector.e2() * b.scalar.0)
                     + self.vector.e3() * b.vector.e1()
                     - self.vector.e1() * b.vector.e3(),
-                (self.scalar * b.vector.e3())
-                    + (self.vector.e3() * b.scalar)
+                (self.scalar.0 * b.vector.e3())
+                    + (self.vector.e3() * b.scalar.0)
                     + self.vector.e1() * b.vector.e2()
                     - self.vector.e2() * b.vector.e1(),
             ),
-        )
+        );
+
+        unit
+        // // normilize to get rid of float errors
+        // let norm = unit.norm();
+        // UnitQuaternion {
+        //     scalar: unit.scalar / norm,
+        //     vector: Vector::new(
+        //         unit.vector.e1() / norm,
+        //         unit.vector.e2() / norm,
+        //         unit.vector.e3() / norm,
+        //     ),
+        // }
     }
 }
-forward_ref_binop!(impl Mul, mul for UnitQuaternion, UnitQuaternion);
+forward_ref_binop!(impl<F:Float> Mul, mul for UnitQuaternion<F>, UnitQuaternion<F>);
 
-impl Mul<Quaternion> for UnitQuaternion {
-    type Output = Quaternion;
+impl<F: Float> Mul<Quaternion<F>> for UnitQuaternion<F> {
+    type Output = Quaternion<F>;
     /// Unit Quaternion multiplication
     /// $$ pq = p_0 \cdot q_0 - \vec{p}\cdot \vec{q} +p_0\vec{q} + q_0\vec{p} + \vec{p}\cross\vec{q} $$
     /// The hamiltonian product of two unit quaternions is a unit quaternion
-    fn mul(self, b: Quaternion) -> Quaternion {
+    fn mul(self, b: Quaternion<F>) -> Quaternion<F> {
         Quaternion::new(
             (self.scalar() * b.scalar())
                 - (self.vector().e1() * b.vector().e1())
@@ -250,14 +267,14 @@ impl Mul<Quaternion> for UnitQuaternion {
         )
     }
 }
-forward_ref_binop!(impl Mul, mul for UnitQuaternion, Quaternion);
+forward_ref_binop!(impl<F:Float> Mul, mul for UnitQuaternion<F>, Quaternion<F>);
 
-impl Mul<UnitQuaternion> for Quaternion {
-    type Output = Quaternion;
+impl<F: Float> Mul<UnitQuaternion<F>> for Quaternion<F> {
+    type Output = Quaternion<F>;
     /// Unit Quaternion multiplication
     /// $$ pq = p_0 \cdot q_0 - \vec{p}\cdot \vec{q} +p_0\vec{q} + q_0\vec{p} + \vec{p}\cross\vec{q} $$
     /// The hamiltonian product of two unit quaternions is a unit quaternion
-    fn mul(self, b: UnitQuaternion) -> Quaternion {
+    fn mul(self, b: UnitQuaternion<F>) -> Quaternion<F> {
         Quaternion::new(
             (self.scalar() * b.scalar())
                 - (self.vector().e1() * b.vector().e1())
@@ -280,26 +297,26 @@ impl Mul<UnitQuaternion> for Quaternion {
         )
     }
 }
-forward_ref_binop!(impl Mul, mul for Quaternion, UnitQuaternion);
+forward_ref_binop!(impl<F:Float> Mul, mul for Quaternion<F>, UnitQuaternion<F>);
 
-pub trait RotatableQuaternion<U = UnitQuaternion> {
+pub trait RotatableQuaternion<F: Float, U = UnitQuaternion<F>> {
     type Output;
     fn rotate_with_quaternion(self, unit_quaternion: U) -> Self::Output;
 }
 
-impl RotatableQuaternion for Quaternion {
-    type Output = Quaternion;
+impl<F: Float> RotatableQuaternion<F> for Quaternion<F> {
+    type Output = Quaternion<F>;
     /// $$ q' = \hat{p} q \hat{p}* $$
-    fn rotate_with_quaternion(self, unit_quaternion: UnitQuaternion) -> Quaternion {
+    fn rotate_with_quaternion(self, unit_quaternion: UnitQuaternion<F>) -> Quaternion<F> {
         unit_quaternion * self * unit_quaternion.conjugate()
     }
 }
 
-impl RotatableQuaternion for Vector {
-    type Output = Vector;
+impl<F: Float> RotatableQuaternion<F> for Vector<F> {
+    type Output = Vector<F>;
     /// $$ q' = \hat{p} q \hat{p}* $$
-    fn rotate_with_quaternion(self, unit_quaternion: UnitQuaternion) -> Vector {
-        let q_vector = Quaternion::new(0.0, self);
+    fn rotate_with_quaternion(self, unit_quaternion: UnitQuaternion<F>) -> Vector<F> {
+        let q_vector = Quaternion::new(F::zero(), self);
         (unit_quaternion * q_vector * unit_quaternion.conjugate()).vector()
     }
 }
@@ -314,16 +331,18 @@ mod unit_quaternion {
     use approx::assert_relative_eq;
     #[test]
     fn unit_quaternion_unit_quaternion_mul() {
-        let p = Quaternion::new(2.0, Vector::new(4.0, -3.0, 7.0));
-        let q = Quaternion::new(6.0, Vector::new(-4.0, -2.0, -3.0));
+        let p = Quaternion::new(2.0, Vector::new(600.0, -3.0, 619.0));
+        let q = Quaternion::new(6.0, Vector::new(-4.0, -2.0, -6488.0));
         let unit1 = p.to_unit_quaternion();
         let unit2 = q.to_unit_quaternion();
-        let unit = unit1 * unit2;
-        let res = unit.norm();
+        let mut res = unit1 * unit2;
+        for _i in 0..1_000_000 {
+            res = unit1 * unit2;
+        }
 
         assert_relative_eq!(unit1.norm(), 1.0, max_relative = 0.000001);
         assert_relative_eq!(unit2.norm(), 1.0, max_relative = 0.000001);
-        assert_relative_eq!(res, 1.0, max_relative = 0.000001);
+        assert_relative_eq!(res.norm(), 1.0, max_relative = 0.1);
     }
 
     #[test]

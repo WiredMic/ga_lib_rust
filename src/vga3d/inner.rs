@@ -23,9 +23,12 @@ use super::{
     bivector::{self, Bivector},
     multivector::Multivector,
     rotor::Rotor,
+    scalar::Scalar,
     trivector::{self, Trivector},
     vector::Vector,
 };
+
+use num_traits::Float;
 
 use crate::forward_ref_binop;
 
@@ -33,244 +36,244 @@ use core::ops::BitOr;
 
 // Scalar-Scalar
 // \[ a \cdot b\]
-// impl BitOr for f32 {
-//     type Output = f32;
-//     fn bitor(self: f32, b: Vector) -> f32 {
+// impl<F:Float> BitOr for F {
+//     type Output = Scalar<F>;
+//     fn bitor(self: F, b: Vector) -> Scalar<F> {
 //         self * b
 //     }
 // }
 
 // // Scalar-Vector
 // // \[ a \cdot \vec{b}\]
-// impl BitOr<Vector> for f32 {
+// impl<F:Float> BitOr<Vector> for F {
 //     type Output = Vector;
-//     fn bitor(self: f32, b: Vector) -> Vector {
+//     fn bitor(self: F, b: Vector) -> Vector {
 //         self * b
 //     }
 // }
-// forward_ref_binop!(impl BitOr, bitor for f32, Vector);
+// forward_ref_binop!(impl<F:Float> BitOr, bitor for F, Vector);
 
 // // Vector-Scalar
 // // \[ \vec{a} \cdot b\]
-// impl BitOr<f32> for Vector {
+// impl<F:Float> BitOr<F> for Vector {
 //     type Output = Vector;
-//     fn bitor(self: Vector, b: f32) -> Vector {
+//     fn bitor(self: Vector, b: F) -> Vector {
 //         self * b
 //     }
 // }
-// forward_ref_binop!(impl BitOr, bitor for Vector, f32);
+// forward_ref_binop!(impl<F:Float> BitOr, bitor for Vector, F);
 
 // // Scalar-Bivector
 // // \[ s \cdot \overset\Rightarrow{b}\]
-// impl BitOr<Bivector> for f32 {
+// impl<F:Float> BitOr<Bivector> for F {
 //     type Output = Bivector;
-//     fn bitor(self: f32, b: Bivector) -> Bivector {
+//     fn bitor(self: F, b: Bivector) -> Bivector {
 //         self * b
 //     }
 // }
-// forward_ref_binop!(impl BitOr, bitor for f32, Bivector);
+// forward_ref_binop!(impl<F:Float> BitOr, bitor for F, Bivector);
 
 // // Bivector-Scalar
 // // \[ \overset\Rightarrow{a} \cdot b\]
-// impl BitOr<f32> for Bivector {
+// impl<F:Float> BitOr<F> for Bivector {
 //     type Output = Bivector;
-//     fn bitor(self: Bivector, b: f32) -> Bivector {
+//     fn bitor(self: Bivector, b: F) -> Bivector {
 //         self * b
 //     }
 // }
-// forward_ref_binop!(impl BitOr, bitor for Bivector,f32);
+// forward_ref_binop!(impl<F:Float> BitOr, bitor for Bivector,F);
 
 // // Scalar-Trivector
 // // \[ s \cdot \overset\Rrightarrow{b}\]
-// impl BitOr<Trivector> for f32 {
+// impl<F:Float> BitOr<Trivector> for F {
 //     type Output = Trivector;
-//     fn bitor(self: f32, b: Trivector) -> Trivector {
+//     fn bitor(self: F, b: Trivector) -> Trivector {
 //         self * b
 //     }
 // }
-// forward_ref_binop!(impl BitOr, bitor for f32, Trivector);
+// forward_ref_binop!(impl<F:Float> BitOr, bitor for F, Trivector);
 
 // // Trivector-Scalar
 // // \[ \overset\Rrightarrow{a} \cdot b\]
-// impl BitOr<f32> for Trivector {
+// impl<F:Float> BitOr<F> for Trivector {
 //     type Output = Trivector;
-//     fn bitor(self: Trivector, b: f32) -> Trivector {
+//     fn bitor(self: Trivector, b: F) -> Trivector {
 //         self * b
 //     }
 // }
-// forward_ref_binop!(impl BitOr, bitor for Trivector, f32);
+// forward_ref_binop!(impl<F:Float> BitOr, bitor for Trivector, F);
 
 // // Scalar-Multivector
 // // \[ s \cdot B\]
-// impl BitOr<Multivector> for f32 {
+// impl<F:Float> BitOr<Multivector> for F {
 //     type Output = Multivector;
-//     fn bitor(self: f32, b: Multivector) -> Multivector {
+//     fn bitor(self: F, b: Multivector) -> Multivector {
 //         self * b
 //     }
 // }
-// forward_ref_binop!(impl BitOr, bitor for f32, Multivector);
+// forward_ref_binop!(impl<F:Float> BitOr, bitor for F, Multivector);
 
 // // Multivector-Scalar
 // // \[ B \cdot b\]
-// impl BitOr<f32> for Multivector {
+// impl<F:Float> BitOr<F> for Multivector {
 //     type Output = Multivector;
-//     fn bitor(self: Multivector, b: f32) -> Multivector {
+//     fn bitor(self: Multivector, b: F) -> Multivector {
 //         self * b
 //     }
 // }
-// forward_ref_binop!(impl BitOr, bitor for Multivector, f32);
+// forward_ref_binop!(impl<F:Float> BitOr, bitor for Multivector, F);
 
 // // Scalar-Rotor
 // // \[ s \cdot R\]
-// impl BitOr<Rotor> for f32 {
+// impl<F:Float> BitOr<Rotor> for F {
 //     type Output = Multivector;
-//     fn bitor(self: f32, b: Rotor) -> Multivector {
+//     fn bitor(self: F, b: Rotor) -> Multivector {
 //         self * b
 //     }
 // }
-// forward_ref_binop!(impl BitOr, bitor for f32, Rotor);
+// forward_ref_binop!(impl<F:Float> BitOr, bitor for F, Rotor);
 
 // //Rotor-Scalar
 // // \[ R \cdot b\]
-// impl BitOr<f32> for Rotor {
+// impl<F:Float> BitOr<F> for Rotor {
 //     type Output = Multivector;
-//     fn bitor(self: Rotor, b: f32) -> Multivector {
+//     fn bitor(self: Rotor, b: F) -> Multivector {
 //         self * b
 //     }
 // }
-// forward_ref_binop!(impl BitOr, bitor for Rotor, f32);
+// forward_ref_binop!(impl<F:Float> BitOr, bitor for Rotor, F);
 
 // Vector-Vector
 // \[ \vec{u} \cdot \vec{v} = u_1 \cdot v_1 + u_2 \cdot v_2 + u_3 \cdot v_3 \]
-impl BitOr for Vector {
-    type Output = f32;
-    fn bitor(self: Vector, b: Vector) -> f32 {
-        self.e1() * b.e1() + self.e2() * b.e2() + self.e3() * b.e3()
+impl<F: Float> BitOr for Vector<F> {
+    type Output = Scalar<F>;
+    fn bitor(self: Vector<F>, b: Vector<F>) -> Scalar<F> {
+        Scalar(self.e1() * b.e1() + self.e2() * b.e2() + self.e3() * b.e3())
     }
 }
-forward_ref_binop!(impl BitOr, bitor for Vector, Vector);
+forward_ref_binop!(impl<F:Float> BitOr, bitor for Vector<F>, Vector<F>);
 
 // Vector-Bivector
 // \[ \vec{a} \cdot \overset\Rightarrow{b}\]
-impl BitOr<Bivector> for Vector {
-    type Output = Vector;
-    fn bitor(self: Vector, b: Bivector) -> Vector {
+impl<F: Float> BitOr<Bivector<F>> for Vector<F> {
+    type Output = Vector<F>;
+    fn bitor(self: Vector<F>, b: Bivector<F>) -> Vector<F> {
         let e1 = -self.e2() * b.e12() + self.e3() * b.e31();
         let e2 = self.e1() * b.e12() - self.e3() * b.e23();
         let e3 = -self.e1() * b.e31() + self.e2() * b.e23();
         Vector::new(e1, e2, e3)
     }
 }
-forward_ref_binop!(impl BitOr, bitor for Vector, Bivector);
+forward_ref_binop!(impl<F:Float> BitOr, bitor for Vector<F>, Bivector<F>);
 
 // Bivector-Vector
 // \[ \overset\Rightarrow{b} \cdot \vec{b}\]
-impl BitOr<Vector> for Bivector {
-    type Output = Vector;
-    fn bitor(self: Bivector, b: Vector) -> Vector {
+impl<F: Float> BitOr<Vector<F>> for Bivector<F> {
+    type Output = Vector<F>;
+    fn bitor(self: Bivector<F>, b: Vector<F>) -> Vector<F> {
         let e1 = self.e12() * b.e2() - self.e31() * b.e3();
         let e2 = -self.e12() * b.e1() + self.e23() * b.e3();
         let e3 = self.e31() * b.e1() - self.e23() * b.e2();
         Vector::new(e1, e2, e3)
     }
 }
-forward_ref_binop!(impl BitOr, bitor for Bivector, Vector);
+forward_ref_binop!(impl<F:Float> BitOr, bitor for Bivector<F>, Vector<F>);
 
 // Vector-Trivector
 // \[ \vec{a} \cdot \overset\Rrightarrow{b}\]
-impl BitOr<Trivector> for Vector {
-    type Output = Bivector;
-    fn bitor(self: Vector, b: Trivector) -> Bivector {
+impl<F: Float> BitOr<Trivector<F>> for Vector<F> {
+    type Output = Bivector<F>;
+    fn bitor(self: Vector<F>, b: Trivector<F>) -> Bivector<F> {
         self * b
     }
 }
-forward_ref_binop!(impl BitOr, bitor for Vector, Trivector);
+forward_ref_binop!(impl<F:Float> BitOr, bitor for Vector<F>, Trivector<F>);
 
 // Trivector-Vector
 // \[ \overset\Rrightarrow{a} \cdot \vec{b}\]
-impl BitOr<Vector> for Trivector {
-    type Output = Bivector;
-    fn bitor(self: Trivector, b: Vector) -> Bivector {
+impl<F: Float> BitOr<Vector<F>> for Trivector<F> {
+    type Output = Bivector<F>;
+    fn bitor(self: Trivector<F>, b: Vector<F>) -> Bivector<F> {
         self * b
     }
 }
-forward_ref_binop!(impl BitOr, bitor for Trivector, Vector);
+forward_ref_binop!(impl<F:Float> BitOr, bitor for Trivector<F>, Vector<F>);
 
 // Vector-Multivector
 // \[ \vec{a} \cdot B\]
-impl BitOr<Multivector> for Vector {
-    type Output = Multivector;
-    fn bitor(self: Vector, b: Multivector) -> Multivector {
+impl<F: Float> BitOr<Multivector<F>> for Vector<F> {
+    type Output = Multivector<F>;
+    fn bitor(self: Vector<F>, b: Multivector<F>) -> Multivector<F> {
         Multivector::new(
-            self | b.vector(),
-            (self | b.bivector()) + (self * b.scalar()),
+            (self | b.vector()).0,
+            (self | b.bivector()) + (self * Scalar(b.scalar())),
             self | b.trivector(),
             Trivector::zero(),
         )
     }
 }
-forward_ref_binop!(impl BitOr, bitor for Vector, Multivector);
+forward_ref_binop!(impl<F:Float> BitOr, bitor for Vector<F>, Multivector<F>);
 
 // Multivector-Vector
 // \[ A \cdot \vec{b}\]
-impl BitOr<Vector> for Multivector {
-    type Output = Multivector;
-    fn bitor(self: Multivector, b: Vector) -> Multivector {
+impl<F: Float> BitOr<Vector<F>> for Multivector<F> {
+    type Output = Multivector<F>;
+    fn bitor(self: Multivector<F>, b: Vector<F>) -> Multivector<F> {
         Multivector::new(
-            self.vector() | b,
-            (self.bivector() | b) + (self.scalar() * b),
+            (self.vector() | b).0,
+            (self.bivector() | b) + (Scalar(self.scalar()) * b),
             self.trivector() | b,
             Trivector::zero(),
         )
     }
 }
-forward_ref_binop!(impl BitOr, bitor for Multivector, Vector);
+forward_ref_binop!(impl<F:Float> BitOr, bitor for Multivector<F>, Vector<F>);
 
 // // Vector-Rotor
 // // \[ \vec{a} \cdot R\]
-// impl BitOr<Rotor> for Vector {
-//     type Output = Multivector;
-//     fn bitor(self: Vector, b: Rotor) -> Multivector {
+// impl<F:Float> BitOr<Rotor> for Vector<F> {
+//     type Output = Multivector<F>;
+//     fn bitor(self: Vector<F>, b: Rotor) -> Multivector<F> {
 //         Multivector::new(
-//             0.0,
+//             F::zero(),
 //             (self * b.scalar()) + (self | b.bivector()),
 //             Bivector::zero(),
 //             Trivector::zero(),
 //         )
 //     }
 // }
-// forward_ref_binop!(impl BitOr, bitor for Vector, Rotor);
+// forward_ref_binop!(impl<F:Float> BitOr, bitor for Vector<F>, Rotor);
 
 // // Rotor-Vector
 // // \[ R \cdot \vec{b}\]
-// impl BitOr<Vector> for Rotor {
-//     type Output = Multivector;
-//     fn bitor(self: Rotor, b: Vector) -> Multivector {
+// impl<F:Float> BitOr<Vector<F>> for Rotor {
+//     type Output = Multivector<F>;
+//     fn bitor(self: Rotor, b: Vector<F>) -> Multivector<F> {
 //         Multivector::new(
-//             0.0,
+//             F::zero(),
 //             (self.scalar() * b) + (self.bivector() | b),
 //             Bivector::zero(),
 //             Trivector::zero(),
 //         )
 //     }
 // }
-// forward_ref_binop!(impl BitOr, bitor for Rotor, Vector);
+// forward_ref_binop!(impl<F:Float> BitOr, bitor for Rotor, Vector<F>);
 
 // Bivector-Bivector
 // \[ \overset\Rightarrow{a} \cdot \overset\Rightarrow{b} = \left <\overset\Rightarrow{a} \overset\Rightarrow{b} \right>_0 \]
-impl BitOr for Bivector {
-    type Output = f32;
-    fn bitor(self: Bivector, b: Bivector) -> f32 {
-        -self.e12() * b.e12() - self.e31() * b.e31() - self.e23() * b.e23()
+impl<F: Float> BitOr for Bivector<F> {
+    type Output = Scalar<F>;
+    fn bitor(self: Bivector<F>, b: Bivector<F>) -> Scalar<F> {
+        Scalar(-self.e12() * b.e12() - self.e31() * b.e31() - self.e23() * b.e23())
     }
 }
-forward_ref_binop!(impl BitOr, bitor for Bivector, Bivector);
+forward_ref_binop!(impl<F:Float> BitOr, bitor for Bivector<F>, Bivector<F>);
 
 // Bivector-Trivector
 // \[ \overset\Rightarrow{a} \cdot \overset\Rrightarrow{b}\]
-impl BitOr<Trivector> for Bivector {
-    type Output = Vector;
-    fn bitor(self: Bivector, b: Trivector) -> Vector {
+impl<F: Float> BitOr<Trivector<F>> for Bivector<F> {
+    type Output = Vector<F>;
+    fn bitor(self: Bivector<F>, b: Trivector<F>) -> Vector<F> {
         Vector::new(
             -self.e23() * b.e123(),
             -self.e31() * b.e123(),
@@ -278,13 +281,13 @@ impl BitOr<Trivector> for Bivector {
         )
     }
 }
-forward_ref_binop!(impl BitOr, bitor for Bivector, Trivector);
+forward_ref_binop!(impl<F:Float> BitOr, bitor for Bivector<F>, Trivector<F>);
 
 // Trivector-Bivector
 // \[ \overset\Rrightarrow{a} \cdot \overset\Rightarrow{b}\]
-impl BitOr<Bivector> for Trivector {
-    type Output = Vector;
-    fn bitor(self: Trivector, b: Bivector) -> Vector {
+impl<F: Float> BitOr<Bivector<F>> for Trivector<F> {
+    type Output = Vector<F>;
+    fn bitor(self: Trivector<F>, b: Bivector<F>) -> Vector<F> {
         Vector::new(
             self.e123() * -b.e23(),
             self.e123() * -b.e31(),
@@ -292,43 +295,43 @@ impl BitOr<Bivector> for Trivector {
         )
     }
 }
-forward_ref_binop!(impl BitOr, bitor for Trivector, Bivector);
+forward_ref_binop!(impl<F:Float> BitOr, bitor for Trivector<F>, Bivector<F>);
 
 // Bivector-Multivector
 // \[ \overset\Rightarrow{a} \cdot B\]
-impl BitOr<Multivector> for Bivector {
-    type Output = Multivector;
-    fn bitor(self: Bivector, b: Multivector) -> Multivector {
-        Multivector::new(
-            self | b.bivector(),
-            (self | b.vector()) + (self | b.trivector()),
-            self * b.scalar(),
-            Trivector::zero(),
-        )
+impl<F: Float> BitOr<Multivector<F>> for Bivector<F> {
+    type Output = Multivector<F>;
+    fn bitor(self: Bivector<F>, b: Multivector<F>) -> Multivector<F> {
+        Multivector {
+            scalar: self | b.bivector,
+            vector: (self | b.vector) + (self | b.trivector),
+            bivector: self * b.scalar,
+            trivector: Trivector::zero(),
+        }
     }
 }
-forward_ref_binop!(impl BitOr, bitor for Bivector, Multivector);
+forward_ref_binop!(impl<F:Float> BitOr, bitor for Bivector<F>, Multivector<F>);
 
 // Multivector-Bivector
 // \[ A \cdot \overset\Rightarrow{b}\]
-impl BitOr<Bivector> for Multivector {
-    type Output = Multivector;
-    fn bitor(self: Multivector, b: Bivector) -> Multivector {
-        Multivector::new(
-            self.bivector() | b,
-            (self.vector() | b) + (self.trivector() | b),
-            self.scalar() * b,
-            Trivector::zero(),
-        )
+impl<F: Float> BitOr<Bivector<F>> for Multivector<F> {
+    type Output = Multivector<F>;
+    fn bitor(self: Multivector<F>, b: Bivector<F>) -> Multivector<F> {
+        Multivector {
+            scalar: self.bivector | b,
+            vector: (self.vector | b) + (self.trivector | b),
+            bivector: self.scalar * b,
+            trivector: Trivector::zero(),
+        }
     }
 }
-forward_ref_binop!(impl BitOr, bitor for Multivector, Bivector);
+forward_ref_binop!(impl<F:Float> BitOr, bitor for Multivector<F>, Bivector<F>);
 
 // // Bivector-Rotor
 // // \[ \overset\Rightarrow{a} \cdot R\]
-// impl BitOr<Rotor> for Bivector {
-//     type Output = Multivector;
-//     fn bitor(self: Bivector, b: Rotor) -> Multivector {
+// impl<F:Float> BitOr<Rotor> for Bivector<F> {
+//     type Output = Multivector<F>;
+//     fn bitor(self: Bivector<F>, b: Rotor) -> Multivector<F> {
 //         let scalar = self | b.bivector();
 //         let vector = Vector::zero();
 //         let bivector = self | b.scalar();
@@ -336,13 +339,13 @@ forward_ref_binop!(impl BitOr, bitor for Multivector, Bivector);
 //         Multivector::new(scalar, vector, bivector, trivector)
 //     }
 // }
-// forward_ref_binop!(impl BitOr, bitor for Bivector, Rotor);
+// forward_ref_binop!(impl<F:Float> BitOr, bitor for Bivector<F>, Rotor);
 
 // // Rotor-Bivector
 // // \[ R \cdot \overset\Rightarrow{b}\]
-// impl BitOr<Bivector> for Rotor {
-//     type Output = Multivector;
-//     fn bitor(self: Rotor, b: Bivector) -> Multivector {
+// impl<F:Float> BitOr<Bivector<F>> for Rotor {
+//     type Output = Multivector<F>;
+//     fn bitor(self: Rotor, b: Bivector<F>) -> Multivector<F> {
 //         let scalar = self.bivector() | b;
 //         let vector = Vector::zero();
 //         let bivector = self.scalar() | b;
@@ -350,89 +353,92 @@ forward_ref_binop!(impl BitOr, bitor for Multivector, Bivector);
 //         Multivector::new(scalar, vector, bivector, trivector)
 //     }
 // }
-// forward_ref_binop!(impl BitOr, bitor for Rotor, Bivector);
+// forward_ref_binop!(impl<F:Float> BitOr, bitor for Rotor, Bivector<F>);
 
 // Trivector-Trivector
 // In 3D there the geometric product of two trivectors is there inner product
 // \[ \overset\Rrightarrow{a} \cdot \overset\Rrightarrow{b} = \left <\overset\Rrightarrow{a} \overset\Rrightarrow{b} \right>_0 = \overset\Rrightarrow{a} \overset\Rrightarrow{b} \]
-impl BitOr for Trivector {
-    type Output = f32;
-    fn bitor(self: Trivector, b: Trivector) -> f32 {
-        -self.e123() * b.e123()
+impl<F: Float> BitOr for Trivector<F> {
+    type Output = Scalar<F>;
+    fn bitor(self: Trivector<F>, b: Trivector<F>) -> Scalar<F> {
+        Scalar(-self.e123() * b.e123())
     }
 }
 
 // Trivector-Multivector
 // \[ \overset\Rrightarrow{a} \cdot B\]
-impl BitOr<Multivector> for Trivector {
-    type Output = Multivector;
-    fn bitor(self: Trivector, b: Multivector) -> Multivector {
+impl<F: Float> BitOr<Multivector<F>> for Trivector<F> {
+    type Output = Multivector<F>;
+    fn bitor(self: Trivector<F>, b: Multivector<F>) -> Multivector<F> {
         Multivector::new(
-            self | b.trivector(),
+            (self | b.trivector()).0,
             self | b.bivector(),
             self | b.vector(),
-            self * b.scalar(),
+            self * Scalar(b.scalar()),
         )
     }
 }
-forward_ref_binop!(impl BitOr, bitor for Trivector, Multivector);
+forward_ref_binop!(impl<F:Float> BitOr, bitor for Trivector<F>, Multivector<F>);
 
 // Multivector-Trivector
 // \[ A \cdot \overset\Rrightarrow{b}\]
-impl BitOr<Trivector> for Multivector {
-    type Output = Multivector;
-    fn bitor(self: Multivector, b: Trivector) -> Multivector {
-        Multivector::new(
-            self.trivector() | b,
-            self.bivector() | b,
-            self.vector() | b,
-            self.scalar() * b,
-        )
+impl<F: Float> BitOr<Trivector<F>> for Multivector<F> {
+    type Output = Multivector<F>;
+    fn bitor(self: Multivector<F>, b: Trivector<F>) -> Multivector<F> {
+        Multivector {
+            scalar: self.trivector() | b,
+            vector: self.bivector() | b,
+            bivector: self.vector() | b,
+            trivector: self.scalar * b,
+        }
     }
 }
-forward_ref_binop!(impl BitOr, bitor for Multivector, Trivector);
+forward_ref_binop!(impl<F:Float> BitOr, bitor for Multivector<F>, Trivector<F>);
 
 // // Trivector-Rotor
 // // \[ \overset\Rrightarrow{a} \cdot R\]
-// impl BitOr<Rotor> for Trivector {
-//     type Output = Multivector;
-//     fn bitor(self: Trivector, b: Rotor) -> Multivector {
-//         let scalar = 0.0;
+// impl<F:Float> BitOr<Rotor> for Trivector<F> {
+//     type Output = Multivector<F>;
+//     fn bitor(self: Trivector<F>, b: Rotor) -> Multivector<F> {
+//         let scalar = F::zero();
 //         let vector = self | b.bivector();
 //         let bivector = Bivector::zero();
 //         let trivector = self | b.scalar();
 //         Multivector::new(scalar, vector, bivector, trivector)
 //     }
 // }
-// forward_ref_binop!(impl BitOr, bitor for Trivector, Rotor);
+// forward_ref_binop!(impl<F:Float> BitOr, bitor for Trivector<F>, Rotor);
 
 // // Rotor-Trivector
 // // \[ R \cdot \overset\Rrightarrow{b}\]
-// impl BitOr<Trivector> for Rotor {
-//     type Output = Multivector;
-//     fn bitor(self: Rotor, b: Trivector) -> Multivector {
-//         let scalar = 0.0;
+// impl<F:Float> BitOr<Trivector<F>> for Rotor {
+//     type Output = Multivector<F>;
+//     fn bitor(self: Rotor, b: Trivector<F>) -> Multivector<F> {
+//         let scalar = F::zero();
 //         let vector = self.bivector() | b;
 //         let bivector = Bivector::zero();
 //         let trivector = self.scalar() | b;
 //         Multivector::new(scalar, vector, bivector, trivector)
 //     }
 // }
-// forward_ref_binop!(impl BitOr, bitor for Rotor, Trivector);
+// forward_ref_binop!(impl<F:Float> BitOr, bitor for Rotor, Trivector<F>);
 
 // Multivector-Multivector
 // // \[ A \cdot B = \left <A B \right>_{|a-b|} \]
-impl BitOr for Multivector {
-    type Output = Multivector;
-    fn bitor(self: Multivector, b: Multivector) -> Multivector {
-        (self * b.scalar()) + (self | b.vector()) + (self | b.bivector()) + (self | b.trivector())
+impl<F: Float> BitOr for Multivector<F> {
+    type Output = Multivector<F>;
+    fn bitor(self: Multivector<F>, b: Multivector<F>) -> Multivector<F> {
+        (self * Scalar(b.scalar()))
+            + (self | b.vector())
+            + (self | b.bivector())
+            + (self | b.trivector())
     }
 }
-forward_ref_binop!(impl BitOr, bitor for Multivector, Multivector);
+forward_ref_binop!(impl<F:Float> BitOr, bitor for Multivector<F>, Multivector<F>);
 
 // // Multivector-Rotor
 // // \[ A \cdot R\]
-// impl BitOr<Rotor> for Multivector {
+// impl<F:Float> BitOr<Rotor> for Multivector {
 //     type Output = Multivector;
 //     fn bitor(self: Multivector, b: Rotor) -> Multivector {
 //         let scalar = (self.scalar() * b.scalar()) + (self.bivector() | b.bivector());
@@ -444,11 +450,11 @@ forward_ref_binop!(impl BitOr, bitor for Multivector, Multivector);
 //         Multivector::new(scalar, vector, bivector, trivector)
 //     }
 // }
-// forward_ref_binop!(impl BitOr, bitor for Multivector, Rotor);
+// forward_ref_binop!(impl<F:Float> BitOr, bitor for Multivector, Rotor);
 
 // // Rotor-Multivector
 // // \[ R \cdot B\]
-// impl BitOr<Multivector> for Rotor {
+// impl<F:Float> BitOr<Multivector> for Rotor {
 //     type Output = Multivector;
 //     fn bitor(self: Rotor, b: Multivector) -> Multivector {
 //         let scalar = (self.scalar() * b.scalar()) + (self.bivector() | b.bivector());
@@ -460,11 +466,11 @@ forward_ref_binop!(impl BitOr, bitor for Multivector, Multivector);
 //         Multivector::new(scalar, vector, bivector, trivector)
 //     }
 // }
-// forward_ref_binop!(impl BitOr, bitor for Rotor, Multivector);
+// forward_ref_binop!(impl<F:Float> BitOr, bitor for Rotor, Multivector);
 
 // // Inner Product
 // // \[ R_1 \cdot R_2\]
-// impl BitOr for Rotor {
+// impl<F:Float> BitOr for Rotor {
 //     type Output = Multivector;
 //     fn bitor(self: Rotor, b: Rotor) -> Multivector {
 //         let scalar = (self.scalar() * b.scalar()) + (self.bivector() | b.bivector());
@@ -474,7 +480,7 @@ forward_ref_binop!(impl BitOr, bitor for Multivector, Multivector);
 //         Multivector::new(scalar, vector, bivector, trivector)
 //     }
 // }
-// forward_ref_binop!(impl BitOr, bitor for Rotor, Rotor);
+// forward_ref_binop!(impl<F:Float> BitOr, bitor for Rotor, Rotor);
 
 #[cfg(test)]
 mod inner_product {
@@ -486,7 +492,7 @@ mod inner_product {
         let vector1 = Vector::new(3.0, 5.0, 4.0);
         // 2e1+1e2+6e3
         let vector2 = Vector::new(2.0, 1.0, 6.0);
-        let scalar = vector1 | vector2;
+        let scalar = (vector1 | vector2).scalar();
         assert_relative_eq!(scalar, 35.0, max_relative = 0.000001);
     }
 
@@ -584,7 +590,7 @@ mod inner_product {
         let bivector1 = Bivector::new(3.0, 5.0, 4.0);
         // 2e12+e31+6e23
         let bivector2 = Bivector::new(2.0, 1.0, 6.0);
-        let scalar = bivector1 | bivector2;
+        let scalar = (bivector1 | bivector2).0;
         assert_relative_eq!(scalar, -35.0, max_relative = 0.000001);
     }
 
@@ -654,7 +660,7 @@ mod inner_product {
     fn trivec_trivec() {
         let trivector1 = Trivector::new(3.0);
         let trivector2 = Trivector::new(6.0);
-        let res = trivector1 | trivector2;
+        let res = (trivector1 | trivector2).scalar();
         assert_relative_eq!(res, -18.0, max_relative = 0.000001);
     }
 

@@ -2,19 +2,39 @@
 name = "ga_lib"
 version = "0.1.0"
 edition = "2024"
-authors = [ "Rasmus Enevoldsen" ]
+authors = [ "Rasmus Enevoldsen <rasmus@enev.dk>" ]
 readme = "README.org"
 license = "LGPL-3.0-or-later"
+categories = ["science", "mathematics","no-std"]
 
-[dependencies]
-libm = {version = "0.2.11"} # math lib for embedded
-approx = {version = "0.5.1"} # approx test for floats
-nalgebra = { version = "0.33.2", optional = true }
-defmt = {version = "1.0.1", optional= true}
 
-[dev-dependencies]
-criterion = { version = "0.4", features = ["html_reports"] }
-nalgebra = { version = "0.33.2" }
+[dependencies.libm]
+ # math lib for embedded
+version = "0.2.11"
+
+[dependencies.approx]
+# approx test for floats
+version = "0.5.1"
+
+[dependencies.nalgebra]
+version = "0.33.2"
+optional = true
+
+[dependencies.defmt]
+version = "1.0.1"
+optional= true
+
+[dependencies.num-traits]
+version = "0.2.19"
+default-features = false
+features = ["libm"]
+
+[dev-dependencies.criterion]
+version = "0.4"
+features = ["html_reports"]
+
+[dev-dependencies.nalgebra]
+version = "0.33.2"
 
 [[bench]]
 name = "benchmark"
@@ -24,13 +44,11 @@ harness = false
 [features]
 default = []
 quaternion = []
-std = []
+std = ["num-traits/std"]
 nalgebra = ["dep:nalgebra"]
 defmt = ["dep:defmt"]
 full = ["nalgebra", "quaternion", "std"]
 
 
 [package.metadata.docs.rs]
-rustdoc-args = [
-"--html-in-header", "./katex-header.html"
-]
+rustdoc-args = [ "--html-in-header", "./katex-header.html" ]

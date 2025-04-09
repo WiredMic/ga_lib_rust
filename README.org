@@ -1,8 +1,13 @@
 #+title: Geometric Algebra Library in Rust
 
 This is a geometric algebra library written in Rust.
+It is build to be able to run in an embedded environment.
 
-I will later have more algebras.
+The library has generic float support.
+
+It supports 3D vector geometric algebra.
+
+More algebras to come.
 
 * vga3d
 
@@ -35,29 +40,28 @@ Implements no extra features.
 Implements all extra features.
 
 ** quaternion
-When the quaternion flag is enabled, then quaternion and unit quaternion are available as struct.
+When the ~quaternion~ flag is enabled, then quaternion and unit quaternion are available as struct.
 Unit quaternions can only rotate vectors and quaternions.
 
 ** TODO nalgebra
 
 ** std
-When the std flag is enabled, then all Stucts will have an implementation of src_rust[:exports code]{fmt::Display}
+When the ~std~ flag is enabled, then all Stucts will have an implementation of src_rust[:exports code]{fmt::Display}
+
 #+begin_src Rust :exports code
 let vector = Vector::new(2.0,4.0,3.2);
 println!("{}",vector);
 #+end_src
 
 ** defmt
-When the defmt flag is enabled, then all Stucts will have an implementation of src_rust[:exports code]{defmt::Format}
+When the ~defmt~ flag is enabled, then all Stucts will have an implementation of src_rust[:exports code]{defmt::Format}
 
 #+begin_src Rust :exports code
 let vector = Vector::new(2.0,4.0,3.2);
-println!("{}",vector);
+defmt::info!("{}",vector);
 #+end_src
 
 
 * TODO
 - I need to make a test for everything
-- Do scalars need their own type?
-- Generic float for all. (One is f64, all is)
 - regressive product, lowest implementation
