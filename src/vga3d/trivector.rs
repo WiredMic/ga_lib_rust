@@ -160,8 +160,12 @@ impl<F: Float> VGA3DOps<F> for Trivector<F> {
 
     // Inverse
     // \[A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>}\]
-    fn inverse(self) -> Self {
-        self.reverse() / (self * self.reverse())
+    fn try_inverse(self) -> Option<Self> {
+        let norm_squared = (self * self.reverse()).scalar();
+        match Scalar(norm_squared).try_inverse() {
+            None => None,
+            Some(scalar_inverse) => Some(self.reverse() * scalar_inverse),
+        }
     }
 
     // Reverse
@@ -194,8 +198,12 @@ impl<F: Float> VGA3DOpsRef<F> for Trivector<F> {
 
     // Inverse
     // \[A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>}\]
-    fn inverse(&self) -> Self {
-        self.reverse() / (self * self.reverse())
+    fn try_inverse(&self) -> Option<Self> {
+        let norm_squared = (self * self.reverse()).scalar();
+        match Scalar(norm_squared).try_inverse() {
+            None => None,
+            Some(scalar_inverse) => Some(self.reverse() * scalar_inverse),
+        }
     }
 
     // Reverse

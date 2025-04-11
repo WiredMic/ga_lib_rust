@@ -258,12 +258,12 @@ impl<F: Float> Quaternion<F> {
     /// The norm of the quaternion can be 0.
     ///
     /// This will give an error.
-    pub fn inverse(self) -> Result<Quaternion<F>, &'static str> {
-        let norm = self.norm();
+    pub fn try_inverse(self) -> Option<Quaternion<F>> {
+        let norm_squared = (self * self.conjugate()).scalar();
 
-        match norm {
-            norm if norm.is_zero() => Err("The length of the quaternion is 0"),
-            _ => return Ok(self.conjugate() * (F::one() / (self * self.conjugate()).scalar())),
+        match norm_squared {
+            norm_squared if norm_squared.is_zero() => None,
+            _ => return Some(self.conjugate() * (F::one() / norm_squared)),
         }
     }
 }
@@ -406,7 +406,10 @@ mod quaternion {
         );
         let res = q.to_rotor();
 
-        let rotor = Rotor::new(angle / 2.0, rotation_axis.dual());
+        let rotor = match Rotor::try_new_from_half_angle_plane(angle / 2.0, rotation_axis.dual()) {
+            Some(rotor) => rotor,
+            None => Rotor::identity(),
+        };
 
         assert_relative_eq!(res.norm(), 1.0, max_relative = 0.000001);
         assert_relative_eq!(res.scalar(), rotor.scalar(), max_relative = 0.000001);

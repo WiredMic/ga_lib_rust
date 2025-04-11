@@ -76,29 +76,60 @@ impl<F: Float + defmt::Format> defmt::Format for Rotor<F> {
 }
 
 impl<F: Float> Rotor<F> {
-    /// Creates new rotor from plane of rotation and angle of rotationen
-    /// The plane of rotation is a bivector
-    /// The direction of rotation is given by the orientation of the bivector
-    /// The angle is half of the rotation angle
-    pub fn new(half_angle: F, rotation_plane: Bivector<F>) -> Self {
-        let scalar = half_angle.cos();
-        let sin = half_angle.sin();
-        let norm = rotation_plane.norm();
-        let bi_pre = sin / norm;
+    /// Creates new rotor from an angle bivector $\overset\Rightarrow{\theta}$.
+    /// The angle must be in radians and must be half the rotational angle.
+    pub fn new(half_angle_bivector: Bivector<F>) -> Self {
+        let half_angle = half_angle_bivector.norm();
 
-        let bivector = Scalar(bi_pre) * rotation_plane;
-        Self {
-            scalar: Scalar(scalar),
-            bivector,
+        // The only time a angle bivectors norm is zero is when the angle is zero
+        // cos(0.0) = 1.0
+        // sin(0.0) = 0.0
+        if half_angle == F::zero() {
+            return Rotor {
+                scalar: Scalar(F::one()),
+                bivector: Bivector::new(F::zero(), F::zero(), F::zero()),
+            };
+        }
+        // Normilize the rotation plane
+        // multiply by the sin of the half angle
+        let bi_pre = Scalar(half_angle.sin() / half_angle);
+        Rotor {
+            scalar: Scalar(half_angle.cos()),
+            bivector: half_angle_bivector * bi_pre,
         }
     }
 
-    /// Creates new rotor from an angle bivector $\overset\Rightarrow{\theta}$.
-    /// The angle must be in radians and must be half the rotational angle.
-    pub fn new_angle_bivector(angle_bivector: Bivector<F>) -> Self {
-        let angle = angle_bivector.norm();
-        let rotation_plane = angle_bivector / angle;
-        Rotor::new(angle, rotation_plane)
+    /// Tries to creates new rotor from plane of rotation and angle of rotationen
+    /// The plane of rotation is a bivector
+    /// The direction of rotation is given by the orientation of the bivector
+    /// The angle is half of the rotation angle
+    pub fn try_new_from_half_angle_plane(
+        half_angle: F,
+        rotation_plane: Bivector<F>,
+    ) -> Option<Self> {
+        // test if the bivector is the unit bivector
+        let bivector_norm = rotation_plane.norm();
+        match bivector_norm {
+            bivector_norm if bivector_norm.is_zero() => return None,
+            _ => {
+                let bi_pre = Scalar(half_angle.sin() / bivector_norm);
+                return Some(Rotor {
+                    scalar: Scalar(half_angle.cos()),
+                    bivector: rotation_plane * bi_pre,
+                });
+            }
+        }
+    }
+
+    /// This is the identity Rotor.
+    /// Anything rotated with this (0.0 rad) will return it self.
+    /// cos(0.0) = 1.0
+    /// sin(0.0) = 0.0
+    pub fn identity() -> Self {
+        Rotor {
+            scalar: Scalar(F::one()),
+            bivector: Bivector::zero(),
+        }
     }
 
     /// Get the scalar grade of the rotor
@@ -148,7 +179,11 @@ mod rotor {
     fn new() {
         let angle = TAU / 4.0;
         let rotation_plane = Bivector::new(4.0, 2.0, -3.0);
-        let rotor = Rotor::new(angle / 2.0, rotation_plane);
+        let rotor = match Rotor::try_new_from_half_angle_plane(angle / 2.0, rotation_plane) {
+            Some(rotor) => rotor,
+            None => Rotor::identity(),
+        };
+
         // 0.70710677+0.52522576e12+0.26261288e31-0.3939193e23
         assert_relative_eq!(rotor.scalar(), 0.70710677, max_relative = 0.000001);
         assert_relative_eq!(rotor.e12(), 0.52522576, max_relative = 0.000001);
@@ -160,7 +195,12 @@ mod rotor {
     fn get_angle() {
         let rotation_angle = TAU / 4.0;
         let rotation_plane = Bivector::new(4.0, 2.0, -3.0);
-        let rotor = Rotor::new(rotation_angle / 2.0, rotation_plane);
+        let rotor = match Rotor::try_new_from_half_angle_plane(rotation_angle / 2.0, rotation_plane)
+        {
+            Some(rotor) => rotor,
+            None => Rotor::identity(),
+        };
+
         assert_relative_eq!(
             rotor.half_angle(),
             rotation_angle / 2.0,
@@ -173,7 +213,11 @@ mod rotor {
         let angle = TAU / 4.0;
         let rotation_plane = Bivector::new(4.0, 2.0, -3.0);
         let norm = rotation_plane.norm();
-        let rotor = Rotor::new(angle / 2.0, rotation_plane);
+        let rotor = match Rotor::try_new_from_half_angle_plane(angle / 2.0, rotation_plane) {
+            Some(rotor) => rotor,
+            None => Rotor::identity(),
+        };
+
         assert_relative_eq!(
             rotor.rotatino_plane().e12() * norm,
             rotation_plane.e12(),
@@ -225,10 +269,16 @@ mod rotor_geo {
     fn rotor_rotor_geo() {
         let angle1 = TAU / 4.0;
         let rotation_plane1 = Bivector::new(1.0, 0.0, 0.0);
-        let rotor1 = Rotor::new(angle1 / 2.0, rotation_plane1);
+        let rotor1 = match Rotor::try_new_from_half_angle_plane(angle1 / 2.0, rotation_plane1) {
+            Some(rotor) => rotor,
+            None => Rotor::identity(),
+        };
         let angle2 = TAU / 4.0;
         let rotation_plane2 = Bivector::new(0.0, 1.0, 0.0);
-        let rotor2 = Rotor::new(angle2 / 2.0, rotation_plane2);
+        let rotor2 = match Rotor::try_new_from_half_angle_plane(angle2 / 2.0, rotation_plane2) {
+            Some(rotor) => rotor,
+            None => Rotor::identity(),
+        };
 
         let res_rotor = rotor1 * rotor2;
         assert_relative_eq!(res_rotor.scalar(), 0.5, max_relative = 0.000001);
@@ -247,11 +297,14 @@ impl<F: Float> VGA3DOps<F> for Rotor<F> {
 
     // Inverse
     // \[A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>}\]
-    fn inverse(self) -> Rotor<F> {
-        let a = F::one() / (self * self.reverse()).scalar();
-        Rotor {
-            scalar: Scalar(self.reverse().scalar.0 * a),
-            bivector: self.reverse().bivector * Scalar(a),
+    fn try_inverse(self) -> Option<Rotor<F>> {
+        let norm_squared = (self * self.reverse()).scalar();
+        match Scalar(norm_squared).try_inverse() {
+            None => None,
+            Some(scalar_inverse) => Some(Rotor {
+                scalar: Scalar(self.reverse().scalar.0 / norm_squared),
+                bivector: self.reverse().bivector * scalar_inverse,
+            }),
         }
     }
 
@@ -291,11 +344,14 @@ impl<F: Float> VGA3DOpsRef<F> for Rotor<F> {
 
     // Inverse
     // \[A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>}\]
-    fn inverse(&self) -> Self {
-        let a = F::one() / (self * self.reverse()).scalar();
-        Rotor {
-            scalar: Scalar(self.reverse().scalar.0 * a),
-            bivector: self.reverse().bivector * Scalar(a),
+    fn try_inverse(&self) -> Option<Rotor<F>> {
+        let norm_squared = (self * self.reverse()).scalar();
+        match Scalar(norm_squared).try_inverse() {
+            None => None,
+            Some(scalar_inverse) => Some(Rotor {
+                scalar: Scalar(self.reverse().scalar.0 / norm_squared),
+                bivector: self.reverse().bivector * scalar_inverse,
+            }),
         }
     }
 
@@ -341,7 +397,11 @@ mod rotor_reverse {
     fn rotor_norm() {
         let angle = TAU / 4.0;
         let rotation_plane = Bivector::new(4.0, 2.0, -3.0);
-        let rotor = Rotor::new(angle / 2.0, rotation_plane);
+        let rotor = match Rotor::try_new_from_half_angle_plane(angle / 2.0, rotation_plane) {
+            Some(rotor) => rotor,
+            None => Rotor::identity(),
+        };
+
         // 0.70710677+0.52522576e12+0.26261288e31-0.3939193e23
         assert_relative_eq!(rotor.norm(), 1.0, max_relative = 0.000001);
         assert_relative_eq!((&rotor).norm(), 1.0, max_relative = 0.000001);
@@ -350,11 +410,17 @@ mod rotor_reverse {
     fn rotor_rotor_reverse() {
         let angle1 = TAU / 4.0;
         let rotation_plane1 = Bivector::new(3.0, 2.0, 10.0);
-        let rotor1 = Rotor::new(angle1, rotation_plane1);
+        let rotor1 = match Rotor::try_new_from_half_angle_plane(angle1, rotation_plane1) {
+            Some(rotor) => rotor,
+            None => Rotor::identity(),
+        };
 
         let angle2 = TAU / 2.0;
         let rotation_plane2 = Bivector::new(2.0, -3.0, -1.0);
-        let rotor2 = Rotor::new(angle2, rotation_plane2);
+        let rotor2 = match Rotor::try_new_from_half_angle_plane(angle2, rotation_plane2) {
+            Some(rotor) => rotor,
+            None => Rotor::identity(),
+        };
 
         let rotor_reverse = (rotor1 * rotor2).reverse();
         let reverse_rotor = rotor2.reverse() * rotor1.reverse();

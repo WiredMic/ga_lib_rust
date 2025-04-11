@@ -58,4 +58,31 @@ impl<F: Float> Scalar<F> {
     pub fn scalar(self) -> F {
         self.0
     }
+
+    /// try to inverse a scalar value
+    pub fn try_inverse(self) -> Option<Scalar<F>> {
+        let scalar = self.0;
+        match scalar {
+            scalar if scalar.is_zero() => None,
+            _ => return Some(Scalar(F::one() / scalar)),
+        }
+    }
+}
+
+#[cfg(test)]
+mod quaternion {
+
+    use super::*;
+    use approx::assert_relative_eq;
+
+    #[test]
+    fn scalar_inverse() {
+        let scalar = Scalar(4.0);
+        let scalar_inverse = match scalar.try_inverse() {
+            Some(scalar) => scalar,
+            None => Scalar(0.0),
+        };
+
+        assert_relative_eq!(scalar_inverse.scalar(), 1.0 / 4.0, max_relative = 0.000001);
+    }
 }

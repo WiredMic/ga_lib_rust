@@ -65,7 +65,9 @@ pub trait VGA3DOps<F: Float> {
     fn conjugate(self) -> Self;
     fn involute(self) -> Self;
     fn norm(self) -> F;
-    fn inverse(self) -> Self;
+    fn try_inverse(self) -> Option<Self>
+    where
+        Self: Sized;
 }
 
 pub trait VGA3DOpsRef<F: Float> {
@@ -74,5 +76,7 @@ pub trait VGA3DOpsRef<F: Float> {
     fn conjugate(&self) -> Self;
     fn involute(&self) -> Self;
     fn norm(&self) -> F;
-    fn inverse(&self) -> Self;
+    fn try_inverse(&self) -> Option<Self>
+    where
+        Self: Sized;
 }

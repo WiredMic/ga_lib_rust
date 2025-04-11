@@ -88,11 +88,23 @@ mod rotation {
         let vector = Vector::new(3.0, 0.0, 0.0);
         let angle = TAU / 4.0;
         let bivector = Bivector::new(1.0, 0.0, 0.0);
-        let rotor = Rotor::new(angle / 2.0, bivector);
-        let vector_rot_ref1 = (&vector).rotate(&rotor);
-        let vector_rot_ref2 = (&vector).rotate(rotor);
-        let vector_rot_ref3 = vector.rotate(&rotor);
-        let vector_rot = vector.rotate(rotor);
+        let rotor = Rotor::try_new_from_half_angle_plane(angle / 2.0, bivector);
+        let vector_rot_ref1 = match rotor {
+            Some(rotor) => (&vector).rotate(&rotor),
+            None => vector,
+        };
+        let vector_rot_ref2 = match rotor {
+            Some(rotor) => (&vector).rotate(rotor),
+            None => vector,
+        };
+        let vector_rot_ref3 = match rotor {
+            Some(rotor) => (vector).rotate(&rotor),
+            None => vector,
+        };
+        let vector_rot = match rotor {
+            Some(rotor) => (vector).rotate(rotor),
+            None => vector,
+        };
 
         assert_relative_eq!(vector_rot_ref1.e1(), 0.0, max_relative = 0.000001);
         assert_relative_eq!(vector_rot_ref1.e2(), 3.0, max_relative = 0.000001);
@@ -115,9 +127,12 @@ mod rotation {
     fn vector() {
         let angle = TAU / 4.0;
         let rotation_plane = Bivector::new(0.5, 5.2, -3.0);
-        let rotor = Rotor::new(angle / 2.0, rotation_plane);
+        let rotor = Rotor::try_new_from_half_angle_plane(angle / 2.0, rotation_plane);
         let vector = Vector::new(6.4, -4.5, 3.3);
-        let res = vector.rotate(rotor);
+        let res = match rotor {
+            Some(rotor) => vector.rotate(rotor),
+            None => vector,
+        };
 
         assert_relative_eq!(res.e1(), 6.6072783, max_relative = 0.000001);
         assert_relative_eq!(res.e2(), -3.6931403, max_relative = 0.000001);
@@ -128,9 +143,13 @@ mod rotation {
     fn vector_2() {
         let angle = TAU * 4.0 / 7.0;
         let rotation_plane = Bivector::new(0.5, 5.2, -3.0);
-        let rotor = Rotor::new(angle / 2.0, rotation_plane);
+        let rotor = Rotor::try_new_from_half_angle_plane(angle / 2.0, rotation_plane);
         let vector = Vector::new(6.4, -4.5, 3.3);
-        let res = vector.rotate(rotor);
+        let res = match rotor {
+            Some(rotor) => vector.rotate(rotor),
+            None => vector,
+        };
+
         // -0.72899,-8.04355,-2.62105
         assert_relative_eq!(res.e1(), -0.72897816, max_relative = 0.000001);
         assert_relative_eq!(res.e2(), -8.043535, max_relative = 0.000001);
@@ -141,9 +160,12 @@ mod rotation {
     fn bivector() {
         let angle = TAU / 4.0;
         let rotation_plane = Bivector::new(0.5, 5.2, -3.0);
-        let rotor = Rotor::new(angle / 2.0, rotation_plane);
+        let rotor = Rotor::try_new_from_half_angle_plane(angle / 2.0, rotation_plane);
         let bivector = Bivector::new(6.4, -4.5, 3.3);
-        let bivector_rot = bivector.rotate(rotor);
+        let bivector_rot = match rotor {
+            Some(rotor) => bivector.rotate(rotor),
+            None => bivector,
+        };
 
         assert_relative_eq!(bivector_rot.e12(), -1.0222723, max_relative = 0.000001);
         assert_relative_eq!(bivector_rot.e31(), -0.8519465, max_relative = 0.000001);
@@ -222,7 +244,7 @@ impl<F: Float> HasMultivector<F> for Multivector<F> {
 pub trait Projectable<T, F: Float> {
     type Output;
 
-    fn project(self, target: T) -> Self::Output
+    fn try_project(self, target: T) -> Option<Self::Output>
     where
         T: VGA3DOps<F> + Copy;
 }
@@ -236,8 +258,11 @@ where
     <<Vector<F> as core::ops::BitOr<T>>::Output as core::ops::Mul<T>>::Output: HasVector<F>,
 {
     type Output = Vector<F>;
-    fn project(self, b: T) -> Self::Output {
-        ((self | b) * (b.inverse())).vector()
+    fn try_project(self, b: T) -> Option<Self::Output> {
+        match b.try_inverse() {
+            None => None,
+            Some(b_inverse) => Some(((self | b) * (b_inverse)).vector()),
+        }
     }
 }
 
@@ -249,9 +274,11 @@ where
     <<Bivector<F> as core::ops::BitOr<T>>::Output as core::ops::Mul<T>>::Output: HasBivector<F>,
 {
     type Output = Bivector<F>;
-
-    fn project(self, b: T) -> Self::Output {
-        ((self | b) * (b.inverse())).bivector()
+    fn try_project(self, b: T) -> Option<Self::Output> {
+        match b.try_inverse() {
+            None => None,
+            Some(b_inverse) => Some(((self | b) * (b_inverse)).bivector()),
+        }
     }
 }
 
@@ -263,9 +290,11 @@ where
     <<Trivector<F> as core::ops::BitOr<T>>::Output as core::ops::Mul<T>>::Output: HasTrivector<F>,
 {
     type Output = Trivector<F>;
-
-    fn project(self, b: T) -> Self::Output {
-        ((self | b) * (b.inverse())).trivector()
+    fn try_project(self, b: T) -> Option<Self::Output> {
+        match b.try_inverse() {
+            None => None,
+            Some(b_inverse) => Some(((self | b) * (b_inverse)).trivector()),
+        }
     }
 }
 
@@ -278,9 +307,11 @@ where
         HasMultivector<F>,
 {
     type Output = Multivector<F>;
-
-    fn project(self, b: T) -> Self::Output {
-        ((self | b) * (b.inverse())).multivector()
+    fn try_project(self, b: T) -> Option<Self::Output> {
+        match b.try_inverse() {
+            None => None,
+            Some(b_inverse) => Some(((self | b) * (b_inverse)).multivector()),
+        }
     }
 }
 
@@ -294,7 +325,10 @@ mod projection {
     fn vector_vector() {
         let vector1 = Vector::new(2.0, 0.0, 3.0);
         let vector2 = Vector::new(-2.0, 0.0, 4.0);
-        let res = vector1.project(vector2);
+        let res = match vector1.try_project(vector2) {
+            None => vector1,
+            Some(vec_res) => vec_res,
+        };
         assert_relative_eq!(res.e1(), -0.8, max_relative = 0.000001);
         assert_relative_eq!(res.e2(), 0.0, max_relative = 0.000001);
         assert_relative_eq!(res.e3(), 1.6, max_relative = 0.000001);
@@ -308,7 +342,11 @@ mod projection {
         let bivector = Bivector::new(-2.0, 0.0, 4.0);
         // ( (2e1+3e3) | (-2e12+4e23) ) * (( ~(-2e12+4e23) )/  ((-2e12+4e23) * ~(-2e12+4e23))  )
         // 1.5999999046e1​+3.1999998093e3
-        let res = vector.project(bivector);
+        let res = match vector.try_project(bivector) {
+            None => vector,
+            Some(vec_res) => vec_res,
+        };
+
         assert_relative_eq!(res.e1(), 1.6, max_relative = 0.000001);
         assert_relative_eq!(res.e2(), 0.0, max_relative = 0.000001);
         assert_relative_eq!(res.e3(), 3.2, max_relative = 0.000001);
@@ -322,7 +360,11 @@ mod projection {
         let trivector = Trivector::new(-2.0);
         // ( (2e1+3e3) | (-2e12+4e23) ) * (( ~(-2e12+4e23) )/  ((-2e12+4e23) * ~(-2e12+4e23))  )
         // 1.5999999046e1​+3.1999998093e3
-        let res = vector.project(trivector);
+        let res = match vector.try_project(trivector) {
+            None => vector,
+            Some(vector_res) => vector_res,
+        };
+
         assert_relative_eq!(res.e1(), 2.0, max_relative = 0.000001);
         assert_relative_eq!(res.e2(), 0.0, max_relative = 0.000001);
         assert_relative_eq!(res.e3(), 3.0, max_relative = 0.000001);
@@ -332,7 +374,10 @@ mod projection {
         // The projected bivector is orthogonal to the dual of the vector it is projected onto
         let bivector = Bivector::new(-2.0, 5.0, -4.0);
         let vector = Vector::new(3.0, 4.0, 0.0);
-        let res = bivector.project(vector);
+        let res = match bivector.try_project(vector) {
+            None => bivector,
+            Some(bivector_res) => bivector_res,
+        };
         let dual = vector.dual();
         let inner = dual | res;
         assert_relative_eq!(inner.0, 0.0, max_relative = 0.0001);
@@ -367,7 +412,7 @@ mod projection {
 pub trait Rejectable<T, F: Float> {
     type Output;
 
-    fn reject(self, target: T) -> Self::Output
+    fn try_reject(self, target: T) -> Option<Self::Output>
     where
         T: VGA3DOps<F> + Copy;
 }
@@ -381,8 +426,11 @@ where
     <<Vector<F> as core::ops::BitXor<T>>::Output as core::ops::Mul<T>>::Output: HasVector<F>,
 {
     type Output = Vector<F>;
-    fn reject(self, b: T) -> Self::Output {
-        ((self ^ b) * (b.inverse())).vector()
+    fn try_reject(self, b: T) -> Option<Self::Output> {
+        match b.try_inverse() {
+            None => None,
+            Some(b_inverse) => Some(((self ^ b) * (b_inverse)).vector()),
+        }
     }
 }
 
@@ -394,9 +442,11 @@ where
     <<Bivector<F> as core::ops::BitXor<T>>::Output as core::ops::Mul<T>>::Output: HasBivector<F>,
 {
     type Output = Bivector<F>;
-
-    fn reject(self, b: T) -> Self::Output {
-        ((self ^ b) * (b.inverse())).bivector()
+    fn try_reject(self, b: T) -> Option<Self::Output> {
+        match b.try_inverse() {
+            None => None,
+            Some(b_inverse) => Some(((self ^ b) * b_inverse).bivector()),
+        }
     }
 }
 
@@ -408,9 +458,11 @@ where
     <<Trivector<F> as core::ops::BitXor<T>>::Output as core::ops::Mul<T>>::Output: HasTrivector<F>,
 {
     type Output = Trivector<F>;
-
-    fn reject(self, b: T) -> Self::Output {
-        ((self ^ b) * (b.inverse())).trivector()
+    fn try_reject(self, b: T) -> Option<Self::Output> {
+        match b.try_inverse() {
+            None => None,
+            Some(b_inverse) => Some(((self ^ b) * b_inverse).trivector()),
+        }
     }
 }
 
@@ -423,9 +475,11 @@ where
         HasMultivector<F>,
 {
     type Output = Multivector<F>;
-
-    fn reject(self, b: T) -> Self::Output {
-        ((self ^ b) * (b.inverse())).multivector()
+    fn try_reject(self, b: T) -> Option<Self::Output> {
+        match b.try_inverse() {
+            None => None,
+            Some(b_inverse) => Some(((self ^ b) * b_inverse).multivector()),
+        }
     }
 }
 
@@ -513,7 +567,7 @@ mod rejection {
 pub trait Reflectable<T, F: Float> {
     type Output;
 
-    fn reflect(self, target: T) -> Self::Output
+    fn try_reflect(self, target: T) -> Option<Self::Output>
     where
         T: VGA3DOps<F> + Copy;
 }
@@ -526,8 +580,11 @@ where
     <<T as core::ops::Mul<Vector<F>>>::Output as core::ops::Mul<T>>::Output: HasVector<F>, // Result has vector method
 {
     type Output = Vector<F>;
-    fn reflect(self, b: T) -> Self::Output {
-        ((b.inverse() * self) * b).vector()
+    fn try_reflect(self, b: T) -> Option<Self::Output> {
+        match b.try_inverse() {
+            None => None,
+            Some(b_inverse) => Some(((b_inverse * self) * b).vector()),
+        }
     }
 }
 
@@ -539,8 +596,11 @@ where
     <<T as core::ops::Mul<Bivector<F>>>::Output as core::ops::Mul<T>>::Output: HasBivector<F>, // Result has vector method
 {
     type Output = Bivector<F>;
-    fn reflect(self, b: T) -> Self::Output {
-        ((b.inverse() * self) * b).bivector()
+    fn try_reflect(self, b: T) -> Option<Self::Output> {
+        match b.try_inverse() {
+            None => None,
+            Some(b_inverse) => Some(((b_inverse * self) * b).bivector()),
+        }
     }
 }
 
@@ -552,8 +612,11 @@ where
     <<T as core::ops::Mul<Trivector<F>>>::Output as core::ops::Mul<T>>::Output: HasTrivector<F>, // Result has vector method
 {
     type Output = Trivector<F>;
-    fn reflect(self, b: T) -> Self::Output {
-        ((b.inverse() * self) * b).trivector()
+    fn try_reflect(self, b: T) -> Option<Self::Output> {
+        match b.try_inverse() {
+            None => None,
+            Some(b_inverse) => Some(((b_inverse * self) * b).trivector()),
+        }
     }
 }
 
@@ -565,8 +628,11 @@ where
     <<T as core::ops::Mul<Multivector<F>>>::Output as core::ops::Mul<T>>::Output: HasMultivector<F>, // Result has vector method
 {
     type Output = Multivector<F>;
-    fn reflect(self, b: T) -> Self::Output {
-        ((b.inverse() * self) * b).multivector()
+    fn try_reflect(self, b: T) -> Option<Self::Output> {
+        match b.try_inverse() {
+            None => None,
+            Some(b_inverse) => Some(((b_inverse * self) * b).multivector()),
+        }
     }
 }
 
@@ -584,9 +650,17 @@ mod reflection {
         // -2e1 + 4e3
         let vector2 = Vector::new(-2.0, 0.0, 4.0);
         // −72e1​+4e3
-        let res = vector1.reflect(vector2);
-        let test = vector1.project(vector2) - vector1.reject(vector2);
-
+        let res = match vector1.try_reflect(vector2) {
+            None => vector1,
+            Some(vector_res) => vector_res,
+        };
+        let test = match vector1.try_project(vector2) {
+            None => vector1,
+            Some(vector_res1) => match vector1.try_reject(vector2) {
+                None => vector_res1 - vector1,
+                Some(vector_res2) => vector_res1 - vector_res2,
+            },
+        };
         assert_relative_eq!(res.e1(), test.e1(), max_relative = 0.000001);
         assert_relative_eq!(res.e2(), test.e2(), max_relative = 0.000001);
         assert_relative_eq!(res.e3(), test.e3(), max_relative = 0.000001);

@@ -411,7 +411,10 @@ mod unit_quaternion {
         let q = super::UnitQuaternion::new(angle / 2.0, rotation_axis);
         let res = q.to_rotor();
 
-        let rotor = Rotor::new(angle / 2.0, rotation_axis.dual());
+        let rotor = match Rotor::try_new_from_half_angle_plane(angle / 2.0, rotation_axis.dual()) {
+            Some(rotor) => rotor,
+            None => Rotor::identity(),
+        };
 
         assert_relative_eq!(res.norm(), 1.0, max_relative = 0.000001);
         assert_relative_eq!(res.scalar(), rotor.scalar(), max_relative = 0.000001);

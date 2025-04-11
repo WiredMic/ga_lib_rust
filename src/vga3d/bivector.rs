@@ -35,7 +35,8 @@ use libm::sqrtf;
 use num_traits::Float;
 
 use super::{
-    multivector::Multivector, trivector::Trivector, vector::Vector, VGA3DOps, VGA3DOpsRef,
+    multivector::Multivector, scalar::Scalar, trivector::Trivector, vector::Vector, VGA3DOps,
+    VGA3DOpsRef,
 };
 
 /// # 3D Vector Geometric Algebra Bivector
@@ -238,14 +239,6 @@ impl<F: Float> Bivector<F> {
 //     fn vector_vector_cross() {
 //     }}
 
-impl<F: Float> Bivector<F> {
-    /// # Inverse
-    /// $$ A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>} $$
-    pub fn inverse(self) -> Bivector<F> {
-        self.reverse() / (self * self.reverse()).scalar()
-    }
-}
-
 impl<F: Float> VGA3DOps<F> for Bivector<F> {
     fn norm(self) -> F {
         // ((self.e12() * self.e12()) + (self.e31() * self.e31()) + (self.e23() * self.e23())).sqrt()
@@ -254,8 +247,12 @@ impl<F: Float> VGA3DOps<F> for Bivector<F> {
 
     // Inverse
     // \[A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>}\]
-    fn inverse(self) -> Self {
-        self.reverse() / (self * self.reverse()).scalar()
+    fn try_inverse(self) -> Option<Self> {
+        let norm_squared = (self * self.reverse()).scalar();
+        match Scalar(norm_squared).try_inverse() {
+            None => None,
+            Some(scalar_inverse) => Some(self.reverse() * scalar_inverse),
+        }
     }
 
     // Reverse
@@ -288,8 +285,12 @@ impl<F: Float> VGA3DOpsRef<F> for Bivector<F> {
 
     // Inverse
     // \[A^{-1}=\frac{A^\dag}{\left< A A^\dag \right>}\]
-    fn inverse(&self) -> Self {
-        self.reverse() / (self * self.reverse()).scalar()
+    fn try_inverse(&self) -> Option<Self> {
+        let norm_squared = (self * self.reverse()).scalar();
+        match Scalar(norm_squared).try_inverse() {
+            None => None,
+            Some(scalar_inverse) => Some(self.reverse() * scalar_inverse),
+        }
     }
 
     // Reverse

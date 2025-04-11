@@ -464,9 +464,9 @@ forward_ref_binop!(impl<F:Float> Mul, mul for Rotor<F>, Bivector<F>);
 // Trivector-Trivector
 // \[ \overset\Rrightarrow{a}\overset\Rrightarrow{b}= \overset\Rrightarrow{a} \cdot \overset\Rrightarrow{b}\]
 impl<F: Float> Mul for Trivector<F> {
-    type Output = F;
-    fn mul(self: Trivector<F>, b: Trivector<F>) -> F {
-        -self.e123() * b.e123()
+    type Output = Scalar<F>;
+    fn mul(self: Trivector<F>, b: Trivector<F>) -> Scalar<F> {
+        Scalar(-self.e123() * b.e123())
     }
 }
 forward_ref_binop!(impl<F:Float> Mul, mul for Trivector<F>, Trivector<F>);
@@ -774,9 +774,14 @@ mod geometric_product {
     fn rotor_vector_geo() {
         let angle = TAU / 4.0;
         let rotation_plane = Bivector::new(4.0, 2.0, -3.0);
-        let rotor = Rotor::new(angle / 2.0, rotation_plane);
+        let rotor = Rotor::try_new_from_half_angle_plane(angle / 2.0, rotation_plane);
         // 2e12+e31+6e23
         let vector = Vector::new(2.0, 1.0, 6.0);
+        let rotor = match rotor {
+            Some(rotor) => rotor,
+            None => Rotor::identity(),
+        };
+
         // 0.7071+0.5252e12+0.2626e31-0.3939e23
         let res_impl = vector * rotor;
         let res_new = Multivector::new(
@@ -804,11 +809,15 @@ mod geometric_product {
     fn rotor_bivector_geo() {
         let angle = TAU / 4.0;
         let rotation_plane = Bivector::new(4.0, 2.0, -3.0);
-        let rotor = Rotor::new(angle / 2.0, rotation_plane);
+        let rotor = Rotor::try_new_from_half_angle_plane(angle / 2.0, rotation_plane);
         // 2e12+e31+6e23
         let bivector = Bivector::new(2.0, 1.0, 6.0);
         // 0.7071+0.5252e12+0.2626e31-0.3939e23
-        let res = rotor * bivector;
+        let res = match rotor {
+            Some(rotor) => rotor * bivector,
+            None => Multivector::zero(),
+        };
+
         // 1.0504512787+3.3838100433e12​-3.2320864201e31​+4.2426404953e23
         assert_relative_eq!(res.scalar(), 1.0504512787, max_relative = 0.000001);
         assert_relative_eq!(res.e12(), 3.3838100433, max_relative = 0.000001);
@@ -823,8 +832,12 @@ mod geometric_product {
         // 0.7071+0.5252e12+0.2626e31-0.3939e23
         let angle = TAU / 4.0;
         let rotation_plane = Bivector::new(4.0, 2.0, -3.0);
-        let rotor = Rotor::new(angle / 2.0, rotation_plane);
-        let mvec = bivector * rotor;
+        let rotor = Rotor::try_new_from_half_angle_plane(angle / 2.0, rotation_plane);
+        let mvec = match rotor {
+            Some(rotor) => bivector * rotor,
+            None => Multivector::zero(),
+        };
+
         // 1.0504512787−0.5553830266e12​+4.646299839e31​+4.2426404953e23
         assert_relative_eq!(mvec.scalar(), 1.0504, max_relative = 0.001);
         assert_relative_eq!(mvec.e12(), -0.5553, max_relative = 0.001);
@@ -837,7 +850,7 @@ mod geometric_product {
         let trivector1 = Trivector::new(3.0);
         let trivector2 = Trivector::new(6.0);
         let res = trivector1 * trivector2;
-        assert_relative_eq!(res, -18.0, max_relative = 0.000001);
+        assert_relative_eq!(res.scalar(), -18.0, max_relative = 0.000001);
     }
 
     #[test]
@@ -877,7 +890,14 @@ mod geometric_product {
         // ( 0 + 0.55708605e12 + 0.3713907e31 + 0.7427814e23)
         let scalar = TAU / 2.0;
         let bivector = Bivector::new(6.0 / 10.770, 4.0 / 10.770, 8.0 / 10.770);
-        let rotor = Rotor::new(scalar / 2.0, bivector);
+        let rotor = Rotor::try_new_from_half_angle_plane(scalar / 2.0, bivector);
+        let rotor = match rotor {
+            Some(rotor) => rotor,
+            None => Rotor {
+                scalar: Scalar(1.0),
+                bivector: Bivector::zero(),
+            },
+        };
 
         assert_relative_eq!(rotor.scalar(), 0.0, max_relative = 0.000001);
         assert_relative_eq!(rotor.e12(), 0.55708605, max_relative = 0.000001);
@@ -905,7 +925,14 @@ mod geometric_product {
         // ( 0 + 0.55708605e12 + 0.3713907e31 + 0.7427814e23)
         let scalar = TAU / 2.0;
         let bivector = Bivector::new(6.0 / 10.770, 4.0 / 10.770, 8.0 / 10.770);
-        let rotor = Rotor::new(scalar / 2.0, bivector);
+        let rotor = Rotor::try_new_from_half_angle_plane(scalar / 2.0, bivector);
+        let rotor = match rotor {
+            Some(rotor) => rotor,
+            None => Rotor {
+                scalar: Scalar(1.0),
+                bivector: Bivector::zero(),
+            },
+        };
 
         assert_relative_eq!(rotor.scalar(), 0.0, max_relative = 0.000001);
         assert_relative_eq!(rotor.e12(), 0.55708605, max_relative = 0.000001);

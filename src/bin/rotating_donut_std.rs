@@ -115,7 +115,13 @@ fn make_torus() -> [Multivector<f32>; NUM_POINT_IN_TORUS] {
 
     for i in 0..NUM_CIRC_IN_TORUS {
         // rotation around in the e3e1 plane
-        let rotor2 = Rotor::new((angle2 * i as f32) / 2.0, rotation_plane2);
+        let rotor2 = match Rotor::try_new_from_half_angle_plane(
+            (angle2 * i as f32) / 2.0,
+            rotation_plane2,
+        ) {
+            Some(rotor) => rotor,
+            None => Rotor::identity(),
+        };
 
         // Rotate translation vector
         // R_2^\dag\vec{r}R_2
@@ -130,7 +136,13 @@ fn make_torus() -> [Multivector<f32>; NUM_POINT_IN_TORUS] {
         // );
         for j in 0..NUM_POINT_IN_CIRC {
             // rotation around the e1e2 plane
-            let rotor1 = Rotor::new((angle1 * j as f32) / 2.0, rotation_plane1);
+            let rotor1 = match Rotor::try_new_from_half_angle_plane(
+                (angle1 * j as f32) / 2.0,
+                rotation_plane1,
+            ) {
+                Some(rotor) => rotor,
+                None => Rotor::identity(),
+            };
 
             // The rotor that rotates from first point to the point in the torus
             // \[R_1R_2\]
@@ -155,10 +167,16 @@ fn rotate_torus(
     angle4: f32,
 ) {
     let rotation_plane3 = Bivector::new(5.0, 3.5, -4.0);
-    let rotor3 = Rotor::new(angle3 / 2.0, rotation_plane3);
+    let rotor3 = match Rotor::try_new_from_half_angle_plane(angle3 / 2.0, rotation_plane3) {
+        Some(rotor) => rotor,
+        None => Rotor::identity(),
+    };
 
     let rotation_plane4 = Bivector::new(-6.0, 2.0, 7.2);
-    let rotor4 = Rotor::new(angle4 / 2.0, rotation_plane4);
+    let rotor4 = match Rotor::try_new_from_half_angle_plane(angle4 / 2.0, rotation_plane4) {
+        Some(rotor) => rotor,
+        None => Rotor::identity(),
+    };
 
     let rotor5 = rotor3 * rotor4;
 
@@ -209,7 +227,10 @@ fn project_torus(point_array: &[Multivector<f32>; NUM_POINT_IN_TORUS]) -> Screen
 
     for point in point_array.iter() {
         // Project point vector onto the screen plane
-        let point_proj = point.project(screen_plane);
+        let point_proj = match point.try_project(screen_plane) {
+            None => *point,
+            Some(point_res) => point_res,
+        };
 
         // Scale the x and y value fit the sceeen
         let x: usize =
@@ -258,7 +279,10 @@ fn project_torus(point_array: &[Multivector<f32>; NUM_POINT_IN_TORUS]) -> Screen
         // z bufer
         // this is the rejected vector
         // \[\vec{v}_perp = (\vec{v}\wedge\vec{B})\vec{B}^{-1} \]
-        let vector_rej = point.reject(screen_plane);
+        let vector_rej = match point.try_reject(screen_plane) {
+            None => *point,
+            Some(point_res) => point_res,
+        };
 
         let z_buffer = match vector_rej.e2() {
             0.0 => 0.01, // If exactly 0.0, use 0.01
