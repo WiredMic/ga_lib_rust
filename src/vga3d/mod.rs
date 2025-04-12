@@ -19,6 +19,7 @@
 #![allow(dead_code)]
 #![allow(unused_imports)]
 
+use core::ops::Mul;
 use num_traits::Float;
 
 mod scalar;
@@ -59,12 +60,25 @@ mod subtraction;
 mod functions;
 pub use functions::{Projectable, Reflectable, Rejectable, Rotatable};
 
-pub trait VGA3DOps<F: Float> {
+pub trait VGA3DOps<F: Float>: Clone {
     fn reverse(self) -> Self;
     // fn dual(self) -> Self;
     fn conjugate(self) -> Self;
     fn involute(self) -> Self;
-    fn norm(self) -> F;
+    fn norm(self) -> Scalar<F>;
+
+    fn try_normalize(self) -> Option<Self>
+    where
+        Self: Sized,
+        Self: Mul<scalar::Scalar<F>, Output = Self>,
+        for<'a> &'a Self: Mul<scalar::Scalar<F>, Output = Self>,
+    {
+        match self.clone().norm().try_inverse() {
+            None => None,
+            Some(norm_inverse) => Some(self * norm_inverse),
+        }
+    }
+
     fn try_inverse(self) -> Option<Self>
     where
         Self: Sized;
@@ -75,7 +89,19 @@ pub trait VGA3DOpsRef<F: Float> {
     // fn dual(&&self) -> Self;
     fn conjugate(&self) -> Self;
     fn involute(&self) -> Self;
-    fn norm(&self) -> F;
+    fn norm(&self) -> Scalar<F>;
+    // Normalize
+    // $$ \frac{A}{|A|} $$
+    fn try_normalize(&self) -> Option<Self>
+    where
+        Self: Sized,
+        for<'a> &'a Self: Mul<scalar::Scalar<F>, Output = Self>,
+    {
+        match self.norm().try_inverse() {
+            None => None,
+            Some(norm_inverse) => Some(self * norm_inverse),
+        }
+    }
     fn try_inverse(&self) -> Option<Self>
     where
         Self: Sized;

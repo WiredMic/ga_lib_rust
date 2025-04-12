@@ -157,24 +157,6 @@ impl<F: Float> Neg for Vector<F> {
     }
 }
 
-impl<F: Float> Div<F> for Vector<F> {
-    // The division of rational numbers is a closed operation.
-    type Output = Vector<F>;
-
-    fn div(self, b: F) -> Vector<F> {
-        if b == F::zero() {
-            panic!("Cannot divide by zero-valued `Rational`!");
-        }
-
-        Vector::new(
-            self.vector().e1() / b,
-            self.vector().e2() / b,
-            self.vector().e3() / b,
-        )
-    }
-}
-forward_ref_binop!(impl<F: Float> Div, div for Vector<F>, F);
-
 impl<F: Float> Vector<F> {
     /// # Cross Product
     /// The cross product is the dual of the exterior product
@@ -230,8 +212,20 @@ mod vector_dual {
 }
 
 impl<F: Float> VGA3DOps<F> for Vector<F> {
-    fn norm(self) -> F {
-        ((self.e1() * self.e1()) + (self.e2() * self.e2()) + (self.e3() * self.e3())).sqrt()
+    fn norm(self) -> Scalar<F> {
+        Scalar(((self.e1() * self.e1()) + (self.e2() * self.e2()) + (self.e3() * self.e3())).sqrt())
+    }
+
+    // Normilize
+    // $$\frac{A}{|A|}$$
+    fn try_normalize(self) -> Option<Self>
+    where
+        Self: Sized,
+    {
+        match self.norm().try_inverse() {
+            None => None,
+            Some(norm_inverse) => Some(self * norm_inverse),
+        }
     }
 
     // Inverse
@@ -267,9 +261,21 @@ impl<F: Float> VGA3DOps<F> for Vector<F> {
 }
 
 impl<F: Float> VGA3DOpsRef<F> for Vector<F> {
-    fn norm(&self) -> F {
-        // sqrtf((self.reverse() * self).scalar())
-        ((self.e1() * self.e1()) + (self.e2() * self.e2()) + (self.e3() * self.e3())).sqrt()
+    fn norm(&self) -> Scalar<F> {
+        // ((self.reverse() * self).scalar()).sqrt()
+        Scalar(((self.e1() * self.e1()) + (self.e2() * self.e2()) + (self.e3() * self.e3())).sqrt())
+    }
+
+    // Normilize
+    // $$\frac{A}{|A|}$$
+    fn try_normalize(&self) -> Option<Self>
+    where
+        Self: Sized,
+    {
+        match self.norm().try_inverse() {
+            None => None,
+            Some(norm_inverse) => Some(*self * norm_inverse),
+        }
     }
 
     // Inverse
@@ -317,19 +323,23 @@ mod vector {
         assert_relative_eq!(vector_reverse.e2(), 5.0, max_relative = 0.000001);
         assert_relative_eq!(vector_reverse.e3(), 4.0, max_relative = 0.000001);
 
-        assert_relative_eq!(vector.norm(), 7.0710678118654755, max_relative = 0.000001);
         assert_relative_eq!(
-            (&vector).norm(),
+            vector.norm().scalar(),
             7.0710678118654755,
             max_relative = 0.000001
         );
         assert_relative_eq!(
-            vector_reverse.norm(),
+            (&vector).norm().scalar(),
             7.0710678118654755,
             max_relative = 0.000001
         );
         assert_relative_eq!(
-            (&vector_reverse).norm(),
+            vector_reverse.norm().scalar(),
+            7.0710678118654755,
+            max_relative = 0.000001
+        );
+        assert_relative_eq!(
+            (&vector_reverse).norm().scalar(),
             7.0710678118654755,
             max_relative = 0.000001
         );

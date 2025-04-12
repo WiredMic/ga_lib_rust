@@ -223,7 +223,10 @@ fn project_torus(point_array: &[Multivector<f32>; NUM_POINT_IN_TORUS]) -> Screen
 
     // light vector
     let light_ray_direction = Vector::new(1.0, 0.2, 1.0);
-    let light_ray_direction = light_ray_direction / light_ray_direction.norm();
+    let light_ray_direction = match light_ray_direction.try_normalize() {
+        None => Vector::zero(),
+        Some(ligh_ray_normilized) => ligh_ray_normilized,
+    };
 
     for point in point_array.iter() {
         // Project point vector onto the screen plane

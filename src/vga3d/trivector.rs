@@ -103,18 +103,18 @@ impl<F: Float> Neg for Trivector<F> {
     }
 }
 
-impl<F: Float> Div<F> for Trivector<F> {
-    // The division of rational numbers is a closed operation.
-    type Output = Trivector<F>;
-    fn div(self, b: F) -> Trivector<F> {
-        if b == F::zero() {
-            panic!("Cannot divide by zero-valued `Rational`!");
-        }
+// impl<F: Float> Div<F> for Trivector<F> {
+//     // The division of rational numbers is a closed operation.
+//     type Output = Trivector<F>;
+//     fn div(self, b: F) -> Trivector<F> {
+//         if b == F::zero() {
+//             panic!("Cannot divide by zero-valued `Rational`!");
+//         }
 
-        Trivector::new(self.e123() / b)
-    }
-}
-forward_ref_binop!(impl<F: Float> Div, div for Trivector<F>, F);
+//         Trivector::new(self.e123() / b)
+//     }
+// }
+// forward_ref_binop!(impl<F: Float> Div, div for Trivector<F>, F);
 
 impl<F: Float> Trivector<F> {
     /// Cross Product
@@ -153,8 +153,8 @@ impl<F: Float> Trivector<F> {
 impl<F: Float> VGA3DOps<F> for Trivector<F> {
     // There is only one element.
     // The norm is the absolute value of e1e2e3
-    fn norm(self) -> F {
-        self.e123().abs()
+    fn norm(self) -> Scalar<F> {
+        Scalar(self.e123().abs())
         // sqrtf((self.reverse() * self).scalar())
     }
 
@@ -191,9 +191,9 @@ impl<F: Float> VGA3DOps<F> for Trivector<F> {
 }
 
 impl<F: Float> VGA3DOpsRef<F> for Trivector<F> {
-    fn norm(&self) -> F {
+    fn norm(&self) -> Scalar<F> {
         // sqrtf((self.reverse() * self).scalar())
-        self.e123().abs()
+        Scalar(self.e123().abs())
     }
 
     // Inverse
@@ -238,9 +238,17 @@ mod trivector {
         let trivector_reverse = trivector.reverse();
         assert_relative_eq!(trivector_reverse.e123(), -3.0, max_relative = 0.000001);
 
-        assert_relative_eq!(trivector.norm(), 3.0, max_relative = 0.000001);
-        assert_relative_eq!((&trivector).norm(), 3.0, max_relative = 0.000001);
-        assert_relative_eq!(trivector_reverse.norm(), 3.0, max_relative = 0.000001);
-        assert_relative_eq!((&trivector_reverse).norm(), 3.0, max_relative = 0.000001);
+        assert_relative_eq!(trivector.norm().scalar(), 3.0, max_relative = 0.000001);
+        assert_relative_eq!((&trivector).norm().scalar(), 3.0, max_relative = 0.000001);
+        assert_relative_eq!(
+            trivector_reverse.norm().scalar(),
+            3.0,
+            max_relative = 0.000001
+        );
+        assert_relative_eq!(
+            (&trivector_reverse).norm().scalar(),
+            3.0,
+            max_relative = 0.000001
+        );
     }
 }

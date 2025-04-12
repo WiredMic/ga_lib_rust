@@ -176,24 +176,24 @@ impl<F: Float> Neg for Multivector<F> {
     }
 }
 
-impl<F: Float> Div<F> for Multivector<F> {
-    // The division of rational numbers is a closed operation.
-    type Output = Multivector<F>;
+// impl<F: Float> Div<F> for Multivector<F> {
+//     // The division of rational numbers is a closed operation.
+//     type Output = Multivector<F>;
 
-    fn div(self, b: F) -> Multivector<F> {
-        if b == F::zero() {
-            panic!("Cannot divide by zero-valued `Rational`!");
-        }
+//     fn div(self, b: F) -> Multivector<F> {
+//         if b == F::zero() {
+//             panic!("Cannot divide by zero-valued `Rational`!");
+//         }
 
-        Multivector::new(
-            self.scalar.0 / b,
-            self.vector / b,
-            self.bivector / b,
-            self.trivector / b,
-        )
-    }
-}
-forward_ref_binop!(impl<F: Float> Div, div for Multivector<F>, F);
+//         Multivector::new(
+//             self.scalar.0 / b,
+//             self.vector / b,
+//             self.bivector / b,
+//             self.trivector / b,
+//         )
+//     }
+// }
+// forward_ref_binop!(impl<F: Float> Div, div for Multivector<F>, F);
 
 // // Cross Product
 // // It does not make sence to take the cross product of two multvectors
@@ -262,8 +262,8 @@ impl<F: Float> VGA3DOps<F> for Multivector<F> {
         }
     }
 
-    fn norm(self) -> F {
-        (self.reverse() * self).scalar().sqrt()
+    fn norm(self) -> Scalar<F> {
+        Scalar((self.reverse() * self).scalar().sqrt())
     }
 }
 
@@ -328,8 +328,8 @@ impl<F: Float> VGA3DOpsRef<F> for Multivector<F> {
 
     // the norm of a multivector |A|
     // \[|A|^2=\left< A\^dag A \right>_0\]
-    fn norm(&self) -> F {
-        (self.reverse() * self).scalar().sqrt()
+    fn norm(&self) -> Scalar<F> {
+        Scalar((self.reverse() * self).scalar().sqrt())
     }
 }
 
@@ -355,22 +355,22 @@ mod quaternion {
         let multivector_reverse = multivector.reverse();
 
         assert_relative_eq!(
-            multivector.norm(),
+            multivector.norm().scalar(),
             9.885848471426213,
             max_relative = 0.000001
         );
         assert_relative_eq!(
-            (&multivector).norm(),
+            (&multivector).norm().scalar(),
             9.885848471426213,
             max_relative = 0.000001
         );
         assert_relative_eq!(
-            multivector_reverse.norm(),
+            multivector_reverse.norm().scalar(),
             9.885848471426213,
             max_relative = 0.000001
         );
         assert_relative_eq!(
-            (&multivector_reverse).norm(),
+            (&multivector_reverse).norm().scalar(),
             9.885848471426213,
             max_relative = 0.000001
         );

@@ -105,7 +105,7 @@ impl<F: Float> UnitQuaternion<F> {
     pub fn new(half_angle: F, rotation_axis: Vector<F>) -> Self {
         let scalar = half_angle.cos();
         let sin = half_angle.sin();
-        let norm = rotation_axis.norm();
+        let norm = rotation_axis.norm().scalar();
         let bi_pre = sin / norm;
 
         let vector = Scalar(bi_pre) * rotation_axis;
@@ -169,12 +169,14 @@ impl<F: Float> UnitQuaternion<F> {
 
     /// The norm of a quaternion is the square root of the product between the quaternion and its conjugate.
     /// $$\sqrt{q q*}$$
-    pub fn norm(self) -> F {
-        (self.scalar * self.scalar
-            + self.vector.e1() * self.vector.e1()
-            + self.vector.e2() * self.vector.e2()
-            + self.vector.e3() * self.vector.e3())
-        .sqrt()
+    pub fn norm(self) -> Scalar<F> {
+        Scalar(
+            (self.scalar * self.scalar
+                + self.vector.e1() * self.vector.e1()
+                + self.vector.e2() * self.vector.e2()
+                + self.vector.e3() * self.vector.e3())
+            .sqrt(),
+        )
         // sqrtf((self * self.conjugate()).scalar())
     }
 }
@@ -340,9 +342,9 @@ mod unit_quaternion {
             res = unit1 * unit2;
         }
 
-        assert_relative_eq!(unit1.norm(), 1.0, max_relative = 0.000001);
-        assert_relative_eq!(unit2.norm(), 1.0, max_relative = 0.000001);
-        assert_relative_eq!(res.norm(), 1.0, max_relative = 0.1);
+        assert_relative_eq!(unit1.norm().scalar(), 1.0, max_relative = 0.000001);
+        assert_relative_eq!(unit2.norm().scalar(), 1.0, max_relative = 0.000001);
+        assert_relative_eq!(res.norm().scalar(), 1.0, max_relative = 0.1);
     }
 
     #[test]
@@ -354,7 +356,7 @@ mod unit_quaternion {
         let res = p * unit;
         // let res = unit.norm();
 
-        assert_relative_eq!(unit.norm(), 1.0, max_relative = 0.000001);
+        assert_relative_eq!(unit.norm().scalar(), 1.0, max_relative = 0.000001);
 
         assert_relative_eq!(unit.scalar(), 0.7442084, max_relative = 0.000001);
         assert_relative_eq!(unit.e1(), -0.49613893, max_relative = 0.000001);
@@ -377,7 +379,7 @@ mod unit_quaternion {
         let res = unit * p;
         // let res = unit.norm();
 
-        assert_relative_eq!(unit.norm(), 1.0, max_relative = 0.000001);
+        assert_relative_eq!(unit.norm().scalar(), 1.0, max_relative = 0.000001);
 
         assert_relative_eq!(unit.scalar(), 0.7442084, max_relative = 0.000001);
         assert_relative_eq!(unit.e1(), -0.49613893, max_relative = 0.000001);
@@ -416,7 +418,7 @@ mod unit_quaternion {
             None => Rotor::identity(),
         };
 
-        assert_relative_eq!(res.norm(), 1.0, max_relative = 0.000001);
+        assert_relative_eq!(res.norm().scalar(), 1.0, max_relative = 0.000001);
         assert_relative_eq!(res.scalar(), rotor.scalar(), max_relative = 0.000001);
         assert_relative_eq!(res.e12(), rotor.e12(), max_relative = 0.000001);
         assert_relative_eq!(res.e31(), rotor.e31(), max_relative = 0.000001);

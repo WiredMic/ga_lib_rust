@@ -65,3 +65,4 @@ defmt::info!("{}",vector);
 * TODO
 - I need to make a test for everything
 - regressive product, lowest implementation
+- Find a way to remove src_rust[:exports code]{Scalar} (Orphan rule)

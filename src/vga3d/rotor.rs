@@ -79,7 +79,7 @@ impl<F: Float> Rotor<F> {
     /// Creates new rotor from an angle bivector $\overset\Rightarrow{\theta}$.
     /// The angle must be in radians and must be half the rotational angle.
     pub fn new(half_angle_bivector: Bivector<F>) -> Self {
-        let half_angle = half_angle_bivector.norm();
+        let half_angle = half_angle_bivector.norm().scalar();
 
         // The only time a angle bivectors norm is zero is when the angle is zero
         // cos(0.0) = 1.0
@@ -108,7 +108,7 @@ impl<F: Float> Rotor<F> {
         rotation_plane: Bivector<F>,
     ) -> Option<Self> {
         // test if the bivector is the unit bivector
-        let bivector_norm = rotation_plane.norm();
+        let bivector_norm = rotation_plane.norm().scalar();
         match bivector_norm {
             bivector_norm if bivector_norm.is_zero() => return None,
             _ => {
@@ -158,14 +158,19 @@ impl<F: Float> Rotor<F> {
     }
 
     /// Get the angle of the rotor
-    pub fn half_angle(&self) -> F {
-        self.scalar().acos()
+    pub fn get_half_angle(&self) -> Scalar<F> {
+        Scalar(self.scalar().acos())
     }
 
     /// Get the plane of rotation of the rotor
-    pub fn rotatino_plane(&self) -> Bivector<F> {
-        let sin = self.half_angle().sin();
-        self.bivector / sin
+    /// This is not always posible
+    /// sin(0) = sin(tau/2) = 0
+    pub fn try_get_rotation_plane(&self) -> Bivector<F> {
+        let sin = Scalar(self.get_half_angle().scalar().sin());
+        match sin.try_inverse() {
+            None => Bivector::zero(),
+            Some(sin_inverse) => self.bivector * sin_inverse,
+        }
     }
 }
 
@@ -202,7 +207,7 @@ mod rotor {
         };
 
         assert_relative_eq!(
-            rotor.half_angle(),
+            rotor.get_half_angle().scalar(),
             rotation_angle / 2.0,
             max_relative = 0.000001
         );
@@ -217,19 +222,20 @@ mod rotor {
             Some(rotor) => rotor,
             None => Rotor::identity(),
         };
+        let rotor_rotation_plane = rotor.try_get_rotation_plane();
 
         assert_relative_eq!(
-            rotor.rotatino_plane().e12() * norm,
+            rotor_rotation_plane.e12() * norm.scalar(),
             rotation_plane.e12(),
             max_relative = 0.000001
         );
         assert_relative_eq!(
-            rotor.rotatino_plane().e31() * norm,
+            rotor_rotation_plane.e31() * norm.scalar(),
             rotation_plane.e31(),
             max_relative = 0.000001
         );
         assert_relative_eq!(
-            rotor.rotatino_plane().e23() * norm,
+            rotor_rotation_plane.e23() * norm.scalar(),
             rotation_plane.e23(),
             max_relative = 0.000001
         );
@@ -290,9 +296,12 @@ mod rotor_geo {
 
 impl<F: Float> VGA3DOps<F> for Rotor<F> {
     // \[ |R|^2=\left< R^\dag A \right>_0 \]
-    fn norm(self) -> F {
-        ((self.scalar() * self.scalar()) + (self.bivector() * self.bivector().reverse()).scalar())
-            .sqrt()
+    fn norm(self) -> Scalar<F> {
+        Scalar(
+            ((self.scalar() * self.scalar())
+                + (self.bivector() * self.bivector().reverse()).scalar())
+            .sqrt(),
+        )
     }
 
     // Inverse
@@ -337,9 +346,12 @@ impl<F: Float> VGA3DOps<F> for Rotor<F> {
 }
 
 impl<F: Float> VGA3DOpsRef<F> for Rotor<F> {
-    fn norm(&self) -> F {
-        ((self.scalar() * self.scalar()) + (self.bivector() * self.bivector().reverse()).scalar())
-            .sqrt()
+    fn norm(&self) -> Scalar<F> {
+        Scalar(
+            ((self.scalar() * self.scalar())
+                + (self.bivector() * self.bivector().reverse()).scalar())
+            .sqrt(),
+        )
     }
 
     // Inverse
@@ -403,8 +415,8 @@ mod rotor_reverse {
         };
 
         // 0.70710677+0.52522576e12+0.26261288e31-0.3939193e23
-        assert_relative_eq!(rotor.norm(), 1.0, max_relative = 0.000001);
-        assert_relative_eq!((&rotor).norm(), 1.0, max_relative = 0.000001);
+        assert_relative_eq!(rotor.norm().scalar(), 1.0, max_relative = 0.000001);
+        assert_relative_eq!((&rotor).norm().scalar(), 1.0, max_relative = 0.000001);
     }
 
     fn rotor_rotor_reverse() {

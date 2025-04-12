@@ -767,7 +767,11 @@ mod geometric_product {
         // assert_relative_eq!(bivector_reverse.e31(), -5.0, max_relative = 0.000001);
         // assert_relative_eq!(bivector_reverse.e23(), -4.0, max_relative = 0.000001);
 
-        assert_relative_eq!(bivector.norm(), 7.0710678118654755, max_relative = 0.000001);
+        assert_relative_eq!(
+            bivector.norm().scalar(),
+            7.0710678118654755,
+            max_relative = 0.000001
+        );
     }
 
     #[test]

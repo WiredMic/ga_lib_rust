@@ -241,12 +241,14 @@ impl<F: Float> Quaternion<F> {
 
     /// The norm of a quaternion is the square root of the product between the quaternion and its conjugate.
     /// $$\sqrt{q q*}$$
-    pub fn norm(self) -> F {
-        (self.scalar * self.scalar
-            + self.vector.e1() * self.vector.e1()
-            + self.vector.e2() * self.vector.e2()
-            + self.vector.e3() * self.vector.e3())
-        .sqrt()
+    pub fn norm(self) -> Scalar<F> {
+        Scalar(
+            (self.scalar * self.scalar
+                + self.vector.e1() * self.vector.e1()
+                + self.vector.e2() * self.vector.e2()
+                + self.vector.e3() * self.vector.e3())
+            .sqrt(),
+        )
 
         // sqrtf((self * self.conjugate()).scalar)
     }
@@ -389,10 +391,10 @@ mod quaternion {
         let norm1 = (q1.conjugate() * q1).scalar().sqrt();
         let norm2 = (q1 * q1.conjugate()).scalar().sqrt();
 
-        assert_relative_eq!(q1.norm(), q2.norm(), max_relative = 0.000001);
+        assert_relative_eq!(q1.norm().scalar(), q2.norm(), max_relative = 0.000001);
 
-        assert_relative_eq!(q1.norm(), norm1, max_relative = 0.000001);
-        assert_relative_eq!(q1.norm(), norm2, max_relative = 0.000001);
+        assert_relative_eq!(q1.norm().scalar(), norm1, max_relative = 0.000001);
+        assert_relative_eq!(q1.norm().scalar(), norm2, max_relative = 0.000001);
     }
 
     #[test]
@@ -402,7 +404,7 @@ mod quaternion {
 
         let q = super::Quaternion::new(
             (angle / 2.0).cos(),
-            rotation_axis * Scalar((angle / 2.0).sin() / rotation_axis.norm()),
+            rotation_axis * Scalar((angle / 2.0).sin() / rotation_axis.norm().scalar()),
         );
         let res = q.to_rotor();
 
@@ -411,7 +413,7 @@ mod quaternion {
             None => Rotor::identity(),
         };
 
-        assert_relative_eq!(res.norm(), 1.0, max_relative = 0.000001);
+        assert_relative_eq!(res.norm().scalar(), 1.0, max_relative = 0.000001);
         assert_relative_eq!(res.scalar(), rotor.scalar(), max_relative = 0.000001);
         assert_relative_eq!(res.e12(), rotor.e12(), max_relative = 0.000001);
         assert_relative_eq!(res.e31(), rotor.e31(), max_relative = 0.000001);
@@ -506,7 +508,7 @@ mod quaternion {
         let angle = 3.0 / 4.0 * TAU;
         let rotation_axis = super::Vector::new(3.0, 4.0, 5.0);
         let scalar = (angle / 2.0).cos();
-        let vector = rotation_axis * Scalar((angle / 2.0).sin() / rotation_axis.norm());
+        let vector = rotation_axis * Scalar((angle / 2.0).sin() / rotation_axis.norm().scalar());
 
         let unit1 = super::Quaternion::new(scalar, vector);
         let unit2 = super::UnitQuaternion::new(angle / 2.0, rotation_axis);

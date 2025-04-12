@@ -161,19 +161,19 @@ impl<F: Float> Neg for Bivector<F> {
     }
 }
 
-impl<F: Float> Div<F> for Bivector<F> {
-    // The division of rational numbers is a closed operation.
-    type Output = Bivector<F>;
+// impl<F: Float> Div<F> for Bivector<F> {
+//     // The division of rational numbers is a closed operation.
+//     type Output = Bivector<F>;
 
-    fn div(self, b: F) -> Bivector<F> {
-        if b == F::zero() {
-            panic!("Cannot divide by zero-valued `Rational`!");
-        }
+//     fn div(self, b: F) -> Bivector<F> {
+//         if b == F::zero() {
+//             panic!("Cannot divide by zero-valued `Rational`!");
+//         }
 
-        Bivector::new(self.e12() / b, self.e31() / b, self.e23() / b)
-    }
-}
-forward_ref_binop!(impl<F: Float> Div, div for Bivector<F>, F);
+//         Bivector::new(self.e12() / b, self.e31() / b, self.e23() / b)
+//     }
+// }
+// forward_ref_binop!(impl<F: Float> Div, div for Bivector<F>, F);
 
 impl<F: Float> Bivector<F> {
     /// # Cross Product
@@ -240,9 +240,9 @@ impl<F: Float> Bivector<F> {
 //     }}
 
 impl<F: Float> VGA3DOps<F> for Bivector<F> {
-    fn norm(self) -> F {
+    fn norm(self) -> Scalar<F> {
         // ((self.e12() * self.e12()) + (self.e31() * self.e31()) + (self.e23() * self.e23())).sqrt()
-        (self.reverse() * self).scalar().sqrt()
+        Scalar((self.reverse() * self).scalar().sqrt())
     }
 
     // Inverse
@@ -278,9 +278,12 @@ impl<F: Float> VGA3DOps<F> for Bivector<F> {
 }
 
 impl<F: Float> VGA3DOpsRef<F> for Bivector<F> {
-    fn norm(&self) -> F {
+    fn norm(&self) -> Scalar<F> {
         // sqrtf((self.reverse() * self).scalar())
-        ((self.e12() * self.e12()) + (self.e31() * self.e31()) + (self.e23() * self.e23())).sqrt()
+        Scalar(
+            ((self.e12() * self.e12()) + (self.e31() * self.e31()) + (self.e23() * self.e23()))
+                .sqrt(),
+        )
     }
 
     // Inverse
@@ -339,19 +342,23 @@ mod bivector {
         assert_relative_eq!(bivector_reverse.e31(), -5.0, max_relative = 0.000001);
         assert_relative_eq!(bivector_reverse.e23(), -4.0, max_relative = 0.000001);
 
-        assert_relative_eq!(bivector.norm(), 7.0710678118654755, max_relative = 0.000001);
         assert_relative_eq!(
-            (&bivector).norm(),
+            bivector.norm().scalar(),
             7.0710678118654755,
             max_relative = 0.000001
         );
         assert_relative_eq!(
-            bivector_reverse.norm(),
+            (&bivector).norm().scalar(),
             7.0710678118654755,
             max_relative = 0.000001
         );
         assert_relative_eq!(
-            (&bivector_reverse).norm(),
+            bivector_reverse.norm().scalar(),
+            7.0710678118654755,
+            max_relative = 0.000001
+        );
+        assert_relative_eq!(
+            (&bivector_reverse).norm().scalar(),
             7.0710678118654755,
             max_relative = 0.000001
         );
